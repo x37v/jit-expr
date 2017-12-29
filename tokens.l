@@ -1,10 +1,11 @@
 %{
+#include "parser.tab.hpp"
 #include <iostream>
 using std::cout;
 using std::endl;
 %}
 
-%option reentrant noyywrap header-file="./lex.yy.hpp"
+%option reentrant noyywrap header-file="./lex.yy.h" bison-bridge
 
 %%
 [ \t\n]            ;
