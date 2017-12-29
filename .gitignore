@@ -1,3 +1,4 @@
 parser
 lex.yy.*
 *.o
+.gdb_history

@@ -1,5 +1,5 @@
-OBJS = lex.yy.o main.o
-CXX = clang++
+OBJS = lex.yy.o
+CXX = g++
 CPPFLAGS = -g -std=c++11
 LDFLAGS = -lfl
 
@@ -10,10 +10,10 @@ lex.yy.cpp: tokens.l
 	flex -o $@ $^
 
 parser: $(OBJS)
-	$(CXX) -o $@ $(CPPFLAGS) $(LDFLAGS) $<
+	$(CXX) main.cpp -o $@ $(CPPFLAGS) $(LDFLAGS) $<
 
 test: parser
-	cat examples.txt | ./parser
+	./parser examples.txt
 
 clean:
 	$(RM) -rf parser lex.yy.* *.o
