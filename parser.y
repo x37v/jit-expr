@@ -1,34 +1,30 @@
 %{
+  #include <string>
   #include "ast.h"
-  #include "lex.yy.h"
+  #include "lex.yy.hpp"
+  #include <stdexcept>
+	void yyerror(yyscan_t scanner, const char *s) {
+    throw std::runtime_error(s);
+  }
 %}
 
-%lex-param {void * scanner}
-%parse-param {void * scanner}
-%define api.pure full
+%define api.pure
+%lex-param {yyscan_t scanner}
+%parse-param {yyscan_t scanner}
 
 %union {
   //xnor::ASTNode * node;
+  std::string * string;
   int token;
 }
 
-%token <symp> NAME
-%token <dval> NUMBER
+%token <string> TIDENTIFIER
 
-%left '-' '+'
-%left '*' '/'
-
-%type <dval> expression
+%type <string> ident
 
 %%
-/*** Rules section ***/
-statement_list : statement '\n'
-  | statement_list statement '\n'
 
-statement: NAME '=' expression { $1->value = $3; }           
-  | expression { printf ("= %g\n", $1); }
-
-expression: NUMBER
-  | NAME { $$ = $1->value; }
+ident : TIDENTIFIER { $$ = new std::string(*$1); delete $1; }
+	  ;
 
 %%

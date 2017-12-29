@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <string>
 #include "lex.yy.h"
 #include "parser.tab.h"
 
@@ -10,6 +11,6 @@ int main(int argc, char* argv[]) {
   yylex_init(&scanner);
   yyset_in(f, scanner);
   //yylex(scanner);
-  yyparse(&scanner);
+  yyparse(scanner);
   yylex_destroy(scanner);
 }

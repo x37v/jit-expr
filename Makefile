@@ -3,10 +3,11 @@ first: parser
 OBJS = lex.yy.o \
 			 parser.tab.o
 
-CXX = g++
-CPPFLAGS = -g -std=c++11
-CFLAGS = -g
-LDFLAGS = -lfl
+
+CXX = clang++
+CPPFLAGS += -g -std=c++11
+CFLAGS += -g
+LDFLAGS += -lfl
 
 
 %.o: %.cpp
