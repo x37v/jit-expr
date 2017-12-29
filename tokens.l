@@ -51,6 +51,7 @@ using std::endl;
 "\\,"              { cout << "found " << yytext << endl; }
 "\\;"              { cout << "found " << yytext << endl; }
 "_"                { cout << "found " << yytext << endl; }
+.                  { throw std::runtime_error("UNKNOWN TOKEN" + std::string(yytext)); }
 
 %%
 
