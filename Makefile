@@ -19,7 +19,7 @@ lex.yy.cpp: tokens.l parser.tab.cpp #actually depends on the hpp but this will d
 parser.tab.cpp: parser.y
 	bison -d -o $@ $^
 
-parser: $(OBJS)
+parser: $(OBJS) main.cpp
 	$(CXX) main.cpp -o $@ $(CPPFLAGS) $(LDFLAGS) $<
 
 test: parser
