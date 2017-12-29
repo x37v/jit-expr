@@ -16,4 +16,4 @@ test: parser
 	cat examples.txt | ./parser
 
 clean:
-	$(RM) -rf parser lex.yy.cpp
+	$(RM) -rf parser lex.yy.* *.o

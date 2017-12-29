@@ -1,10 +1,10 @@
 %{
 #include <iostream>
-using namespace std;
-#define YY_DECL extern "C" int yylex()
+using std::cout;
+using std::endl;
 %}
 
-%option noyywrap
+%option reentrant noyywrap header-file="./lex.yy.hpp"
 
 %%
 [ \t\n]            ;
@@ -50,3 +50,4 @@ using namespace std;
 "_"                { cout << "found " << yytext << endl; }
 
 %%
+
