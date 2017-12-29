@@ -7,7 +7,7 @@ using std::endl;
 #include "parser.tab.hpp"
 %}
 
-%option reentrant noyywrap header-file="./lex.yy.hpp" bison-bridge
+%option reentrant noyywrap header-file="./lex.yy.hpp"
 
 %%
 [ \t\n]            ;

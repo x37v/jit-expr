@@ -8,9 +8,8 @@
   }
 %}
 
-%define api.pure
-%lex-param {yyscan_t scanner}
-%parse-param {yyscan_t scanner}
+%pure-parser
+%parse-param { yyscan_t scanner }
 
 %union {
   //xnor::ASTNode * node;

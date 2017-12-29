@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <string>
-#include "lex.yy.h"
-#include "parser.tab.h"
+#include "lex.yy.hpp"
+#include "parser.tab.hpp"
 
 int main(int argc, char* argv[]) {
   yyscan_t scanner;
