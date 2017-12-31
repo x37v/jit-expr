@@ -1,28 +1,43 @@
-first: parser
+FILES = CMakeLists.txt Makefile configure src/
+NAME = name
+PROJECT_NAME = parser
+TARBALL = ${NAME}-${PROJECT_NAME}.tar.bz2
 
-OBJS = scanner.o \
-			 parser.o
+ERROR="<It seems that the build/ directory is missing\nMaybe you forgot to execute the configure ?>"
 
-CXX = clang++
-CPPFLAGS += -g -std=c++11 -Wall
-CFLAGS += -g
-LDFLAGS += -lfl
+.PHONY: check pit track
 
 
-%.o: %.cpp
-	$(CXX) -c $(CPPFLAGS) -o $@ $<
-
-scanner.cpp: scanner.ll parser.cpp #actually depends on the hpp but this will do it
-	flex -o $@ $^
-
-parser.cpp: parser.yy
-	bison -d -o $@ $^
-
-parser: $(OBJS) main.cpp
-	$(CXX) main.cpp -o $@ $(CPPFLAGS) $(LDFLAGS) $<
-
-test: parser
-	./parser examples.txt
+all:
+	@make -C build
 
 clean:
-	$(RM) -rf parser *.o parser.cpp parser.hpp scanner.cpp scanner.h
+	@echo "\033[33m< ---------------------- >\033[37m"
+	@echo "\033[33m<     Cleaning Parser    >\033[37m"
+	@echo "\033[33m< ---------------------- >\033[37m"
+	@rm -f *.dot
+	@if [ -e build/ ] ; then make -C build/ clean ; fi 1>/dev/null
+
+distclean: clean
+	@echo "\033[34m< Preparing directory for dist >\033[37m"
+	@if [ -e build/ ] ; then rm -fr build/ ; fi 1>/dev/null
+	@rm -frv track pit
+	@if test -e $(TARBALL) ; then rm -fr $(TARBALL) ; fi 1>/dev/null
+
+check: all
+	@echo "\033[33m< -------------------- >\033[37m"
+	@echo "\033[33m< Launching test_suite >\033[37m"
+	@echo "\033[33m< -------------------- >\033[37m"
+	@make -C check/
+
+dist: distclean
+	@mkdir ${NAME}
+	@cp -r $(FILES) ${NAME}
+	@tar cjvf $(TARBALL) ${NAME}
+	@rm -fr ${NAME}
+
+distcheck: dist
+	@tar -xjvf $(TARBALL)
+	@make -C ${NAME} check
+	@make distclean
+	@rm -fr ${NAME}
