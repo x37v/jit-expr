@@ -36,16 +36,17 @@
 %locations
 %defines
 %debug
-%define namespace "parse"
-%define parser_class_name "Parser"
+
+%define api.namespace {parse}
+%define parser_class_name {Parser}
+%define variant
+
 %parse-param { Driver &driver }
 %lex-param { Driver &driver }
 %error-verbose
 
-%union
-{
- /* YYLTYPE */
-}
+%token <float> FLOAT;
+%token <std::string> STRING;
 
 /* Tokens */
 %token TOK_EOF 0

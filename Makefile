@@ -41,3 +41,6 @@ distcheck: dist
 	@make -C ${NAME} check
 	@make distclean
 	@rm -fr ${NAME}
+
+test: all
+	cat examples.txt | ./parser

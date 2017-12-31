@@ -1,0 +1,90 @@
+#! /usr/bin/env sh
+
+echo "\033[33m -------------------------------------------\033[37m"
+echo "\033[33m|                    PARSER                 |\033[37m"
+echo "\033[33m|                  CONFIGURE                |\033[37m"
+echo "\033[33m -------------------------------------------\033[37m"
+
+
+# Function that calls CMake with the corrects CFLAGS
+call_CMake()
+{
+  cd build/
+  if [ "${1}" = "" ] ; then
+    cmake ../ -G"Unix Makefiles"
+  else
+    cmake ../ -DCMAKE_BUILD_TYPE=Debug  -G"Unix Makefiles"
+  fi;
+
+  # Checking for errors
+  if [ "$?" != "0" ] ; then
+    cd ../
+    rm -fr build/
+    echo
+    echo "\033[31m<< An error occured while configuring >>\033[37m"
+    echo "\033[31m<<        Please, report this bug     >>\033[37m"
+    echo
+    return "1"
+  fi;
+
+  cd ../
+  echo
+  echo "\033[32m<< Project is now ready to be built >>\033[37m"
+  echo "\033[32m     << Run \`make\` to continue >>\033[37m"
+}
+
+
+# Function that builds CFLAGS according to arguments
+parse_opt()
+{
+  DEBUG=""
+
+  for i in $@; do
+    case $i in
+      "--with-debug" )
+        DEBUG="YES";;
+      "--help" )
+        print_usage
+        return;;
+      * )
+        print_usage
+        return;;
+    esac
+  done
+
+  call_CMake "${DEBUG}"
+}
+
+
+# Print the Usage of the configure script
+print_usage()
+{
+  echo
+  echo "Configuring Parser project"
+  echo "Usage: ./configure [--with-debug] [--help]"
+  echo "  All the arguments are optionnals but if --help is given"
+  echo "the program exit, displaying this Usage."
+  echo "  If no argument is passed, Makefile will be generated with"
+  echo "default CFLAGS and no debug mode."
+  echo "  You can pass as much arguments as you like."
+  echo ""
+  echo "--help       - Display this Usage and exit program"
+  echo "--with-debug - Generate Makefile that will build the"
+  echo "               project with debugs CFLAGS (-g)."
+  echo
+}
+
+
+#
+# Check if build/ directory exists
+#
+if [ ! -e build ] ; then
+  mkdir -m 750 build/
+else
+  rm -fr build/*
+fi;
+
+#
+# Get_opt
+#
+parse_opt $@
