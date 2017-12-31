@@ -71,7 +71,8 @@
 %%
 
 start: 
-	  var | constant
+	  var { driver.ast_ = $1; }
+    | constant { driver.ast_ = $1; }
 	  ;
 
 var : VAR  { $$ = new xnor::ast::Variable($1); }

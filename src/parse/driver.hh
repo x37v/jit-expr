@@ -1,10 +1,10 @@
-
 #ifndef DRIVER_HH_
 # define DRIVER_HH_
 
-# include <string>
-# include <iostream>
-# include <fstream>
+#include <string>
+#include <iostream>
+#include <fstream>
+#include "ast.h"
 
 namespace parse
 {
@@ -19,13 +19,14 @@ namespace parse
             Driver();
             ~Driver();
 
-            int parse();
-            int parse_file(const std::string& path);
-            int parse_string(const std::string& value);
+            xnor::ast::Node * parse();
+            xnor::ast::Node * parse_file(const std::string& path);
+            xnor::ast::Node * parse_string(const std::string& value);
 
             void reset();
 
         private:
+            xnor::ast::Node * ast_ = nullptr;
             Scanner*      scanner_;
             Parser*       parser_;
             location*     location_;
