@@ -1,6 +1,7 @@
 #include "driver.hh"
 #include "parser.hh"
 #include "scanner.hh"
+#include <sstream>
 
 namespace parse
 {
@@ -29,19 +30,25 @@ namespace parse
     int Driver::parse()
     {
         scanner_->switch_streams(&std::cin, &std::cerr);
-        parser_->parse();
-        return 0;
+        return parser_->parse();
     }
 
-    int Driver::parse_file (std::string& path)
+    int Driver::parse_file (const std::string& path)
     {
         std::ifstream s(path.c_str(), std::ifstream::in);
         scanner_->switch_streams(&s, &std::cerr);
 
-        parser_->parse();
+        int ret = parser_->parse();
 
         s.close();
 
-        return 0;
+        return ret;
+    }
+
+    int Driver::parse_string(const std::string& value) {
+      std::stringstream s;
+      s << value;
+      scanner_->switch_streams(&s, &std::cerr);
+      return parser_->parse();
     }
 }

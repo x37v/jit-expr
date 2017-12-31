@@ -1,85 +1,85 @@
-expr $f1 + 1 \; $f1 - 1 \; $f1 * 2
-expr $s2[$f1]
-expr array1[$f1]
-expr array1[1] = $f1
-expr i = i + 1
-expr (a + b) / c
-expr i * 2 \; i = i + 1
-expr $s2[$f1]
-expr \$0-x[$f1]
-expr x\$0 \; y_\$0
-expr $f1 + 4
-expr $f1 * 4
-expr $f1 - 1
-expr $f1 / 10
-expr ~ $f1
-expr $f1 & 3
-expr $f1 << 1
-expr $f1 >> 2
-expr $f1 ^ 1
-expr $f1 | 3
-expr $f1 > 4
-expr $f1 < 4
-expr $f1 >= 1
-expr $f1 <= 10
-expr $f1 == 2
-expr $f1 != 2
-expr $f1 && 1
-expr $f1 || 0
-expr if($f1 > 0 \, $f1 * 10 \, $f1 - 1)
-expr if($f1 > 10 \, 10 \, if($f1 < -10 \, -10 \, $f1))
-expr if($f1 >= 0 \, 1 \, -1)
-expr random(10 \, 20)
-expr random(-100 \, 101)
-expr size("$s1") \;
-expr Sum("table" \, 3 \, 9) \; sum("table") \; size("table")
-expr pow($f1 \, 2)
-expr ln($f1) \; log($f1)
-expr fact($f1)
-expr log1p($f1)
-expr log10($f1)
-expr ldexp($f1 \, 3)
-expr exp($f1) \; expm1($f1)
-expr sqrt($f1)
-expr cbrt($f1)
-expr erf($f1) \; erfc($f1)
-expr sin($f1)
-expr cos($f1)
-expr tan($f1)
-expr asin($f1)
-expr acos($f1)
-expr tan($f1)
-expr asinh($f1)
-expr acosh($f1)
-expr atanh($f1)
-expr atan2($f1 \, $f2)
-expr max($f1 \, 0) \; min($f1 \, 0)
-expr copysign($f1 \, $f2)
-expr float($i1) / 10 \; float(5) / 10 \;
-expr isinf($f1) \; finite($f1)
-expr isnan($f1)
-expr int($f1) \; trunc($f1)
-expr rint($f1) \; round($f1) \; nearbyint($f1)
-expr ceil($f1) \; floor($f1)
-expr imodf($f1) \; modf($f1)
-expr abs($f1)
-expr fmod($f1 \, 4.1) \; remainder($f1 \, 4.1)
-expr log(-1)
-expr array2[inc - 1] = 1 / inc \; inc = inc + 1
-expr 1
-expr 2 + 3
-expr 8 / 3
-expr $f1 / 3
-expr $i1 / 3
-expr ($f1 + 2) + $i2
-expr float(8) / 3 \; 8./3
-expr cos(2 * 3.14159 * $f1 / 360) \; sin(2 * 3.14159* $f1 / 360)
-expr~ $v1 * pow($v2 / 127 \, 4)
-expr~ $v1 * $v2 \; if ($v2 > 0 \, 0 \, $v1*$v2)
-expr~ max(min($v1 \, $f2) \, -$f2)
-expr~ $v1 + $f2
-fexpr~ $x1[0] + $y1[-1]
-fexpr~ $x1 + $x1[$f2]
-expr 8./3
-fexpr~ $y1 + pr*($y2 - $y1) * dt \; $y2 + ($y1*(r -$y3) - $y2) * dt \; $y3 + ($y1*$y2 - b*$y3) * dt
-fexpr~ $x1 + $x1[$x2]
+$f1 + 1 \; $f1 - 1 \; $f1 * 2
+$s2[$f1]
+array1[$f1]
+array1[1] = $f1
+i = i + 1
+(a + b) / c
+i * 2 \; i = i + 1
+$s2[$f1]
+\$0-x[$f1]
+x\$0 \; y_\$0
+$f1 + 4
+$f1 * 4
+$f1 - 1
+$f1 / 10
+~ $f1
+$f1 & 3
+$f1 << 1
+$f1 >> 2
+$f1 ^ 1
+$f1 | 3
+$f1 > 4
+$f1 < 4
+$f1 >= 1
+$f1 <= 10
+$f1 == 2
+$f1 != 2
+$f1 && 1
+$f1 || 0
+if($f1 > 0 \, $f1 * 10 \, $f1 - 1)
+if($f1 > 10 \, 10 \, if($f1 < -10 \, -10 \, $f1))
+if($f1 >= 0 \, 1 \, -1)
+random(10 \, 20)
+random(-100 \, 101)
+size("$s1") \;
+Sum("table" \, 3 \, 9) \; sum("table") \; size("table")
+pow($f1 \, 2)
+ln($f1) \; log($f1)
+fact($f1)
+log1p($f1)
+log10($f1)
+ldexp($f1 \, 3)
+exp($f1) \; expm1($f1)
+sqrt($f1)
+cbrt($f1)
+erf($f1) \; erfc($f1)
+sin($f1)
+cos($f1)
+tan($f1)
+asin($f1)
+acos($f1)
+tan($f1)
+asinh($f1)
+acosh($f1)
+atanh($f1)
+atan2($f1 \, $f2)
+max($f1 \, 0) \; min($f1 \, 0)
+copysign($f1 \, $f2)
+float($i1) / 10 \; float(5) / 10 \;
+isinf($f1) \; finite($f1)
+isnan($f1)
+int($f1) \; trunc($f1)
+rint($f1) \; round($f1) \; nearbyint($f1)
+ceil($f1) \; floor($f1)
+imodf($f1) \; modf($f1)
+abs($f1)
+fmod($f1 \, 4.1) \; remainder($f1 \, 4.1)
+log(-1)
+array2[inc - 1] = 1 / inc \; inc = inc + 1
+1
+2 + 3
+8 / 3
+$f1 / 3
+$i1 / 3
+($f1 + 2) + $i2
+float(8) / 3 \; 8./3
+cos(2 * 3.14159 * $f1 / 360) \; sin(2 * 3.14159* $f1 / 360)
+$v1 * pow($v2 / 127 \, 4)
+$v1 * $v2 \; if ($v2 > 0 \, 0 \, $v1*$v2)
+max(min($v1 \, $f2) \, -$f2)
+$v1 + $f2
+$x1[0] + $y1[-1]
+$x1 + $x1[$f2]
+8./3
+$y1 + pr*($y2 - $y1) * dt \; $y2 + ($y1*(r -$y3) - $y2) * dt \; $y3 + ($y1*$y2 - b*$y3) * dt
+$x1 + $x1[$x2]

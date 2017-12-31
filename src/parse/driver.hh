@@ -20,7 +20,8 @@ namespace parse
             ~Driver();
 
             int parse();
-            int parse_file(std::string& path);
+            int parse_file(const std::string& path);
+            int parse_string(const std::string& value);
 
             void reset();
 

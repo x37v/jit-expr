@@ -13,6 +13,7 @@
   #include "location.hh"
   #include "position.hh"
   #include "ast.h"
+  #include <string>
 }
 
 %code provides
@@ -50,10 +51,10 @@
 %token <float> FLOAT;
 %token <int> INT;
 %token <std::string> STRING;
-%token <std::string> VAR_FLOAT VAR_INTEGER VAR_SYMBOL VAR_VECTOR VAR_INPUT VAR_OUTPUT VAR_DOLLAR;
+%token <std::string> VAR VAR_DOLLAR;
 %token <std::string> OPEN_PAREN CLOSE_PAREN
 
-%type <xnor::ast::Variable *> var
+%type <xnor::ast::Node *> var constant;
 
 /* Tokens */
 %token TOK_EOF 0
@@ -70,11 +71,15 @@
 %%
 
 start: 
-	  var
+	  var | constant
 	  ;
 
-var : VAR_FLOAT  { $$ = "asdf"; }
+var : VAR  { $$ = new xnor::ast::Variable($1); }
 	 ;
+
+constant : INT { $$ = new xnor::ast::Value<int>($1); }
+         | FLOAT { $$ = new xnor::ast::Value<float>($1); }
+         ;
 
 %%
 

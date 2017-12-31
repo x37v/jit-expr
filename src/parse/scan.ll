@@ -4,6 +4,7 @@
 #include "scanner.hh"
 #include "driver.hh"
 
+#include <string>
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -66,16 +67,11 @@ eol                ;
 "expr"             { cout << "found: " << yytext << endl; }
 "fexpr~"           { cout << "found: " << yytext << endl; }
 
-\$f[0-9]+          { yylval->build<std::string>() = std::string(yytext); return token::VAR_FLOAT; }
-\$i[0-9]+          { return token::VAR_INTEGER; }
-\$s[0-9]+          { return token::VAR_SYMBOL; }
-\$v[0-9]+          { return token::VAR_VECTOR; }
-\$x[0-9]+          { return token::VAR_INPUT; }
-\$y[0-9]+          { return token::VAR_OUTPUT; }
+\$[fisvxy][0-9]+   { yylval->build<std::string>() = std::string(yytext); return token::VAR; }
 \\\$[0-9]+         { return token::VAR_DOLLAR; }
 
--?[0-9]+\.[0-9]*   { return token::FLOAT; }
--?[0-9]+           { return token::INT; }
+-?[0-9]+\.[0-9]*   { yylval->build<float>() = std::stof(yytext); return token::FLOAT; }
+-?[0-9]+           { yylval->build<int>() = std::stoi(yytext); return token::INT; }
 [a-zA-Z0-9]+       { return token::STRING; }
 
 "["                { cout << "found open bracket: " << yytext << endl; }
@@ -102,14 +98,12 @@ eol                ;
 "\\,"              { cout << "found " << yytext << endl; }
 "\\;"              { cout << "found " << yytext << endl; }
 "_"                { cout << "found " << yytext << endl; }
-.                  { throw std::runtime_error("UNKNOWN TOKEN" + std::string(yytext)); }
 
 .             {
-                std::cerr << *driver.location_ << " Unexpected token : "
-                                              << *yytext << std::endl;
-                driver.error_ = (driver.error_ == 127 ? 127
-                                : driver.error_ + 1);
+                std::cerr << *driver.location_ << " Unexpected token : " << *yytext << std::endl;
+                driver.error_ = (driver.error_ == 127 ? 127 : driver.error_ + 1);
                 STEP ();
+                throw std::runtime_error("UNKNOWN TOKEN: " + std::string(yytext));
               }
 
 %%
