@@ -23,5 +23,15 @@ namespace ast {
   FunctionCall::FunctionCall(const std::string& name, const std::vector<Node*>& args) : mName(name), mArgs(args) {
     cout << "got function call: " << name << endl;
   }
+
+  ArrayAccess::ArrayAccess(const std::string& name, Node * accessor) :
+    mArrayName(name), mAccessor(accessor)
+  {
+  }
+
+  ArrayAccess::ArrayAccess(Variable * varNode, Node * accessor) :
+    mArrayVar(varNode), mAccessor(accessor)
+  {
+  }
 }
 }

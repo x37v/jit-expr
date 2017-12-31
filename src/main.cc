@@ -27,7 +27,10 @@ int main() {
   s = "~$f1";
   test(driver.parse_string(s));
 
-  s = "log10(234\\, 42)";
+  s = "log10(234\\, 42.0 + $f1)";
+  test(driver.parse_string(s));
+
+  s = "v34_asdf[$f1]";
   test(driver.parse_string(s));
 
   return 0;

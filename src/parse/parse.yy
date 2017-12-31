@@ -51,13 +51,14 @@
 
 %token <float> FLOAT
 %token <int> INT
-%token COMMA OPEN_PAREN CLOSE_PAREN
+%token COMMA OPEN_PAREN CLOSE_PAREN OPEN_BRACKET CLOSE_BRACKET
 %token <std::string> STRING
 %token <std::string> VAR VAR_DOLLAR
 %token <xnor::ast::BinaryOp::Op> BINARY_OP
 %token <xnor::ast::UnaryOp::Op> UNARY_OP
 
-%type <xnor::ast::Node *> var constant binary_op unary_op statement function_call
+%type <xnor::ast::Variable *> var
+%type <xnor::ast::Node *> constant binary_op unary_op statement function_call array_op
 %type <std::vector<xnor::ast::Node *>*> call_args
 
 /* Tokens */
@@ -80,6 +81,7 @@ statement:
     | binary_op { $$ = $1; }
     | unary_op { $$ = $1; }
     | function_call { $$ = $1; }
+    | array_op { $$ = $1; }
 	  ;
 
 var : VAR  { $$ = new xnor::ast::Variable($1); }
@@ -94,6 +96,10 @@ binary_op : statement BINARY_OP statement { $$ = new xnor::ast::BinaryOp($1, $2,
 
 unary_op : UNARY_OP statement { $$ = new xnor::ast::UnaryOp($1, $2); }
           ;
+
+array_op : STRING OPEN_BRACKET statement CLOSE_BRACKET { $$ = new xnor::ast::ArrayAccess($1, $3); }
+         | var OPEN_BRACKET statement CLOSE_BRACKET { $$ = new xnor::ast::ArrayAccess($1, $3); }
+         ;
 
 function_call : STRING OPEN_PAREN call_args CLOSE_PAREN { $$ = new xnor::ast::FunctionCall($1, *$3); }
          ;

@@ -76,5 +76,15 @@ namespace xnor {
         std::string mName;
         std::vector<Node *> mArgs;
     };
+
+    class ArrayAccess : public Node {
+      public:
+        ArrayAccess(const std::string& name, Node * accessor);
+        ArrayAccess(Variable * varNode, Node * accessor);
+      private:
+        std::string mArrayName;
+        Variable * mArrayVar = nullptr;
+        Node * mAccessor;
+    };
   }
 }
