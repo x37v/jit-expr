@@ -83,10 +83,10 @@ eol                ;
 
 -?[0-9]+\.[0-9]*   { yylval->build<float>() = std::stof(yytext); return token::FLOAT; }
 -?[0-9]+           { yylval->build<int>() = std::stoi(yytext); return token::INT; }
-[a-zA-z][a-zA-Z0-9_]+ { yylval->build<std::string>() = std::string(yytext); return token::STRING; }
+[a-zA-Z][_a-zA-Z0-9]* { yylval->build<std::string>() = std::string(yytext); return token::STRING; }
 
-"["                { cout << "found open bracket: " << yytext << endl; }
-"]"                { cout << "found close bracket: " << yytext << endl; }
+"["                { return token::OPEN_BRACKET; }
+"]"                { return token::CLOSE_BRACKET; }
 "("                { return token::OPEN_PAREN; }
 ")"                { return token::CLOSE_PAREN; }
 "+"                { BINOP(ADD); }
