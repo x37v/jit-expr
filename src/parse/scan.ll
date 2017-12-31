@@ -17,6 +17,17 @@ using std::endl;
     driver.location_->step ();                      \
   } while (0)
 
+#define BINOP(op)  \
+  do { \
+    yylval->build<xnor::ast::BinaryOp::Op>() = xnor::ast::BinaryOp::Op::op; return token::BINARY_OP;  \
+  } while(0);
+
+#define UNOP(op)  \
+  do { \
+    yylval->build<xnor::ast::UnaryOp::Op>() = xnor::ast::UnaryOp::Op::op; return token::UNARY_OP;  \
+  } while(0);
+
+
 #define COL(Col)				                    \
   driver.location_->columns (Col)
 
@@ -78,22 +89,26 @@ eol                ;
 "]"                { cout << "found close bracket: " << yytext << endl; }
 "("                { return token::OPEN_PAREN; }
 ")"                { return token::CLOSE_PAREN; }
-"+"                { cout << "found " << yytext << endl; }
-"-"                { cout << "found " << yytext << endl; }
-"*"                { cout << "found " << yytext << endl; }
-"/"                { cout << "found " << yytext << endl; }
-"="                { cout << "found " << yytext << endl; }
-">>"               { return token::SHIFT_RIGHT; }
-"<<"               { return token::SHIFT_LEFT; }
-">"                { cout << "found " << yytext << endl; }
-"<"                { cout << "found " << yytext << endl; }
-">="               { cout << "found " << yytext << endl; }
-"<="               { cout << "found " << yytext << endl; }
-"&"                { cout << "found " << yytext << endl; }
-"|"                { cout << "found " << yytext << endl; }
-"^"                { cout << "found " << yytext << endl; }
-"~"                { cout << "found " << yytext << endl; }
-"!"                { cout << "found " << yytext << endl; }
+"+"                { BINOP(ADD); }
+"-"                { BINOP(SUBTRACT); }
+"*"                { BINOP(MULTIPLY); }
+"/"                { BINOP(DIVIDE); }
+"="                { BINOP(COMP_EQUAL); }
+">"                { BINOP(COMP_GREATER); }
+"<"                { BINOP(COMP_LESS); }
+">="               { BINOP(COMP_GREATER_OR_EQUAL); }
+"<="               { BINOP(COMP_LESS_OR_EQUAL); }
+"||"               { BINOP(LOGICAL_OR); }
+"&&"               { BINOP(LOGICAL_AND); }
+">>"               { BINOP(SHIFT_RIGHT); }
+"<<"               { BINOP(SHIFT_LEFT); }
+"&"                { BINOP(BIT_AND); }
+"|"                { BINOP(BIT_OR); }
+"^"                { BINOP(BIT_XOR); }
+
+"~"                { UNOP(BIT_NOT); }
+"!"                { UNOP(LOGICAL_NOT); }
+
 "\""               { cout << "found " << yytext << endl; }
 "\\,"              { cout << "found " << yytext << endl; }
 "\\;"              { cout << "found " << yytext << endl; }

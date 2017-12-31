@@ -53,26 +53,24 @@
 %token <std::string> STRING;
 %token <std::string> VAR VAR_DOLLAR;
 %token <std::string> OPEN_PAREN CLOSE_PAREN
+%token <xnor::ast::BinaryOp::Op> BINARY_OP
+%token <xnor::ast::UnaryOp::Op> UNARY_OP
 
-%type <xnor::ast::Node *> var constant;
+%type <xnor::ast::Node *> var constant binary_op unary_op statement
 
 /* Tokens */
-%token TOK_EOF 0
-	PLUS "+"
-	MINUS "-"
-	MULTIPLY  "*"
-	SHIFT_LEFT "<<"
-	SHIFT_RIGHT ">>"
-;
+%token TOK_EOF 0;
 
 /* Entry point of grammar */
-%start start
+%start statement
 
 %%
 
-start: 
+statement: 
 	  var { driver.ast_ = $1; }
     | constant { driver.ast_ = $1; }
+    | binary_op { driver.ast_ = $1; }
+    | unary_op { driver.ast_ = $1; }
 	  ;
 
 var : VAR  { $$ = new xnor::ast::Variable($1); }
@@ -81,6 +79,12 @@ var : VAR  { $$ = new xnor::ast::Variable($1); }
 constant : INT { $$ = new xnor::ast::Value<int>($1); }
          | FLOAT { $$ = new xnor::ast::Value<float>($1); }
          ;
+
+binary_op : statement BINARY_OP statement { $$ = new xnor::ast::BinaryOp($1, $2, $3); }
+          ;
+
+unary_op : UNARY_OP statement { $$ = new xnor::ast::UnaryOp($1, $2); }
+          ;
 
 %%
 
