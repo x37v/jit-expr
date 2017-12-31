@@ -51,14 +51,15 @@
 
 %token <float> FLOAT
 %token <int> INT
-%token COMMA OPEN_PAREN CLOSE_PAREN OPEN_BRACKET CLOSE_BRACKET
+%token COMMA SEMICOLON OPEN_PAREN CLOSE_PAREN OPEN_BRACKET CLOSE_BRACKET ASSIGN
 %token <std::string> STRING
 %token <std::string> VAR VAR_DOLLAR
 %token <xnor::ast::BinaryOp::Op> BINARY_OP
 %token <xnor::ast::UnaryOp::Op> UNARY_OP
 
 %type <xnor::ast::Variable *> var
-%type <xnor::ast::Node *> constant binary_op unary_op statement function_call array_op
+%type <xnor::ast::ArrayAccess *> array_op
+%type <xnor::ast::Node *> constant binary_op unary_op statement function_call assign
 %type <std::vector<xnor::ast::Node *>*> call_args
 
 /* Tokens */
@@ -68,12 +69,17 @@
 %destructor {} <float>
 %destructor {} <int>
 
+%right ASSIGN
+
 /* Entry point of grammar */
-%start start
+%start statements
 
 %%
 
-start: statement { driver.ast_ = $1; } ;
+statements: statement { driver.add_tree($1); }
+          | statements SEMICOLON statement { driver.add_tree($3); }
+          | statements SEMICOLON { }
+          ;
 
 statement: 
 	  var { $$ = $1; }
@@ -82,13 +88,21 @@ statement:
     | unary_op { $$ = $1; }
     | function_call { $$ = $1; }
     | array_op { $$ = $1; }
+    | OPEN_PAREN statement CLOSE_PAREN { $$ = $2; }
+    | assign { $$ = $1; }
 	  ;
+
+assign :
+       STRING ASSIGN statement { $$ = new xnor::ast::ValueAssignment($1, $3); }
+       | array_op ASSIGN statement { $$ = new xnor::ast::ArrayAssignment($1, $3); }
+       ;
 
 var : VAR  { $$ = new xnor::ast::Variable($1); }
 	 ;
 
 constant : INT { $$ = new xnor::ast::Value<int>($1); }
          | FLOAT { $$ = new xnor::ast::Value<float>($1); }
+         | STRING { $$ = new xnor::ast::Value<std::string>($1); }
          ;
 
 binary_op : statement BINARY_OP statement { $$ = new xnor::ast::BinaryOp($1, $2, $3); }

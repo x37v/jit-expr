@@ -23,23 +23,23 @@ namespace parse
 
     void Driver::reset()
     {
-      if (ast_)
-        delete ast_;
-      ast_ = nullptr;
+      for (auto a: mTrees)
+        delete a;
+      mTrees.clear();
 
       delete location_;
       location_ = new location();
     }
 
-    xnor::ast::Node* Driver::parse()
+    TreeVector Driver::parse()
     {
       reset();
       scanner_->switch_streams(&std::cin, &std::cerr);
       parser_->parse();
-      return ast_;
+      return trees();
     }
 
-    xnor::ast::Node* Driver::parse_file (const std::string& path)
+    TreeVector Driver::parse_file (const std::string& path)
     {
       reset();
 
@@ -50,16 +50,19 @@ namespace parse
 
       s.close();
 
-      return ast_;
+      return trees();
     }
 
-    xnor::ast::Node* Driver::parse_string(const std::string& value) {
+    TreeVector Driver::parse_string(const std::string& value) {
       reset();
 
       std::stringstream s;
       s << value;
       scanner_->switch_streams(&s, &std::cerr);
       parser_->parse();
-      return ast_;
+      return trees();
     }
+
+    std::vector<xnor::ast::Node *> Driver::trees() const { return mTrees; }
+    void Driver::add_tree(xnor::ast::Node * root) { mTrees.push_back(root); }
 }

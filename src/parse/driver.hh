@@ -13,24 +13,30 @@ namespace parse
     class Scanner;
     class location;
 
+    typedef std::vector<xnor::ast::Node *> TreeVector;
     class Driver
     {
         public:
             Driver();
             ~Driver();
 
-            xnor::ast::Node * parse();
-            xnor::ast::Node * parse_file(const std::string& path);
-            xnor::ast::Node * parse_string(const std::string& value);
+            TreeVector parse();
+            TreeVector parse_file(const std::string& path);
+            TreeVector parse_string(const std::string& value);
+            TreeVector trees() const;
 
             void reset();
 
+        protected:
+            void add_tree(xnor::ast::Node * root);
+
         private:
-            xnor::ast::Node * ast_ = nullptr;
+            TreeVector mTrees;
             Scanner*      scanner_;
             Parser*       parser_;
             location*     location_;
             int           error_;
+
 
             /// Allows Parser and Scanner to access private attributes
             /// of the Driver class

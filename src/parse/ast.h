@@ -86,5 +86,21 @@ namespace xnor {
         Variable * mArrayVar = nullptr;
         Node * mAccessor;
     };
+
+    class ValueAssignment : public Node {
+      public:
+        ValueAssignment(const std::string& name, Node * node);
+      private:
+        std::string mValueName;
+        Node * mValueNode;
+    };
+
+    class ArrayAssignment : public Node {
+      public:
+        ArrayAssignment(ArrayAccess * array, Node * node);
+      private:
+        ArrayAccess * mArray;
+        Node * mValueNode;
+    };
   }
 }

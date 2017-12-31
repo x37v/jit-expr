@@ -89,11 +89,13 @@ eol                ;
 "]"                { return token::CLOSE_BRACKET; }
 "("                { return token::OPEN_PAREN; }
 ")"                { return token::CLOSE_PAREN; }
-"+"                { BINOP(ADD); }
+"="                { return token::ASSIGN; }
+"\+"                { BINOP(ADD); }
 "-"                { BINOP(SUBTRACT); }
-"*"                { BINOP(MULTIPLY); }
-"/"                { BINOP(DIVIDE); }
-"="                { BINOP(COMP_EQUAL); }
+"\*"                { BINOP(MULTIPLY); }
+"\/"                { BINOP(DIVIDE); }
+"=="               { BINOP(COMP_EQUAL); }
+"!="               { BINOP(COMP_NOT_EQUAL); }
 ">"                { BINOP(COMP_GREATER); }
 "<"                { BINOP(COMP_LESS); }
 ">="               { BINOP(COMP_GREATER_OR_EQUAL); }
@@ -111,7 +113,7 @@ eol                ;
 
 "\""               { cout << "found " << yytext << endl; }
 "\\,"              { return token::COMMA; }
-"\\;"              { cout << "found " << yytext << endl; }
+"\\;"              { return token::SEMICOLON; }
 
 .             {
                 std::cerr << *driver.location_ << " Unexpected token : " << *yytext << std::endl;

@@ -10,18 +10,14 @@ int main(int argc, char * argv[]) {
   if (argc != 2)
     throw std::runtime_error("must provide a file as an argument");
 
-  parse::Driver driver;
-
-  auto test = [](xnor::ast::Node * root) {
-    cout << "parse " << (root ? "success" : "fail") << endl;
-  };
-
   std::ifstream infile(argv[1]);
 
+  parse::Driver driver;
   std::string line;
   while(std::getline(infile, line)) {
     cout << "parsing " << line << endl;
-    test(driver.parse_string(line));
+    auto c = driver.parse_string(line).size();
+    cout << "parse " << (c ? "success" : "fail" ) << " trees: " << c << endl;
     cout << endl;
   }
 
