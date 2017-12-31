@@ -1,11 +1,10 @@
 first: parser
 
-OBJS = lex.yy.o \
-			 parser.tab.o
-
+OBJS = scanner.o \
+			 parser.o
 
 CXX = clang++
-CPPFLAGS += -g -std=c++11
+CPPFLAGS += -g -std=c++11 -Wall
 CFLAGS += -g
 LDFLAGS += -lfl
 
@@ -13,10 +12,10 @@ LDFLAGS += -lfl
 %.o: %.cpp
 	$(CXX) -c $(CPPFLAGS) -o $@ $<
 
-lex.yy.cpp: tokens.l parser.tab.cpp #actually depends on the hpp but this will do it
+scanner.cpp: scanner.ll parser.cpp #actually depends on the hpp but this will do it
 	flex -o $@ $^
 
-parser.tab.cpp: parser.y
+parser.cpp: parser.yy
 	bison -d -o $@ $^
 
 parser: $(OBJS) main.cpp
@@ -26,4 +25,4 @@ test: parser
 	./parser examples.txt
 
 clean:
-	$(RM) -rf parser lex.yy.* *.o parser.tab.*
+	$(RM) -rf parser *.o parser.cpp parser.hpp scanner.cpp scanner.h

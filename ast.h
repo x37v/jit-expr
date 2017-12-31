@@ -1,4 +1,5 @@
-#pragma once
+#ifndef XNOR_ASTNODE
+#define XNOR_ASTNODE
 
 namespace xnor {
   class ASTNode {
@@ -15,3 +16,5 @@ namespace xnor {
         T mValue;
     };
 }
+
+#endif

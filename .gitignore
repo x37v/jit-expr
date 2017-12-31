@@ -1,5 +1,9 @@
 parser
-lex.yy.*
+core
 *.o
 .gdb_history
-parser.tab.*
+stack.hh
+scanner.h
+scanner.cpp
+parser.hpp
+parser.cpp
