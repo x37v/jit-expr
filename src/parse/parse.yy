@@ -12,6 +12,7 @@
   #include "driver.hh"
   #include "location.hh"
   #include "position.hh"
+  #include "ast.h"
 }
 
 %code provides
@@ -39,28 +40,41 @@
 
 %define api.namespace {parse}
 %define parser_class_name {Parser}
-%define variant
+
+%define api.value.type variant
 
 %parse-param { Driver &driver }
 %lex-param { Driver &driver }
 %error-verbose
 
 %token <float> FLOAT;
+%token <int> INT;
 %token <std::string> STRING;
+%token <std::string> VAR_FLOAT VAR_INTEGER VAR_SYMBOL VAR_VECTOR VAR_INPUT VAR_OUTPUT VAR_DOLLAR;
+%token <std::string> OPEN_PAREN CLOSE_PAREN
+
+%type <xnor::ast::Variable *> var
 
 /* Tokens */
 %token TOK_EOF 0
+	PLUS "+"
+	MINUS "-"
+	MULTIPLY  "*"
+	SHIFT_LEFT "<<"
+	SHIFT_RIGHT ">>"
+;
 
 /* Entry point of grammar */
 %start start
 
 %%
 
-start:
-     /* empty */
-;
+start: 
+	  var
+	  ;
 
-
+var : VAR_FLOAT  { $$ = "asdf"; }
+	 ;
 
 %%
 

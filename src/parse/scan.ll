@@ -61,33 +61,34 @@ eol     [\n\r]+
 %}
 
 [ \t\n]            ;
+eol                ;
 "expr~"            { cout << "found: " << yytext << endl; }
 "expr"             { cout << "found: " << yytext << endl; }
 "fexpr~"           { cout << "found: " << yytext << endl; }
 
-\$f[0-9]+          { cout << "found float var: " << yytext << endl; }
-\$i[0-9]+          { cout << "found int var: " << yytext << endl; }
-\$s[0-9]+          { cout << "found sym var: " << yytext << endl; }
-\$v[0-9]+          { cout << "found vec var: " << yytext << endl; }
-\$x[0-9]+          { cout << "found input var: " << yytext << endl; }
-\$y[0-9]+          { cout << "found output var: " << yytext << endl; }
-\\\$[0-9]+         { cout << "found dollar var: " << yytext << endl; }
+\$f[0-9]+          { yylval->build<std::string>() = std::string(yytext); return token::VAR_FLOAT; }
+\$i[0-9]+          { return token::VAR_INTEGER; }
+\$s[0-9]+          { return token::VAR_SYMBOL; }
+\$v[0-9]+          { return token::VAR_VECTOR; }
+\$x[0-9]+          { return token::VAR_INPUT; }
+\$y[0-9]+          { return token::VAR_OUTPUT; }
+\\\$[0-9]+         { return token::VAR_DOLLAR; }
 
--?[0-9]+\.[0-9]*   { cout << "found a floating-point number:" << yytext << endl; return token::FLOAT; }
--?[0-9]+           { cout << "found an integer:" << yytext << endl; }
-[a-zA-Z0-9]+       { cout << "found a string: " << yytext << endl; }
+-?[0-9]+\.[0-9]*   { return token::FLOAT; }
+-?[0-9]+           { return token::INT; }
+[a-zA-Z0-9]+       { return token::STRING; }
 
 "["                { cout << "found open bracket: " << yytext << endl; }
 "]"                { cout << "found close bracket: " << yytext << endl; }
-"("                { cout << "found open paren: " << yytext << endl; }
-")"                { cout << "found close paren: " << yytext << endl; }
+"("                { return token::OPEN_PAREN; }
+")"                { return token::CLOSE_PAREN; }
 "+"                { cout << "found " << yytext << endl; }
 "-"                { cout << "found " << yytext << endl; }
 "*"                { cout << "found " << yytext << endl; }
 "/"                { cout << "found " << yytext << endl; }
 "="                { cout << "found " << yytext << endl; }
-">>"               { cout << "found " << yytext << endl; }
-"<<"               { cout << "found " << yytext << endl; }
+">>"               { return token::SHIFT_RIGHT; }
+"<<"               { return token::SHIFT_LEFT; }
 ">"                { cout << "found " << yytext << endl; }
 "<"                { cout << "found " << yytext << endl; }
 ">="               { cout << "found " << yytext << endl; }
