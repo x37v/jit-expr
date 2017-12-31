@@ -2,6 +2,7 @@
 
 #include <string>
 #include <iostream>
+#include <vector>
 
 namespace xnor {
   namespace ast {
@@ -66,6 +67,14 @@ namespace xnor {
         Node * mLeft;
         Op mOp;
         Node * mRight;
+    };
+
+    class FunctionCall : public Node {
+      public:
+        FunctionCall(const std::string& name, const std::vector<Node *>& args);
+      private:
+        std::string mName;
+        std::vector<Node *> mArgs;
     };
   }
 }

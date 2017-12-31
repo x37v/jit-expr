@@ -19,5 +19,9 @@ namespace ast {
   BinaryOp::BinaryOp(Node * left, Op op, Node * right) : mLeft(left), mOp(op), mRight(right) {
     cout << "got binary op" << endl;
   }
+
+  FunctionCall::FunctionCall(const std::string& name, const std::vector<Node*>& args) : mName(name), mArgs(args) {
+    cout << "got function call: " << name << endl;
+  }
 }
 }

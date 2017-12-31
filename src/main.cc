@@ -27,5 +27,8 @@ int main() {
   s = "~$f1";
   test(driver.parse_string(s));
 
+  s = "log10(234\\, 42)";
+  test(driver.parse_string(s));
+
   return 0;
 }

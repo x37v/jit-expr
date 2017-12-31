@@ -14,6 +14,7 @@
   #include "position.hh"
   #include "ast.h"
   #include <string>
+  #include <vector>
 }
 
 %code provides
@@ -48,29 +49,37 @@
 %lex-param { Driver &driver }
 %error-verbose
 
-%token <float> FLOAT;
-%token <int> INT;
-%token <std::string> STRING;
-%token <std::string> VAR VAR_DOLLAR;
-%token <std::string> OPEN_PAREN CLOSE_PAREN
+%token <float> FLOAT
+%token <int> INT
+%token COMMA OPEN_PAREN CLOSE_PAREN
+%token <std::string> STRING
+%token <std::string> VAR VAR_DOLLAR
 %token <xnor::ast::BinaryOp::Op> BINARY_OP
 %token <xnor::ast::UnaryOp::Op> UNARY_OP
 
-%type <xnor::ast::Node *> var constant binary_op unary_op statement
+%type <xnor::ast::Node *> var constant binary_op unary_op statement function_call
+%type <std::vector<xnor::ast::Node *>*> call_args
 
 /* Tokens */
 %token TOK_EOF 0;
 
+%destructor {} <std::string>
+%destructor {} <float>
+%destructor {} <int>
+
 /* Entry point of grammar */
-%start statement
+%start start
 
 %%
 
+start: statement { driver.ast_ = $1; } ;
+
 statement: 
-	  var { driver.ast_ = $1; }
-    | constant { driver.ast_ = $1; }
-    | binary_op { driver.ast_ = $1; }
-    | unary_op { driver.ast_ = $1; }
+	  var { $$ = $1; }
+    | constant { $$ = $1; }
+    | binary_op { $$ = $1; }
+    | unary_op { $$ = $1; }
+    | function_call { $$ = $1; }
 	  ;
 
 var : VAR  { $$ = new xnor::ast::Variable($1); }
@@ -84,6 +93,14 @@ binary_op : statement BINARY_OP statement { $$ = new xnor::ast::BinaryOp($1, $2,
           ;
 
 unary_op : UNARY_OP statement { $$ = new xnor::ast::UnaryOp($1, $2); }
+          ;
+
+function_call : STRING OPEN_PAREN call_args CLOSE_PAREN { $$ = new xnor::ast::FunctionCall($1, *$3); }
+         ;
+
+call_args :  { $$ = new std::vector<xnor::ast::Node *>(); } 
+          | statement { $$ = new std::vector<xnor::ast::Node *>(); $$->push_back($1); }
+          | call_args COMMA statement { $$ = $1; $1->push_back($3); }
           ;
 
 %%

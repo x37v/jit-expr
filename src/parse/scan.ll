@@ -83,7 +83,7 @@ eol                ;
 
 -?[0-9]+\.[0-9]*   { yylval->build<float>() = std::stof(yytext); return token::FLOAT; }
 -?[0-9]+           { yylval->build<int>() = std::stoi(yytext); return token::INT; }
-[a-zA-Z0-9]+       { return token::STRING; }
+[a-zA-z][a-zA-Z0-9_]+ { yylval->build<std::string>() = std::string(yytext); return token::STRING; }
 
 "["                { cout << "found open bracket: " << yytext << endl; }
 "]"                { cout << "found close bracket: " << yytext << endl; }
@@ -110,9 +110,8 @@ eol                ;
 "!"                { UNOP(LOGICAL_NOT); }
 
 "\""               { cout << "found " << yytext << endl; }
-"\\,"              { cout << "found " << yytext << endl; }
+"\\,"              { return token::COMMA; }
 "\\;"              { cout << "found " << yytext << endl; }
-"_"                { cout << "found " << yytext << endl; }
 
 .             {
                 std::cerr << *driver.location_ << " Unexpected token : " << *yytext << std::endl;
