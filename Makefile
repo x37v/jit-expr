@@ -43,4 +43,4 @@ distcheck: dist
 	@rm -fr ${NAME}
 
 test: all
-	cat examples.txt | ./parser
+	./parser examples.txt

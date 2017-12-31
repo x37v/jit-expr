@@ -2,36 +2,28 @@
 #include <string>
 
 #include <iostream>
+#include <fstream>
 using std::cout;
 using std::endl;
 
-int main() {
+int main(int argc, char * argv[]) {
+  if (argc != 2)
+    throw std::runtime_error("must provide a file as an argument");
+
   parse::Driver driver;
-  std::string s = "$f1";
 
   auto test = [](xnor::ast::Node * root) {
     cout << "parse " << (root ? "success" : "fail") << endl;
   };
 
-  test(driver.parse_string(s));
+  std::ifstream infile(argv[1]);
 
-  s = "1";
-  test(driver.parse_string(s));
-
-  s = "01.234";
-  test(driver.parse_string(s));
-
-  s = "01.234 * $f1";
-  test(driver.parse_string(s));
-
-  s = "~$f1";
-  test(driver.parse_string(s));
-
-  s = "log10(234\\, 42.0 + $f1)";
-  test(driver.parse_string(s));
-
-  s = "v34_asdf[$f1]";
-  test(driver.parse_string(s));
+  std::string line;
+  while(std::getline(infile, line)) {
+    cout << "parsing " << line << endl;
+    test(driver.parse_string(line));
+    cout << endl;
+  }
 
   return 0;
 }
