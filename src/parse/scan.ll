@@ -80,11 +80,11 @@ eol                ;
 
 \$[fiv][0-9]+      { yylval->build<std::string>() = std::string(yytext); return token::VAR; }
 \$[xys][0-9]+      { yylval->build<std::string>() = std::string(yytext); return token::VAR_INDEXED; }
-\\\$[0-9]+         { return token::VAR_DOLLAR; }
+\\\$[0-9]+         { yylval->build<std::string>() = std::string(yytext); return token::VAR_DOLLAR; }
 
--?[0-9]+\.[0-9]*   { yylval->build<float>() = std::stof(yytext); return token::FLOAT; }
--?[0-9]+           { yylval->build<int>() = std::stoi(yytext); return token::INT; }
-[a-zA-Z][_a-zA-Z0-9]* { yylval->build<std::string>() = std::string(yytext); return token::STRING; }
+-?[0-9]+\.[0-9]*      { yylval->build<float>() = std::stof(yytext); return token::FLOAT; }
+-?[0-9]+              { yylval->build<int>() = std::stoi(yytext); return token::INT; }
+[a-zA-Z]([_a-zA-Z0-9]|\\\$[0-9]+)* { yylval->build<std::string>() = std::string(yytext); return token::STRING; }
 
 "["                { return token::OPEN_BRACKET; }
 "]"                { return token::CLOSE_BRACKET; }

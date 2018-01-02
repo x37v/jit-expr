@@ -105,6 +105,7 @@ var : VAR  { $$ = new xnor::ast::Variable($1); }
 constant : INT { $$ = new xnor::ast::Value<int>($1); }
          | FLOAT { $$ = new xnor::ast::Value<float>($1); }
          | STRING { $$ = new xnor::ast::Value<std::string>($1); }
+         | VAR_DOLLAR { $$ = new xnor::ast::Value<std::string>($1); }
          ;
 
 binary_op : statement BINARY_OP statement { $$ = new xnor::ast::BinaryOp($1, $2, $3); }

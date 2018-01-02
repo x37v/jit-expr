@@ -32,7 +32,6 @@ namespace ast {
   ArrayAccess::ArrayAccess(Variable * varNode, Node * accessor) :
     mArrayVar(varNode), mAccessor(accessor)
   {
-    cout << "assign to array " << endl;
   }
 
   ValueAssignment::ValueAssignment(const std::string& name, Node * node) : mValueName(name), mValueNode(node)
@@ -42,6 +41,7 @@ namespace ast {
 
   ArrayAssignment::ArrayAssignment(ArrayAccess * array, Node * node) : mArray(array), mValueNode(node)
   {
+    cout << "assign to array " << endl;
   }
 }
 }

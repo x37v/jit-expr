@@ -13,6 +13,14 @@ namespace xnor {
 
     class Variable : public Node {
       public:
+        enum class VarType {
+          FLOAT,
+          INT,
+          SYMBOL,
+          VECTOR,
+          INPUT,
+          OUTPUT
+        };
         Variable(const std::string& n);
       private:
         std::string mName;
@@ -33,7 +41,8 @@ namespace xnor {
       public:
         enum class Op {
           BIT_NOT,
-          LOGICAL_NOT
+          LOGICAL_NOT,
+          NEGATE
         };
         UnaryOp(Op op, Node * node);
       private:
