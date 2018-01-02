@@ -91,26 +91,27 @@ eol                ;
 "("                { return token::OPEN_PAREN; }
 ")"                { return token::CLOSE_PAREN; }
 "="                { return token::ASSIGN; }
-"\+"                { BINOP(ADD); }
+"\+"               { return token::ADD; }
 "-"                { return token::NEG; }
-"\*"                { BINOP(MULTIPLY); }
-"\/"                { BINOP(DIVIDE); }
-"=="               { BINOP(COMP_EQUAL); }
-"!="               { BINOP(COMP_NOT_EQUAL); }
-">"                { BINOP(COMP_GREATER); }
-"<"                { BINOP(COMP_LESS); }
-">="               { BINOP(COMP_GREATER_OR_EQUAL); }
-"<="               { BINOP(COMP_LESS_OR_EQUAL); }
-"||"               { BINOP(LOGICAL_OR); }
-"&&"               { BINOP(LOGICAL_AND); }
-">>"               { BINOP(SHIFT_RIGHT); }
-"<<"               { BINOP(SHIFT_LEFT); }
-"&"                { BINOP(BIT_AND); }
-"|"                { BINOP(BIT_OR); }
-"^"                { BINOP(BIT_XOR); }
+"\*"               { return token::MULTIPLY; }
+"\/"               { return token::DIVIDE; }
+"=="               { return token::COMP_EQUAL; }
+"!="               { return token::COMP_NOT_EQUAL; }
+">"                { return token::COMP_GREATER; }
+"<"                { return token::COMP_LESS; }
+">="               { return token::COMP_GREATER_OR_EQUAL; }
+"<="               { return token::COMP_LESS_OR_EQUAL; }
+"||"               { return token::LOGICAL_OR; }
+"&&"               { return token::LOGICAL_AND; }
+">>"               { return token::SHIFT_RIGHT; }
+"<<"               { return token::SHIFT_LEFT; }
 
-"~"                { UNOP(BIT_NOT); }
-"!"                { UNOP(LOGICAL_NOT); }
+"&"                { return token::BIT_AND; }
+"|"                { return token::BIT_OR; }
+"^"                { return token::BIT_XOR; }
+
+"~"                { return token::UNOP_BIT_NOT; }
+"!"                { return token::UNOP_LOGICAL_NOT; }
 
 "\""               { cout << "found " << yytext << endl; }
 "\\,"              { return token::COMMA; }
