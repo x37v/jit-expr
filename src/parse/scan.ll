@@ -78,7 +78,8 @@ eol                ;
 "expr"             { cout << "found: " << yytext << endl; }
 "fexpr~"           { cout << "found: " << yytext << endl; }
 
-\$[fisvxy][0-9]+   { yylval->build<std::string>() = std::string(yytext); return token::VAR; }
+\$[fiv][0-9]+      { yylval->build<std::string>() = std::string(yytext); return token::VAR; }
+\$[xys][0-9]+      { yylval->build<std::string>() = std::string(yytext); return token::VAR_INDEXED; }
 \\\$[0-9]+         { return token::VAR_DOLLAR; }
 
 -?[0-9]+\.[0-9]*   { yylval->build<float>() = std::stof(yytext); return token::FLOAT; }
@@ -91,7 +92,7 @@ eol                ;
 ")"                { return token::CLOSE_PAREN; }
 "="                { return token::ASSIGN; }
 "\+"                { BINOP(ADD); }
-"-"                { BINOP(SUBTRACT); }
+"-"                { return token::NEG; }
 "\*"                { BINOP(MULTIPLY); }
 "\/"                { BINOP(DIVIDE); }
 "=="               { BINOP(COMP_EQUAL); }
