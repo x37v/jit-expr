@@ -51,8 +51,9 @@
 
 %token <float> FLOAT
 %token <int> INT
-%token COMMA SEMICOLON OPEN_PAREN CLOSE_PAREN OPEN_BRACKET CLOSE_BRACKET ASSIGN NEG
+%token COMMA SEMICOLON OPEN_PAREN CLOSE_PAREN OPEN_BRACKET CLOSE_BRACKET ASSIGN QUOTE
 
+%token NEG
 %token ADD
 %token MULTIPLY
 %token DIVIDE
@@ -130,6 +131,7 @@ constant : INT { $$ = new xnor::ast::Value<int>($1); }
          | FLOAT { $$ = new xnor::ast::Value<float>($1); }
          | STRING { $$ = new xnor::ast::Value<std::string>($1); }
          | VAR_DOLLAR { $$ = new xnor::ast::Value<std::string>($1); }
+         | QUOTE STRING QUOTE { $$ = new xnor::ast::Value<std::string>("\"" + std::string($2) + "\""); }
          ;
 
 binary_op : 

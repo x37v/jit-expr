@@ -114,7 +114,7 @@ eol                ;
 "~"                { return token::UNOP_BIT_NOT; }
 "!"                { return token::UNOP_LOGICAL_NOT; }
 
-"\""               { cout << "found " << yytext << endl; }
+"\""               { return token::QUOTE; }
 "\\,"              { return token::COMMA; }
 "\\;"              { return token::SEMICOLON; }
 
