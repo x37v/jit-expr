@@ -43,4 +43,4 @@ distcheck: dist
 	@rm -fr ${NAME}
 
 test: all
-	./parser examples.txt
+	./parser examples.txt 2>&1 | less
