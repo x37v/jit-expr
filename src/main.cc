@@ -15,7 +15,7 @@ int main(int argc, char * argv[]) {
   parse::Driver driver;
   std::string line;
   while(std::getline(infile, line)) {
-    cout << "parsing " << line << endl;
+    cout << "parsing: " << line << endl;
     auto c = driver.parse_string(line).size();
     cout << "parse " << (c ? "success" : "fail" ) << " trees: " << c << endl;
     cout << endl;
