@@ -123,6 +123,7 @@ assign :
        ;
 
 var : VAR  { $$ = new xnor::ast::Variable($1); }
+    | VAR_INDEXED { $$ = new xnor::ast::Variable($1); }
     ;
 
 constant : INT { $$ = new xnor::ast::Value<int>($1); }
