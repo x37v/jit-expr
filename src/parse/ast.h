@@ -22,8 +22,11 @@ namespace xnor {
           OUTPUT
         };
         Variable(const std::string& n);
+        unsigned int input_index() const;
+        VarType type() const;
       private:
-        std::string mName;
+        unsigned int mInputIndex = 0;
+        VarType mType = VarType::FLOAT;
     };
 
     template <typename T>
