@@ -86,14 +86,6 @@
 %token TOK_EOF 0;
 
 
-%destructor {} <xnor::ast::NodePtr>
-%destructor {} <xnor::ast::VariablePtr>
-%destructor {} <xnor::ast::ArrayAccessPtr>
-%destructor {} <std::vector<xnor::ast::NodePtr>>
-%destructor {} <std::string>
-%destructor {} <float>
-%destructor {} <int>
-
 /* XXX NOT SURE ABOUT PRECEDENCE */
 %left COMP_EQUAL COMP_NOT_EQUAL COMP_GREATER COMP_LESS COMP_GREATER_OR_EQUAL COMP_LESS_OR_EQUAL
 %left LOGICAL_OR LOGICAL_AND
