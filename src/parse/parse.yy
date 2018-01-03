@@ -77,15 +77,19 @@
 %token <std::string> STRING
 %token <std::string> VAR VAR_DOLLAR VAR_INDEXED VAR_SYMBOL
 
-%type <xnor::ast::Variable *> var
-%type <xnor::ast::ArrayAccess *> array_op
-%type <xnor::ast::Node *> constant binary_op unary_op statement function_call assign quoted call_arg
-%type <std::vector<xnor::ast::Node *>> call_args
+%type <xnor::ast::VariablePtr> var
+%type <xnor::ast::ArrayAccessPtr> array_op
+%type <xnor::ast::NodePtr> constant binary_op unary_op statement function_call assign quoted call_arg
+%type <std::vector<xnor::ast::NodePtr>> call_args
 
 /* Tokens */
 %token TOK_EOF 0;
 
-%destructor {} <std::vector<xnor::ast::Node *>>
+
+%destructor {} <xnor::ast::NodePtr>
+%destructor {} <xnor::ast::VariablePtr>
+%destructor {} <xnor::ast::ArrayAccessPtr>
+%destructor {} <std::vector<xnor::ast::NodePtr>>
 %destructor {} <std::string>
 %destructor {} <float>
 %destructor {} <int>
@@ -121,67 +125,67 @@ statement:
     | array_op { $$ = $1; }
     | OPEN_PAREN statement CLOSE_PAREN { $$ = $2; }
     | assign { $$ = $1; }
-    | statement NEG statement { $$ = new xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::SUBTRACT, $3); }
-    | NEG statement %prec UMINUS { $$ = new xnor::ast::UnaryOp(xnor::ast::UnaryOp::Op::NEGATE, $2); }
+    | statement NEG statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::SUBTRACT, $3); }
+    | NEG statement %prec UMINUS { $$ = std::make_shared<xnor::ast::UnaryOp>(xnor::ast::UnaryOp::Op::NEGATE, $2); }
     ;
 
 assign :
-       STRING ASSIGN statement { $$ = new xnor::ast::ValueAssignment($1, $3); }
-       | array_op ASSIGN statement { $$ = new xnor::ast::ArrayAssignment($1, $3); }
+       STRING ASSIGN statement { $$ = std::make_shared<xnor::ast::ValueAssignment>($1, $3); }
+       | array_op ASSIGN statement { $$ = std::make_shared<xnor::ast::ArrayAssignment>($1, $3); }
        ;
 
-var : VAR  { $$ = new xnor::ast::Variable($1); }
-    | VAR_INDEXED { $$ = new xnor::ast::Variable($1); }
-    | VAR_SYMBOL { $$ = new xnor::ast::Variable($1); }
+var : VAR  { $$ = std::make_shared<xnor::ast::Variable>($1); }
+    | VAR_INDEXED { $$ = std::make_shared<xnor::ast::Variable>($1); }
+    | VAR_SYMBOL { $$ = std::make_shared<xnor::ast::Variable>($1); }
     ;
 
-constant : INT { $$ = new xnor::ast::Value<int>($1); }
-         | FLOAT { $$ = new xnor::ast::Value<float>($1); }
-         | STRING { $$ = new xnor::ast::Value<std::string>($1); }
-         | VAR_DOLLAR { $$ = new xnor::ast::Value<std::string>($1); }
+constant : INT { $$ = std::make_shared<xnor::ast::Value<int>>($1); }
+         | FLOAT { $$ = std::make_shared<xnor::ast::Value<float>>($1); }
+         | STRING { $$ = std::make_shared<xnor::ast::Value<std::string>>($1); }
+         | VAR_DOLLAR { $$ = std::make_shared<xnor::ast::Value<std::string>>($1); }
          ;
 
-quoted : QUOTE STRING QUOTE { $$ = new xnor::ast::Quoted($2); }
-       | QUOTE VAR_SYMBOL QUOTE { $$ = new xnor::ast::Quoted($2); }
+quoted : QUOTE STRING QUOTE { $$ = std::make_shared<xnor::ast::Quoted>($2); }
+       | QUOTE VAR_SYMBOL QUOTE { $$ = std::make_shared<xnor::ast::Quoted>($2); }
        ;
 
 binary_op : 
-          statement ADD statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::ADD, $3); }
-        | statement MULTIPLY statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::MULTIPLY, $3); }
-        | statement DIVIDE statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::DIVIDE, $3); }
-        | statement COMP_EQUAL statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::COMP_EQUAL, $3); }
-        | statement COMP_NOT_EQUAL statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::COMP_NOT_EQUAL, $3); }
-        | statement COMP_GREATER statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::COMP_GREATER, $3); }
-        | statement COMP_LESS statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::COMP_LESS, $3); }
-        | statement COMP_GREATER_OR_EQUAL statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::COMP_GREATER_OR_EQUAL, $3); }
-        | statement COMP_LESS_OR_EQUAL statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::COMP_LESS_OR_EQUAL, $3); }
-        | statement LOGICAL_OR statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::LOGICAL_OR, $3); }
-        | statement LOGICAL_AND statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::LOGICAL_AND, $3); }
-        | statement SHIFT_RIGHT statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::SHIFT_RIGHT, $3); }
-        | statement SHIFT_LEFT statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::SHIFT_LEFT, $3); }
-        | statement BIT_AND statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::BIT_AND, $3); }
-        | statement BIT_OR statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::BIT_OR, $3); }
-        | statement BIT_XOR statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::BIT_XOR, $3); }
+          statement ADD statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::ADD, $3); }
+        | statement MULTIPLY statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::MULTIPLY, $3); }
+        | statement DIVIDE statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::DIVIDE, $3); }
+        | statement COMP_EQUAL statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::COMP_EQUAL, $3); }
+        | statement COMP_NOT_EQUAL statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::COMP_NOT_EQUAL, $3); }
+        | statement COMP_GREATER statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::COMP_GREATER, $3); }
+        | statement COMP_LESS statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::COMP_LESS, $3); }
+        | statement COMP_GREATER_OR_EQUAL statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::COMP_GREATER_OR_EQUAL, $3); }
+        | statement COMP_LESS_OR_EQUAL statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::COMP_LESS_OR_EQUAL, $3); }
+        | statement LOGICAL_OR statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::LOGICAL_OR, $3); }
+        | statement LOGICAL_AND statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::LOGICAL_AND, $3); }
+        | statement SHIFT_RIGHT statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::SHIFT_RIGHT, $3); }
+        | statement SHIFT_LEFT statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::SHIFT_LEFT, $3); }
+        | statement BIT_AND statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::BIT_AND, $3); }
+        | statement BIT_OR statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::BIT_OR, $3); }
+        | statement BIT_XOR statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::BIT_XOR, $3); }
         ;
 
-unary_op : UNOP_LOGICAL_NOT statement { $$ = new xnor::ast::UnaryOp(xnor::ast::UnaryOp::Op::LOGICAL_NOT, $2); }
-         | UNOP_BIT_NOT statement { $$ = new xnor::ast::UnaryOp(xnor::ast::UnaryOp::Op::BIT_NOT, $2); }
+unary_op : UNOP_LOGICAL_NOT statement { $$ = std::make_shared<xnor::ast::UnaryOp>(xnor::ast::UnaryOp::Op::LOGICAL_NOT, $2); }
+         | UNOP_BIT_NOT statement { $$ = std::make_shared<xnor::ast::UnaryOp>(xnor::ast::UnaryOp::Op::BIT_NOT, $2); }
          ;
 
-array_op : STRING OPEN_BRACKET statement CLOSE_BRACKET { $$ = new xnor::ast::ArrayAccess($1, $3); }
-         | VAR_INDEXED OPEN_BRACKET statement CLOSE_BRACKET { $$ = new xnor::ast::ArrayAccess(new xnor::ast::Variable($1), $3); }
-         | VAR_SYMBOL OPEN_BRACKET statement CLOSE_BRACKET { $$ = new xnor::ast::ArrayAccess(new xnor::ast::Variable($1), $3); }
+array_op : STRING OPEN_BRACKET statement CLOSE_BRACKET { $$ = std::make_shared<xnor::ast::ArrayAccess>($1, $3); }
+         | VAR_INDEXED OPEN_BRACKET statement CLOSE_BRACKET { $$ = std::make_shared<xnor::ast::ArrayAccess>(std::make_shared<xnor::ast::Variable>($1), $3); }
+         | VAR_SYMBOL OPEN_BRACKET statement CLOSE_BRACKET { $$ = std::make_shared<xnor::ast::ArrayAccess>(std::make_shared<xnor::ast::Variable>($1), $3); }
          ;
 
-function_call : STRING OPEN_PAREN call_args CLOSE_PAREN { $$ = new xnor::ast::FunctionCall($1, $3); }
+function_call : STRING OPEN_PAREN call_args CLOSE_PAREN { $$ = std::make_shared<xnor::ast::FunctionCall>($1, $3); }
          ;
 
 call_arg : statement { $$ = $1; }
          | quoted { $$ = $1; }
          ;
 
-call_args :  { $$ = std::vector<xnor::ast::Node *>(); } 
-          | call_arg { $$ = std::vector<xnor::ast::Node *>(); $$.push_back($1); }
+call_args :  { $$ = std::vector<xnor::ast::NodePtr>(); } 
+          | call_arg { $$ = std::vector<xnor::ast::NodePtr>(); $$.push_back($1); }
           | call_args COMMA call_arg { $$ = $1; $1.push_back($3); }
           ;
 

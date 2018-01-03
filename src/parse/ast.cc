@@ -45,41 +45,41 @@ namespace ast {
   Quoted::Quoted(const std::string& value) : mStringValue(value) {
   }
 
-  Quoted::Quoted(Variable * var) : mQuotedVar(var) {
+  Quoted::Quoted(VariablePtr var) : mQuotedVar(var) {
     if (var == nullptr)
       throw std::runtime_error("variable cannot be null");
     if (var->type() != a::Variable::VarType::SYMBOL)
       throw std::runtime_error("quoted values can only be strings or symbol variables");
   }
 
-  UnaryOp::UnaryOp(Op op, Node * node) : mOp(op), mNode(node) {
+  UnaryOp::UnaryOp(Op op, NodePtr node) : mOp(op), mNode(node) {
     cout << "got unary op" << endl;
   }
 
-  BinaryOp::BinaryOp(Node * left, Op op, Node * right) : mLeft(left), mOp(op), mRight(right) {
+  BinaryOp::BinaryOp(NodePtr left, Op op, NodePtr right) : mLeft(left), mOp(op), mRight(right) {
     cout << "got binary op" << endl;
   }
 
-  FunctionCall::FunctionCall(const std::string& name, const std::vector<Node*>& args) : mName(name), mArgs(args) {
+  FunctionCall::FunctionCall(const std::string& name, const std::vector<NodePtr>& args) : mName(name), mArgs(args) {
     cout << "got function call: " << name << endl;
   }
 
-  ArrayAccess::ArrayAccess(const std::string& name, Node * accessor) :
+  ArrayAccess::ArrayAccess(const std::string& name, NodePtr accessor) :
     mArrayName(name), mAccessor(accessor)
   {
   }
 
-  ArrayAccess::ArrayAccess(Variable * varNode, Node * accessor) :
+  ArrayAccess::ArrayAccess(VariablePtr varNode, NodePtr accessor) :
     mArrayVar(varNode), mAccessor(accessor)
   {
   }
 
-  ValueAssignment::ValueAssignment(const std::string& name, Node * node) : mValueName(name), mValueNode(node)
+  ValueAssignment::ValueAssignment(const std::string& name, NodePtr node) : mValueName(name), mValueNode(node)
   {
     cout << "assigning to value " << name << endl;
   }
 
-  ArrayAssignment::ArrayAssignment(ArrayAccess * array, Node * node) : mArray(array), mValueNode(node)
+  ArrayAssignment::ArrayAssignment(ArrayAccessPtr array, NodePtr node) : mArray(array), mValueNode(node)
   {
     cout << "assign to array " << endl;
   }

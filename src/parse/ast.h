@@ -3,9 +3,17 @@
 #include <string>
 #include <iostream>
 #include <vector>
+#include <memory>
 
 namespace xnor {
   namespace ast {
+    class Node;
+    class Variable;
+    class ArrayAccess;
+    typedef std::shared_ptr<Node> NodePtr;
+    typedef std::shared_ptr<Variable> VariablePtr;
+    typedef std::shared_ptr<ArrayAccess> ArrayAccessPtr;
+
     class Node {
       public:
         virtual ~Node();
@@ -43,10 +51,10 @@ namespace xnor {
     class Quoted : public Node {
       public:
         Quoted(const std::string& value);
-        Quoted(Variable * var);
+        Quoted(VariablePtr var);
       private:
         std::string mStringValue;
-        Variable * mQuotedVar = nullptr;
+        VariablePtr mQuotedVar = nullptr;
     };
 
     class UnaryOp : public Node {
@@ -56,10 +64,10 @@ namespace xnor {
           LOGICAL_NOT,
           NEGATE
         };
-        UnaryOp(Op op, Node * node);
+        UnaryOp(Op op, NodePtr node);
       private:
         Op mOp;
-        Node * mNode;
+        NodePtr mNode;
     };
 
     class BinaryOp : public Node {
@@ -83,45 +91,46 @@ namespace xnor {
           BIT_OR,
           BIT_XOR
         };
-        BinaryOp(Node * left, Op op, Node * right);
+        BinaryOp(NodePtr left, Op op, NodePtr right);
       private:
-        Node * mLeft;
+        NodePtr mLeft;
         Op mOp;
-        Node * mRight;
+        NodePtr mRight;
     };
 
     class FunctionCall : public Node {
       public:
-        FunctionCall(const std::string& name, const std::vector<Node *>& args);
+        FunctionCall(const std::string& name, const std::vector<NodePtr>& args);
       private:
         std::string mName;
-        std::vector<Node *> mArgs;
+        std::vector<NodePtr> mArgs;
     };
 
     class ArrayAccess : public Node {
       public:
-        ArrayAccess(const std::string& name, Node * accessor);
-        ArrayAccess(Variable * varNode, Node * accessor);
+        ArrayAccess(const std::string& name, NodePtr accessor);
+        ArrayAccess(VariablePtr varNode, NodePtr accessor);
       private:
         std::string mArrayName;
-        Variable * mArrayVar = nullptr;
-        Node * mAccessor;
+        VariablePtr mArrayVar = nullptr;
+        NodePtr mAccessor;
     };
 
     class ValueAssignment : public Node {
       public:
-        ValueAssignment(const std::string& name, Node * node);
+        ValueAssignment(const std::string& name, NodePtr node);
       private:
         std::string mValueName;
-        Node * mValueNode;
+        NodePtr mValueNode;
     };
 
     class ArrayAssignment : public Node {
       public:
-        ArrayAssignment(ArrayAccess * array, Node * node);
+        ArrayAssignment(ArrayAccessPtr array, NodePtr node);
       private:
-        ArrayAccess * mArray;
-        Node * mValueNode;
+        ArrayAccessPtr mArray;
+        NodePtr mValueNode;
     };
+
   }
 }

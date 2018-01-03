@@ -23,8 +23,6 @@ namespace parse
 
     void Driver::reset()
     {
-      for (auto a: mTrees)
-        delete a;
       mTrees.clear();
 
       delete location_;
@@ -63,6 +61,6 @@ namespace parse
       return trees();
     }
 
-    std::vector<xnor::ast::Node *> Driver::trees() const { return mTrees; }
-    void Driver::add_tree(xnor::ast::Node * root) { mTrees.push_back(root); }
+    std::vector<xnor::ast::NodePtr> Driver::trees() const { return mTrees; }
+    void Driver::add_tree(xnor::ast::NodePtr root) { mTrees.push_back(root); }
 }

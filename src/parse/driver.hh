@@ -13,7 +13,7 @@ namespace parse
     class Scanner;
     class location;
 
-    typedef std::vector<xnor::ast::Node *> TreeVector;
+    typedef std::vector<xnor::ast::NodePtr> TreeVector;
     class Driver
     {
         public:
@@ -28,7 +28,7 @@ namespace parse
             void reset();
 
         protected:
-            void add_tree(xnor::ast::Node * root);
+            void add_tree(xnor::ast::NodePtr root);
 
         private:
             TreeVector mTrees;
