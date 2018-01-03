@@ -89,11 +89,17 @@
 %destructor {} <float>
 %destructor {} <int>
 
+/* XXX NOT SURE ABOUT PRECEDENCE */
+%left COMP_EQUAL COMP_NOT_EQUAL COMP_GREATER COMP_LESS COMP_GREATER_OR_EQUAL COMP_LESS_OR_EQUAL
+%left LOGICAL_OR LOGICAL_AND
 %left ADD NEG
 %left MULTIPLY DIVIDE
-%right OPEN_PAREN
+%left BIT_AND BIT_OR BIT_XOR
+%left SHIFT_RIGHT SHIFT_LEFT
+%right UNOP_BIT_NOT UNOP_LOGICAL_NOT
 %right ASSIGN
 %right UMINUS
+
 
 /* Entry point of grammar */
 %start statements
@@ -171,11 +177,15 @@ call_args :  { $$ = new std::vector<xnor::ast::Node *>(); }
 
 %%
 
+#include <sstream>
+
 namespace parse
 {
-    void Parser::error(const location&, const std::string& m)
-    {
-        std::cerr << *driver.location_ << ": " << m << std::endl;
-        driver.error_ = (driver.error_ == 127 ? 127 : driver.error_ + 1);
-    }
+  void Parser::error(const location&, const std::string& m) {
+    std::stringstream s;
+    s << *driver.location_;
+    //std::cerr << *driver.location_ << ": " << m << std::endl;
+    //driver.error_ = (driver.error_ == 127 ? 127 : driver.error_ + 1);
+    throw std::runtime_error(s.str() + ": " + m);
+  }
 }
