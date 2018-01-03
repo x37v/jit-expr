@@ -40,6 +40,15 @@ namespace xnor {
           T mValue;
       };
 
+    class Quoted : public Node {
+      public:
+        Quoted(const std::string& value);
+        Quoted(Variable * var);
+      private:
+        std::string mStringValue;
+        Variable * mQuotedVar = nullptr;
+    };
+
     class UnaryOp : public Node {
       public:
         enum class Op {

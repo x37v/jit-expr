@@ -75,11 +75,11 @@
 %token UNOP_LOGICAL_NOT
 
 %token <std::string> STRING
-%token <std::string> VAR VAR_DOLLAR VAR_INDEXED
+%token <std::string> VAR VAR_DOLLAR VAR_INDEXED VAR_SYMBOL
 
 %type <xnor::ast::Variable *> var
 %type <xnor::ast::ArrayAccess *> array_op
-%type <xnor::ast::Node *> constant binary_op unary_op statement function_call assign
+%type <xnor::ast::Node *> constant binary_op unary_op statement function_call assign quoted call_arg
 %type <std::vector<xnor::ast::Node *>*> call_args
 
 /* Tokens */
@@ -131,14 +131,18 @@ assign :
 
 var : VAR  { $$ = new xnor::ast::Variable($1); }
     | VAR_INDEXED { $$ = new xnor::ast::Variable($1); }
+    | VAR_SYMBOL { $$ = new xnor::ast::Variable($1); }
     ;
 
 constant : INT { $$ = new xnor::ast::Value<int>($1); }
          | FLOAT { $$ = new xnor::ast::Value<float>($1); }
          | STRING { $$ = new xnor::ast::Value<std::string>($1); }
          | VAR_DOLLAR { $$ = new xnor::ast::Value<std::string>($1); }
-         | QUOTE STRING QUOTE { $$ = new xnor::ast::Value<std::string>("\"" + std::string($2) + "\""); }
          ;
+
+quoted : QUOTE STRING QUOTE { $$ = new xnor::ast::Quoted($2); }
+       | QUOTE VAR_SYMBOL QUOTE { $$ = new xnor::ast::Quoted($2); }
+       ;
 
 binary_op : 
           statement ADD statement { $$ = new::xnor::ast::BinaryOp($1, xnor::ast::BinaryOp::Op::ADD, $3); }
@@ -165,14 +169,19 @@ unary_op : UNOP_LOGICAL_NOT statement { $$ = new xnor::ast::UnaryOp(xnor::ast::U
 
 array_op : STRING OPEN_BRACKET statement CLOSE_BRACKET { $$ = new xnor::ast::ArrayAccess($1, $3); }
          | VAR_INDEXED OPEN_BRACKET statement CLOSE_BRACKET { $$ = new xnor::ast::ArrayAccess(new xnor::ast::Variable($1), $3); }
+         | VAR_SYMBOL OPEN_BRACKET statement CLOSE_BRACKET { $$ = new xnor::ast::ArrayAccess(new xnor::ast::Variable($1), $3); }
          ;
 
 function_call : STRING OPEN_PAREN call_args CLOSE_PAREN { $$ = new xnor::ast::FunctionCall($1, *$3); }
          ;
 
+call_arg : statement { $$ = $1; }
+         | quoted { $$ = $1; }
+         ;
+
 call_args :  { $$ = new std::vector<xnor::ast::Node *>(); } 
-          | statement { $$ = new std::vector<xnor::ast::Node *>(); $$->push_back($1); }
-          | call_args COMMA statement { $$ = $1; $1->push_back($3); }
+          | call_arg { $$ = new std::vector<xnor::ast::Node *>(); $$->push_back($1); }
+          | call_args COMMA call_arg { $$ = $1; $1->push_back($3); }
           ;
 
 %%

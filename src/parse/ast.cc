@@ -7,7 +7,7 @@ using std::endl;
 namespace a = xnor::ast;
 
 namespace {
-  const std::regex var_regex("\\$([fisxy])(\\d*)");
+  const std::regex var_regex("\\$([fisvxy])(\\d*)");
   const std::map<std::string, a::Variable::VarType> var_type_map = {
     {"f", a::Variable::VarType::FLOAT},
     {"i", a::Variable::VarType::INT},
@@ -41,6 +41,16 @@ namespace ast {
   }
 
   Variable::VarType Variable::type() const { return mType; }
+
+  Quoted::Quoted(const std::string& value) : mStringValue(value) {
+  }
+
+  Quoted::Quoted(Variable * var) : mQuotedVar(var) {
+    if (var == nullptr)
+      throw std::runtime_error("variable cannot be null");
+    if (var->type() != a::Variable::VarType::SYMBOL)
+      throw std::runtime_error("quoted values can only be strings or symbol variables");
+  }
 
   UnaryOp::UnaryOp(Op op, Node * node) : mOp(op), mNode(node) {
     cout << "got unary op" << endl;

@@ -69,7 +69,7 @@ eol                ;
 "fexpr~"           { cout << "found: " << yytext << endl; }
 
 \$[fiv][0-9]+      { yylval->build<std::string>() = std::string(yytext); return token::VAR; }
-\$s[0-9]+          { yylval->build<std::string>() = std::string(yytext); return token::VAR_INDEXED; }
+\$s[0-9]*          { yylval->build<std::string>() = std::string(yytext); return token::VAR_SYMBOL; }
 \$[xy][0-9]*       { yylval->build<std::string>() = std::string(yytext); return token::VAR_INDEXED; }
 \\\$[0-9]+         { yylval->build<std::string>() = std::string(yytext); return token::VAR_DOLLAR; }
 
