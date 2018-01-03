@@ -80,11 +80,12 @@
 %type <xnor::ast::Variable *> var
 %type <xnor::ast::ArrayAccess *> array_op
 %type <xnor::ast::Node *> constant binary_op unary_op statement function_call assign quoted call_arg
-%type <std::vector<xnor::ast::Node *>*> call_args
+%type <std::vector<xnor::ast::Node *>> call_args
 
 /* Tokens */
 %token TOK_EOF 0;
 
+%destructor {} <std::vector<xnor::ast::Node *>>
 %destructor {} <std::string>
 %destructor {} <float>
 %destructor {} <int>
@@ -172,16 +173,16 @@ array_op : STRING OPEN_BRACKET statement CLOSE_BRACKET { $$ = new xnor::ast::Arr
          | VAR_SYMBOL OPEN_BRACKET statement CLOSE_BRACKET { $$ = new xnor::ast::ArrayAccess(new xnor::ast::Variable($1), $3); }
          ;
 
-function_call : STRING OPEN_PAREN call_args CLOSE_PAREN { $$ = new xnor::ast::FunctionCall($1, *$3); }
+function_call : STRING OPEN_PAREN call_args CLOSE_PAREN { $$ = new xnor::ast::FunctionCall($1, $3); }
          ;
 
 call_arg : statement { $$ = $1; }
          | quoted { $$ = $1; }
          ;
 
-call_args :  { $$ = new std::vector<xnor::ast::Node *>(); } 
-          | call_arg { $$ = new std::vector<xnor::ast::Node *>(); $$->push_back($1); }
-          | call_args COMMA call_arg { $$ = $1; $1->push_back($3); }
+call_args :  { $$ = std::vector<xnor::ast::Node *>(); } 
+          | call_arg { $$ = std::vector<xnor::ast::Node *>(); $$.push_back($1); }
+          | call_args COMMA call_arg { $$ = $1; $1.push_back($3); }
           ;
 
 %%
