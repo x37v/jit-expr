@@ -188,10 +188,9 @@ call_args :  { $$ = std::vector<xnor::ast::NodePtr>(); }
 namespace parse
 {
   void Parser::error(const location&, const std::string& m) {
+    driver.error_ = (driver.error_ == 127 ? 127 : driver.error_ + 1);
     std::stringstream s;
     s << *driver.location_;
-    //std::cerr << *driver.location_ << ": " << m << std::endl;
-    //driver.error_ = (driver.error_ == 127 ? 127 : driver.error_ + 1);
     throw std::runtime_error(s.str() + ": " + m);
   }
 }
