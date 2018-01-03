@@ -7,6 +7,8 @@ using std::endl;
 namespace a = xnor::ast;
 
 namespace {
+  using ot = a::Node::OutputType;
+
   const std::regex var_regex("\\$([fisvxy])(\\d*)");
   const std::map<std::string, a::Variable::VarType> var_type_map = {
     {"f", a::Variable::VarType::FLOAT},
@@ -15,6 +17,55 @@ namespace {
     {"v", a::Variable::VarType::VECTOR},
     {"x", a::Variable::VarType::INPUT},
     {"y", a::Variable::VarType::OUTPUT},
+  };
+
+  const std::map<std::string, std::vector<a::Node::OutputType> > function_arg_map = {
+    {"Sum", {ot::STRING, ot::NUMERIC, ot::NUMERIC}},
+    {"abs", {ot::NUMERIC}},
+    {"acos", {ot::NUMERIC}},
+    {"acosh", {ot::NUMERIC}},
+    {"asin", {ot::NUMERIC}},
+    {"asinh", {ot::NUMERIC}},
+    {"atan2", {ot::NUMERIC, ot::NUMERIC}},
+    {"atanh", {ot::NUMERIC}},
+    {"cbrt", {ot::NUMERIC}},
+    {"ceil", {ot::NUMERIC}},
+    {"copysign", {ot::NUMERIC, ot::NUMERIC}},
+    {"cos", {ot::NUMERIC}},
+    {"erf", {ot::NUMERIC}},
+    {"erfc", {ot::NUMERIC}},
+    {"exp", {ot::NUMERIC}},
+    {"expm1", {ot::NUMERIC}},
+    {"fact", {ot::NUMERIC}},
+    {"finite", {ot::NUMERIC}},
+    {"float", {ot::NUMERIC}},
+    {"floor", {ot::NUMERIC}},
+    {"fmod", {ot::NUMERIC, ot::NUMERIC}},
+    {"if", {ot::NUMERIC, ot::NUMERIC, ot::NUMERIC}},
+    {"imodf", {ot::NUMERIC}},
+    {"int", {ot::NUMERIC}},
+    {"isinf", {ot::NUMERIC}},
+    {"isnan", {ot::NUMERIC}},
+    {"ldexp", {ot::NUMERIC, ot::NUMERIC}},
+    {"ln", {ot::NUMERIC}},
+    {"log", {ot::NUMERIC}},
+    {"log10", {ot::NUMERIC}},
+    {"log1p", {ot::NUMERIC}},
+    {"max", {ot::NUMERIC, ot::NUMERIC}},
+    {"min", {ot::NUMERIC, ot::NUMERIC}},
+    {"modf", {ot::NUMERIC}},
+    {"nearbyint", {ot::NUMERIC}},
+    {"pow", {ot::NUMERIC, ot::NUMERIC}},
+    {"random", {ot::NUMERIC, ot::NUMERIC}},
+    {"remainder", {ot::NUMERIC, ot::NUMERIC}},
+    {"rint", {ot::NUMERIC}},
+    {"round", {ot::NUMERIC}},
+    {"sin", {ot::NUMERIC}},
+    {"size", {ot::STRING}},
+    {"sqrt", {ot::NUMERIC}},
+    {"sum", {ot::STRING}},
+    {"tan", {ot::NUMERIC}},
+    {"trunc", {ot::NUMERIC}},
   };
 }
 
@@ -66,6 +117,12 @@ namespace ast {
   }
 
   FunctionCall::FunctionCall(const std::string& name, const std::vector<NodePtr>& args) : mName(name), mArgs(args) {
+    auto it = function_arg_map.find(name);
+    if (it == function_arg_map.end())
+      throw std::runtime_error("function not found with name: " + name);
+    const auto& arg_types = it->second;
+    if (args.size() != arg_types.size())
+      throw std::runtime_error("function " + name + " expects " + std::to_string(arg_types.size()) + " arguments, got: " + std::to_string(args.size()));
     cout << "got function call: " << name << endl;
   }
 
