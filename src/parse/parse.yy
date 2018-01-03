@@ -126,10 +126,7 @@ assign :
        | array_op ASSIGN statement { $$ = std::make_shared<xnor::ast::ArrayAssignment>($1, $3); }
        ;
 
-var : VAR  { $$ = std::make_shared<xnor::ast::Variable>($1); }
-    | VAR_INDEXED { $$ = std::make_shared<xnor::ast::Variable>($1); }
-    | VAR_SYMBOL { $$ = std::make_shared<xnor::ast::Variable>($1); }
-    ;
+var : VAR  { $$ = std::make_shared<xnor::ast::Variable>($1); } ;
 
 constant : INT { $$ = std::make_shared<xnor::ast::Value<int>>($1); }
          | FLOAT { $$ = std::make_shared<xnor::ast::Value<float>>($1); }
@@ -166,6 +163,13 @@ unary_op : UNOP_LOGICAL_NOT statement { $$ = std::make_shared<xnor::ast::UnaryOp
 
 array_op : STRING OPEN_BRACKET statement CLOSE_BRACKET { $$ = std::make_shared<xnor::ast::ArrayAccess>($1, $3); }
          | VAR_INDEXED OPEN_BRACKET statement CLOSE_BRACKET { $$ = std::make_shared<xnor::ast::ArrayAccess>(std::make_shared<xnor::ast::Variable>($1), $3); }
+         | VAR_INDEXED {
+           //$x# -> $x#[0]
+           //$y# -> $y#[-1]
+           auto var = std::make_shared<xnor::ast::Variable>($1);
+           auto val = std::make_shared<xnor::ast::Value<int>>(var->type() == xnor::ast::Variable::VarType::OUTPUT ? -1 : 0);
+           $$ = std::make_shared<xnor::ast::ArrayAccess>(var, val);
+         }
          | VAR_SYMBOL OPEN_BRACKET statement CLOSE_BRACKET { $$ = std::make_shared<xnor::ast::ArrayAccess>(std::make_shared<xnor::ast::Variable>($1), $3); }
          ;
 

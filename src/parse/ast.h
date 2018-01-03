@@ -17,6 +17,11 @@ namespace xnor {
     class Node {
       public:
         virtual ~Node();
+        enum class OutputType {
+          NUMERIC,
+          STRING
+        };
+        virtual OutputType output_type() const;
     };
 
     class Variable : public Node {
@@ -52,6 +57,7 @@ namespace xnor {
       public:
         Quoted(const std::string& value);
         Quoted(VariablePtr var);
+        virtual OutputType output_type() const override;
       private:
         std::string mStringValue;
         VariablePtr mQuotedVar = nullptr;

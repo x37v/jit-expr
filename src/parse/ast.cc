@@ -23,6 +23,9 @@ namespace ast {
   Node::~Node() {
   }
 
+  //default is numeric output
+  Node::OutputType Node::output_type() const { return OutputType::NUMERIC; }
+
   Variable::Variable(const std::string& v) {
     std::cmatch m;
     if (!std::regex_match(v.c_str(), m, var_regex))
@@ -51,6 +54,8 @@ namespace ast {
     if (var->type() != a::Variable::VarType::SYMBOL)
       throw std::runtime_error("quoted values can only be strings or symbol variables");
   }
+
+  Node::OutputType Quoted::output_type() const { return Node::OutputType::STRING; }
 
   UnaryOp::UnaryOp(Op op, NodePtr node) : mOp(op), mNode(node) {
     cout << "got unary op" << endl;
