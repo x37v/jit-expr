@@ -5,9 +5,7 @@
 #include "driver.hh"
 
 #include <string>
-#include <iostream>
-using std::cout;
-using std::endl;
+#include <sstream>
 
 /*  Defines some macros to update locations */
 
@@ -64,9 +62,6 @@ eol     [\n\r]+
 
 [ \t\n]            ;
 eol                ;
-"expr~"            { cout << "found: " << yytext << endl; }
-"expr"             { cout << "found: " << yytext << endl; }
-"fexpr~"           { cout << "found: " << yytext << endl; }
 
 \$[fiv][0-9]+      { yylval->build<std::string>() = std::string(yytext); return token::VAR; }
 \$s[0-9]*          { yylval->build<std::string>() = std::string(yytext); return token::VAR_SYMBOL; }
@@ -109,10 +104,11 @@ eol                ;
 "\\;"              { return token::SEMICOLON; }
 
 .             {
-                std::cerr << *driver.location_ << " Unexpected token : " << *yytext << std::endl;
+                std::stringstream s;
+                s << *driver.location_ << " Unexpected token : " << *yytext;
                 driver.error_ = (driver.error_ == 127 ? 127 : driver.error_ + 1);
                 STEP ();
-                throw std::runtime_error("UNKNOWN TOKEN: " + std::string(yytext));
+                throw std::runtime_error(s.str());
               }
 
 %%
