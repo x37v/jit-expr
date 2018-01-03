@@ -17,16 +17,6 @@ using std::endl;
     driver.location_->step ();                      \
   } while (0)
 
-#define BINOP(op)  \
-  do { \
-    yylval->build<xnor::ast::BinaryOp::Op>() = xnor::ast::BinaryOp::Op::op; return token::BINARY_OP;  \
-  } while(0);
-
-#define UNOP(op)  \
-  do { \
-    yylval->build<xnor::ast::UnaryOp::Op>() = xnor::ast::UnaryOp::Op::op; return token::UNARY_OP;  \
-  } while(0);
-
 
 #define COL(Col)				                    \
   driver.location_->columns (Col)
