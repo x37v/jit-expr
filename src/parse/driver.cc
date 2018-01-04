@@ -24,6 +24,7 @@ namespace parse
     void Driver::reset()
     {
       mTrees.clear();
+      mInputs.clear();
 
       delete location_;
       location_ = new location();
@@ -61,6 +62,9 @@ namespace parse
       return trees();
     }
 
-    std::vector<xnor::ast::NodePtr> Driver::trees() const { return mTrees; }
-    void Driver::add_tree(xnor::ast::NodePtr root) { mTrees.push_back(root); }
+    parse::TreeVector Driver::trees() const { return mTrees; }
+    parse::InputVector Driver::inputs() const { return mInputs; }
+
+    void Driver::add_tree(xnor::ast::NodePtr v) { mTrees.push_back(v); }
+    void Driver::add_input(xnor::ast::VariablePtr v) { mInputs.push_back(v); }
 }

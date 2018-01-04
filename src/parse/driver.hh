@@ -1,5 +1,5 @@
 #ifndef DRIVER_HH_
-# define DRIVER_HH_
+#define DRIVER_HH_
 
 #include <string>
 #include <iostream>
@@ -14,6 +14,7 @@ namespace parse
     class location;
 
     typedef std::vector<xnor::ast::NodePtr> TreeVector;
+    typedef std::vector<xnor::ast::VariablePtr> InputVector;
     class Driver
     {
         public:
@@ -23,15 +24,20 @@ namespace parse
             TreeVector parse();
             TreeVector parse_file(const std::string& path);
             TreeVector parse_string(const std::string& value);
+
             TreeVector trees() const;
+            InputVector inputs() const;
 
             void reset();
 
         protected:
             void add_tree(xnor::ast::NodePtr root);
+            void add_input(xnor::ast::VariablePtr var);
 
         private:
             TreeVector mTrees;
+            InputVector mInputs;
+
             Scanner*      scanner_;
             Parser*       parser_;
             location*     location_;
