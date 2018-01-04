@@ -21,7 +21,7 @@ int main(int argc, char * argv[]) {
       auto t = driver.parse_string(line);
       for (auto c: t) {
         c->print([](std::string v, unsigned int d) {
-          for (auto i = 0; i < d; i++)
+          for (unsigned int i = 0; i < d; i++)
             cout << "  ";
           cout << v << endl;
         });
