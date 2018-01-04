@@ -38,6 +38,7 @@ namespace xnor {
           OUTPUT
         };
         Variable(const std::string& n);
+        virtual ~Variable();
         unsigned int input_index() const;
         VarType type() const;
         virtual void print(PrintFunc printfuc) const;

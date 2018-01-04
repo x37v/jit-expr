@@ -95,6 +95,10 @@ namespace ast {
       mInputIndex = std::stoi(i);
   }
 
+  Variable::~Variable() {
+  }
+
+
   Variable::VarType Variable::type() const { return mType; }
   void Variable::print(PrintFunc printfuc) const {
     std::string t;
@@ -213,7 +217,7 @@ namespace ast {
     if (args.size() != arg_types.size()) {
       throw std::runtime_error("function " + name + " expects " + std::to_string(arg_types.size()) + " arguments, got: " + std::to_string(args.size()));
     }
-    for (auto i = 0; i < args.size(); i++) {
+    for (unsigned int i = 0; i < args.size(); i++) {
       if (args.at(i)->output_type() != arg_types.at(i))
         throw std::runtime_error("function " + name + " arg " + std::to_string(i) + " type mismatch");
     }

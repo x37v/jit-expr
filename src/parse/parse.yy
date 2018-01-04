@@ -126,7 +126,12 @@ assign :
        | array_op ASSIGN statement { $$ = std::make_shared<xnor::ast::ArrayAssignment>($1, $3); }
        ;
 
-var : VAR  { $$ = std::make_shared<xnor::ast::Variable>($1); } ;
+var : VAR  {
+      xnor::ast::VariablePtr var = std::make_shared<xnor::ast::Variable>($1);
+      driver.add_input(var);
+      $$ = var;
+    }
+    ;
 
 constant : INT { $$ = std::make_shared<xnor::ast::Value<int>>($1); }
          | FLOAT { $$ = std::make_shared<xnor::ast::Value<float>>($1); }
@@ -135,7 +140,11 @@ constant : INT { $$ = std::make_shared<xnor::ast::Value<int>>($1); }
          ;
 
 quoted : QUOTE STRING QUOTE { $$ = std::make_shared<xnor::ast::Quoted>($2); }
-       | QUOTE VAR_SYMBOL QUOTE { $$ = std::make_shared<xnor::ast::Quoted>($2); }
+       | QUOTE VAR_SYMBOL QUOTE {
+            xnor::ast::VariablePtr var = std::make_shared<xnor::ast::Variable>($2);
+            driver.add_input(var);
+            $$ = std::make_shared<xnor::ast::Quoted>(var);
+          }
        ;
 
 binary_op : 
@@ -162,15 +171,24 @@ unary_op : UNOP_LOGICAL_NOT statement { $$ = std::make_shared<xnor::ast::UnaryOp
          ;
 
 array_op : STRING OPEN_BRACKET statement CLOSE_BRACKET { $$ = std::make_shared<xnor::ast::ArrayAccess>($1, $3); }
-         | VAR_INDEXED OPEN_BRACKET statement CLOSE_BRACKET { $$ = std::make_shared<xnor::ast::ArrayAccess>(std::make_shared<xnor::ast::Variable>($1), $3); }
+         | VAR_INDEXED OPEN_BRACKET statement CLOSE_BRACKET {
+            xnor::ast::VariablePtr var = std::make_shared<xnor::ast::Variable>($1);
+            driver.add_input(var);
+            $$ = std::make_shared<xnor::ast::ArrayAccess>(var, $3);
+         }
          | VAR_INDEXED {
            //$x# -> $x#[0]
            //$y# -> $y#[-1]
-           auto var = std::make_shared<xnor::ast::Variable>($1);
+           xnor::ast::VariablePtr var = std::make_shared<xnor::ast::Variable>($1);
+           driver.add_input(var);
            auto val = std::make_shared<xnor::ast::Value<int>>(var->type() == xnor::ast::Variable::VarType::OUTPUT ? -1 : 0);
            $$ = std::make_shared<xnor::ast::ArrayAccess>(var, val);
          }
-         | VAR_SYMBOL OPEN_BRACKET statement CLOSE_BRACKET { $$ = std::make_shared<xnor::ast::ArrayAccess>(std::make_shared<xnor::ast::Variable>($1), $3); }
+         | VAR_SYMBOL OPEN_BRACKET statement CLOSE_BRACKET {
+              xnor::ast::VariablePtr var = std::make_shared<xnor::ast::Variable>($1);
+              driver.add_input(var);
+              $$ = std::make_shared<xnor::ast::ArrayAccess>(var, $3);
+            }
          ;
 
 function_call : STRING OPEN_PAREN call_args CLOSE_PAREN { $$ = std::make_shared<xnor::ast::FunctionCall>($1, $3); }
