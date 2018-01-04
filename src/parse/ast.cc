@@ -2,8 +2,6 @@
 #include <iostream>
 #include <regex>
 
-using std::cout;
-using std::endl;
 namespace a = xnor::ast;
 
 namespace {
@@ -95,8 +93,6 @@ namespace ast {
     std::string i(m[2]);
     if (i.size())
       mInputIndex = std::stoi(i);
-
-    cout << "got " << v << endl;
   }
 
   Variable::VarType Variable::type() const { return mType; }
@@ -112,7 +108,7 @@ namespace ast {
       case VarType::VECTOR:
         t = "v"; break;
       case VarType::INPUT:
-        t = "s"; break;
+        t = "x"; break;
       case VarType::OUTPUT:
         t = "y"; break;
     }
@@ -146,7 +142,6 @@ namespace ast {
   }
 
   UnaryOp::UnaryOp(Op op, NodePtr node) : mOp(op), mNode(node) {
-    cout << "got unary op" << endl;
   }
 
   void UnaryOp::print(PrintFunc printfuc) const {
@@ -165,7 +160,6 @@ namespace ast {
   }
 
   BinaryOp::BinaryOp(NodePtr left, Op op, NodePtr right) : mLeft(left), mOp(op), mRight(right) {
-    cout << "got binary op" << endl;
   }
 
   void BinaryOp::print(PrintFunc printfuc) const {
@@ -217,16 +211,9 @@ namespace ast {
       throw std::runtime_error("function not found with name: " + name);
     const auto& arg_types = it->second;
     if (args.size() != arg_types.size()) {
-      for (auto a: args) {
-        a->print([](std::string v, unsigned int depth) {
-          for (auto i = 0; i < depth; i++)
-            cout << "\t";
-          cout << v << endl;
-        });
-      }
       throw std::runtime_error("function " + name + " expects " + std::to_string(arg_types.size()) + " arguments, got: " + std::to_string(args.size()));
     }
-    cout << "got function call: " << name << endl;
+    // XXX test types
   }
 
   void FunctionCall::print(PrintFunc printfuc) const {
@@ -258,7 +245,6 @@ namespace ast {
 
   ValueAssignment::ValueAssignment(const std::string& name, NodePtr node) : mValueName(name), mValueNode(node)
   {
-    cout << "assigning to value " << name << endl;
   }
 
   void ValueAssignment::print(PrintFunc printfuc) const {
@@ -268,7 +254,6 @@ namespace ast {
 
   ArrayAssignment::ArrayAssignment(ArrayAccessPtr array, NodePtr node) : mArray(array), mValueNode(node)
   {
-    cout << "assign to array " << endl;
   }
 
   void ArrayAssignment::print(PrintFunc printfuc) const {

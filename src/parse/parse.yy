@@ -180,9 +180,12 @@ call_arg : statement { $$ = $1; }
          | quoted { $$ = $1; }
          ;
 
-call_args :  { $$ = std::vector<xnor::ast::NodePtr>(); } 
-          | call_arg { $$ = std::vector<xnor::ast::NodePtr>(); $$.push_back($1); }
-          | call_args COMMA call_arg { $$ = $1; $1.push_back($3); }
+call_args :  {  } 
+          | call_arg { $$.push_back($1); }
+          | call_args COMMA call_arg {
+            $1.push_back($3);
+            $$ = $1;
+          }
           ;
 
 %%

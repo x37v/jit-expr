@@ -3,7 +3,6 @@
 #pragma once
 
 #include <string>
-#include <iostream>
 #include <vector>
 #include <memory>
 
@@ -50,9 +49,7 @@ namespace xnor {
     template <typename T>
       class Value : public Node {
         public:
-          Value(const T& v) : mValue(v) { 
-            std::cout << "got " << v << std::endl;
-          }
+          Value(const T& v) : mValue(v) { }
           T value() const { return mValue; }
           virtual void print(PrintFunc printfuc) const;
         private:

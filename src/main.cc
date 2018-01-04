@@ -18,8 +18,14 @@ int main(int argc, char * argv[]) {
   while(std::getline(infile, line)) {
     try { 
       cout << "parsing: " << line << endl;
-      auto c = driver.parse_string(line).size();
-      cout << "parse " << (c ? "success" : "fail" ) << " trees: " << c << endl;
+      auto t = driver.parse_string(line);
+      for (auto c: t) {
+        c->print([](std::string v, unsigned int d) {
+          for (auto i = 0; i < d; i++)
+            cout << "  ";
+          cout << v << endl;
+        });
+      }
       cout << endl;
     } catch (std::runtime_error& e) {
       cerr << "fail: " << e.what() << endl;
