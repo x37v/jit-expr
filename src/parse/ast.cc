@@ -213,7 +213,10 @@ namespace ast {
     if (args.size() != arg_types.size()) {
       throw std::runtime_error("function " + name + " expects " + std::to_string(arg_types.size()) + " arguments, got: " + std::to_string(args.size()));
     }
-    // XXX test types
+    for (auto i = 0; i < args.size(); i++) {
+      if (args.at(i)->output_type() != arg_types.at(i))
+        throw std::runtime_error("function " + name + " arg " + std::to_string(i) + " type mismatch");
+    }
   }
 
   void FunctionCall::print(PrintFunc printfuc) const {
