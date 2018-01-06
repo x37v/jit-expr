@@ -2,14 +2,6 @@
 #include "ast.h"
 #include <iostream>
 
-/*
-        c->print([](std::string v, unsigned int d) {
-          for (unsigned int i = 0; i < d; i++)
-            cout << "  ";
-          cout << v << endl;
-        });
-        */
-
 using std::cout;
 using std::endl;
 
@@ -143,10 +135,14 @@ namespace xnor {
   }
   
   void AstPrintVisitor::print(const std::string& v) {
+    for (unsigned int i = 0; i < mDepth; i++)
+      cout << "  ";
     cout << v << endl;
   }
 
   void AstPrintVisitor::print_child(xnor::ast::NodePtr c) {
+    mDepth++;
     c->accept(this);
+    mDepth--;
   }
 }
