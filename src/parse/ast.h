@@ -10,11 +10,34 @@ namespace xnor {
   namespace ast {
     class Node;
     class Variable;
+    template <typename T>
+      class Value;
+    class Quoted;
+    class UnaryOp;
+    class BinaryOp;
+    class FunctionCall;
     class ArrayAccess;
+    class ValueAssignment;
+    class ArrayAssignment;
     typedef std::shared_ptr<Node> NodePtr;
     typedef std::shared_ptr<Variable> VariablePtr;
     typedef std::shared_ptr<ArrayAccess> ArrayAccessPtr;
     typedef std::function<void(std::string v, unsigned int depth)> PrintFunc;
+
+    class Visitor {
+      public:
+        virtual void visit(Variable* v) = 0;
+        virtual void visit(Value<int>* v) = 0;
+        virtual void visit(Value<float>* v) = 0;
+        virtual void visit(Value<std::string>* v) = 0;
+        virtual void visit(Quoted* v) = 0;
+        virtual void visit(UnaryOp* v) = 0;
+        virtual void visit(BinaryOp* v) = 0;
+        virtual void visit(FunctionCall* v) = 0;
+        virtual void visit(ArrayAccess* v) = 0;
+        virtual void visit(ValueAssignment* v) = 0;
+        virtual void visit(ArrayAssignment* v) = 0;
+    };
 
     class Node {
       public:
@@ -25,9 +48,19 @@ namespace xnor {
         };
         virtual OutputType output_type() const;
         virtual void print(PrintFunc printfuc) const = 0;
+        virtual void accept(Visitor* v) = 0;
     };
 
-    class Variable : public Node {
+    template <typename T>
+      class VNode : public Node {
+        public:
+          virtual void accept(Visitor* v) override {
+            v->visit(static_cast<T *>(this));
+          };
+      };
+
+
+    class Variable : public VNode<Variable> {
       public:
         enum class VarType {
           FLOAT,
@@ -39,6 +72,7 @@ namespace xnor {
         };
         Variable(const std::string& n);
         virtual ~Variable();
+
         unsigned int input_index() const;
         VarType type() const;
         virtual void print(PrintFunc printfuc) const;
@@ -48,7 +82,7 @@ namespace xnor {
     };
 
     template <typename T>
-      class Value : public Node {
+      class Value : public VNode<Value<T>> {
         public:
           Value(const T& v) : mValue(v) { }
           T value() const { return mValue; }
@@ -65,18 +99,21 @@ namespace xnor {
         printfuc("const: " + std::to_string(mValue), 0);
       }
 
-    class Quoted : public Node {
+    class Quoted : public VNode<Quoted> {
       public:
         Quoted(const std::string& value);
         Quoted(VariablePtr var);
         virtual OutputType output_type() const override;
         virtual void print(PrintFunc printfuc) const;
+
+        std::string value() const { return mStringValue; }
+        VariablePtr variable() const { return mQuotedVar; }
       private:
         std::string mStringValue;
         VariablePtr mQuotedVar = nullptr;
     };
 
-    class UnaryOp : public Node {
+    class UnaryOp : public VNode<UnaryOp> {
       public:
         enum class Op {
           BIT_NOT,
@@ -85,12 +122,14 @@ namespace xnor {
         };
         UnaryOp(Op op, NodePtr node);
         virtual void print(PrintFunc printfuc) const;
+        Op op() const { return mOp; }
+        NodePtr node() const { return mNode; }
       private:
         Op mOp;
         NodePtr mNode;
     };
 
-    class BinaryOp : public Node {
+    class BinaryOp : public VNode<BinaryOp> {
       public:
         enum class Op {
           ADD,
@@ -113,50 +152,65 @@ namespace xnor {
         };
         BinaryOp(NodePtr left, Op op, NodePtr right);
         virtual void print(PrintFunc printfuc) const;
+
+        Op op() const { return mOp; }
+        NodePtr left() const { return mLeft; }
+        NodePtr right() const { return mRight; }
       private:
         NodePtr mLeft;
         Op mOp;
         NodePtr mRight;
     };
 
-    class FunctionCall : public Node {
+    class FunctionCall : public VNode<FunctionCall> {
       public:
         FunctionCall(const std::string& name, const std::vector<NodePtr>& args);
         virtual void print(PrintFunc printfuc) const;
+        std::string name() const { return mName; }
+        const std::vector<NodePtr>& args() const { return mArgs; }
       private:
         std::string mName;
         std::vector<NodePtr> mArgs;
     };
 
-    class ArrayAccess : public Node {
+    class ArrayAccess : public VNode<ArrayAccess> {
       public:
         ArrayAccess(const std::string& name, NodePtr accessor);
         ArrayAccess(VariablePtr varNode, NodePtr accessor);
         virtual void print(PrintFunc printfuc) const;
+
+        std::string name() const { return mArrayName; }
+        VariablePtr name_var() const { return mArrayVar; }
+        NodePtr index_node() const { return mAccessor; }
       private:
         std::string mArrayName;
         VariablePtr mArrayVar = nullptr;
         NodePtr mAccessor;
     };
 
-    class ValueAssignment : public Node {
+    class ValueAssignment : public VNode<ValueAssignment> {
       public:
         ValueAssignment(const std::string& name, NodePtr node);
         virtual void print(PrintFunc printfuc) const;
+
+        std::string value_name() const { return mValueName; }
+        NodePtr value_node() const { return mValueNode; }
       private:
         std::string mValueName;
         NodePtr mValueNode;
     };
 
-    class ArrayAssignment : public Node {
+    class ArrayAssignment : public VNode<ArrayAssignment> {
       public:
         ArrayAssignment(ArrayAccessPtr array, NodePtr node);
         virtual void print(PrintFunc printfuc) const;
+
+        ArrayAccessPtr array() const { return mArray; }
+        NodePtr value_node() const { return mValueNode; }
       private:
         ArrayAccessPtr mArray;
         NodePtr mValueNode;
     };
-
   }
 }
 #endif

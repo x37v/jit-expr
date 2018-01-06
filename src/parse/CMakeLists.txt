@@ -2,6 +2,7 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
+file(GLOB H_FILES *.h)
 file(GLOB HH_FILES *.hh)
 file(GLOB SRC_FILES *.cc)
 file(GLOB HXX_FILES *.hxx)
@@ -18,6 +19,7 @@ add_library(parse
             STATIC
             ${FLEX_Scanner_OUTPUTS}
             ${BISON_Parser_OUTPUTS}
+				${H_FILES}
             ${HH_FILES}
             ${SRC_FILES}
             ${HXX_FILES}

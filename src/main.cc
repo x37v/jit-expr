@@ -7,6 +7,8 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
+#include "print.h"
+
 int main(int argc, char * argv[]) {
   if (argc != 2)
     throw std::runtime_error("must provide a file as an argument");
@@ -20,11 +22,8 @@ int main(int argc, char * argv[]) {
       cout << "parsing: " << line << endl;
       auto t = driver.parse_string(line);
       for (auto c: t) {
-        c->print([](std::string v, unsigned int d) {
-          for (unsigned int i = 0; i < d; i++)
-            cout << "  ";
-          cout << v << endl;
-        });
+        xnor::AstPrintVisitor v;
+        c->accept(&v);
       }
       cout << endl;
     } catch (std::runtime_error& e) {
