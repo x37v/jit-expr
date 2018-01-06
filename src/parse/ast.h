@@ -51,6 +51,7 @@ namespace xnor {
         virtual void accept(Visitor* v) = 0;
     };
 
+    //templatized to with CRTP to auto gen accept method
     template <typename T>
       class VNode : public Node {
         public:
