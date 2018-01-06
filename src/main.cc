@@ -1,5 +1,6 @@
 #include "parse/driver.hh"
 #include "llvmcodegen/codegen.h"
+#include <llvm/Support/TargetSelect.h>
 #include <string>
 
 #include <iostream>
@@ -13,6 +14,10 @@ using std::endl;
 int main(int argc, char * argv[]) {
   if (argc != 2)
     throw std::runtime_error("must provide a file as an argument");
+  
+  llvm::InitializeNativeTarget();
+	llvm::InitializeNativeTargetAsmPrinter();
+	llvm::InitializeNativeTargetAsmParser();
 
   std::ifstream infile(argv[1]);
 
@@ -24,7 +29,10 @@ int main(int argc, char * argv[]) {
       auto t = driver.parse_string(line);
       for (auto c: t) {
         xnor::AstPrintVisitor v;
+        xnor::LLVMCodeGenVisitor cv;
         c->accept(&v);
+        c->accept(&cv);
+        cv.run();
       }
       cout << endl;
     } catch (std::runtime_error& e) {

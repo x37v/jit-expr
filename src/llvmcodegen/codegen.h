@@ -6,6 +6,8 @@
 namespace llvm {
   class Module;
   class Function; 
+  class Value;
+  class BasicBlock;
 }
 
 namespace xnor {
@@ -24,9 +26,13 @@ namespace xnor {
       virtual void visit(xnor::ast::ArrayAccess* v);
       virtual void visit(xnor::ast::ValueAssignment* v);
       virtual void visit(xnor::ast::ArrayAssignment* v);
+
+      void run();
     private:
       llvm::LLVMContext mContext;
       llvm::Module * mModule = nullptr;
       llvm::Function * mMainFunction;
+      llvm::Value * mValue;
+      llvm::BasicBlock * mBlock;
   };
 }

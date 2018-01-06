@@ -24,6 +24,7 @@ add_executable(
   print.cc
 )
 
-llvm_map_components_to_libnames(llvm_libs support core irreader mcjit linker)
+llvm_map_components_to_libnames(llvm_libs support core irreader mcjit linker
+native)
 
 target_link_libraries(../../parser parse ${llvm_libs})
