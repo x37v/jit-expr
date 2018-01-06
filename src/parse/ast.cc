@@ -92,13 +92,14 @@ namespace ast {
 
     std::string i(m[2]);
     if (i.size())
-      mInputIndex = std::stoi(i);
+      mInputIndex = std::stoi(i) - 1;
   }
 
   Variable::~Variable() {
   }
 
 
+  unsigned int Variable::input_index() const { return mInputIndex; }
   Variable::VarType Variable::type() const { return mType; }
   void Variable::print(PrintFunc printfuc) const {
     std::string t;
