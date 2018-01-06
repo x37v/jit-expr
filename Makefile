@@ -9,7 +9,7 @@ ERROR="<It seems that the build/ directory is missing\nMaybe you forgot to execu
 
 
 all:
-	@make -C build
+	@make -C build -j4
 
 clean:
 	@echo "\033[33m< ---------------------- >\033[37m"

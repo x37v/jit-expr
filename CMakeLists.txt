@@ -5,8 +5,8 @@ cmake_minimum_required(VERSION 2.6)
 project(parser)
 
 set(CXX "clang++")
-set(CMAKE_CXX_FLAGS_DEBUG "-Wall -W -Werror -pedantic -g -Wno-sign-compare")
-set(CMAKE_CXX_FLAGS "-O3 -Wall -W -pedantic")
+set(CMAKE_CXX_FLAGS_DEBUG "-Wall -W -Werror -pedantic -g -Wno-sign-compare -Wno-unused-parameter")
+set(CMAKE_CXX_FLAGS "-O3 -Wall -W -pedantic -Wno-unused-parameter")
 
 #Defines subdirectory
 add_subdirectory(src/)
