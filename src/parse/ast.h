@@ -47,7 +47,6 @@ namespace xnor {
           STRING
         };
         virtual OutputType output_type() const;
-        virtual void print(PrintFunc printfuc) const = 0;
         virtual void accept(Visitor* v) = 0;
     };
 
@@ -76,7 +75,6 @@ namespace xnor {
 
         unsigned int input_index() const;
         VarType type() const;
-        virtual void print(PrintFunc printfuc) const;
       private:
         unsigned int mInputIndex = 0;
         VarType mType = VarType::FLOAT;
@@ -87,25 +85,15 @@ namespace xnor {
         public:
           Value(const T& v) : mValue(v) { }
           T value() const { return mValue; }
-          virtual void print(PrintFunc printfuc) const;
         private:
           T mValue;
       };
-
-    template <>
-      void Value<std::string>::print(PrintFunc printfuc) const;
-
-    template <typename T>
-      void Value<T>::print(PrintFunc printfuc) const {
-        printfuc("const: " + std::to_string(mValue), 0);
-      }
 
     class Quoted : public VNode<Quoted> {
       public:
         Quoted(const std::string& value);
         Quoted(VariablePtr var);
         virtual OutputType output_type() const override;
-        virtual void print(PrintFunc printfuc) const;
 
         std::string value() const { return mStringValue; }
         VariablePtr variable() const { return mQuotedVar; }
@@ -122,7 +110,6 @@ namespace xnor {
           NEGATE
         };
         UnaryOp(Op op, NodePtr node);
-        virtual void print(PrintFunc printfuc) const;
         Op op() const { return mOp; }
         NodePtr node() const { return mNode; }
       private:
@@ -152,7 +139,6 @@ namespace xnor {
           BIT_XOR
         };
         BinaryOp(NodePtr left, Op op, NodePtr right);
-        virtual void print(PrintFunc printfuc) const;
 
         Op op() const { return mOp; }
         NodePtr left() const { return mLeft; }
@@ -166,7 +152,6 @@ namespace xnor {
     class FunctionCall : public VNode<FunctionCall> {
       public:
         FunctionCall(const std::string& name, const std::vector<NodePtr>& args);
-        virtual void print(PrintFunc printfuc) const;
         std::string name() const { return mName; }
         const std::vector<NodePtr>& args() const { return mArgs; }
       private:
@@ -178,7 +163,6 @@ namespace xnor {
       public:
         ArrayAccess(const std::string& name, NodePtr accessor);
         ArrayAccess(VariablePtr varNode, NodePtr accessor);
-        virtual void print(PrintFunc printfuc) const;
 
         std::string name() const { return mArrayName; }
         VariablePtr name_var() const { return mArrayVar; }
@@ -192,7 +176,6 @@ namespace xnor {
     class ValueAssignment : public VNode<ValueAssignment> {
       public:
         ValueAssignment(const std::string& name, NodePtr node);
-        virtual void print(PrintFunc printfuc) const;
 
         std::string value_name() const { return mValueName; }
         NodePtr value_node() const { return mValueNode; }
@@ -204,7 +187,6 @@ namespace xnor {
     class ArrayAssignment : public VNode<ArrayAssignment> {
       public:
         ArrayAssignment(ArrayAccessPtr array, NodePtr node);
-        virtual void print(PrintFunc printfuc) const;
 
         ArrayAccessPtr array() const { return mArray; }
         NodePtr value_node() const { return mValueNode; }
