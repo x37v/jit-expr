@@ -102,8 +102,10 @@ namespace xnor {
       case xnor::ast::BinaryOp::Op::MULTIPLY:
         mValue = mBuilder.CreateFMul(left, right, "multmp");
         return;
-        /*
       case xnor::ast::BinaryOp::Op::DIVIDE:
+        mValue = mBuilder.CreateFDiv(left, right, "divtmp");
+        return;
+        /*
       case xnor::ast::BinaryOp::Op::SHIFT_LEFT:
         op = "<<"; break;
       case xnor::ast::BinaryOp::Op::SHIFT_RIGHT:
@@ -228,6 +230,5 @@ namespace xnor {
     }
     return MangledName;
   }
-
 
 }
