@@ -74,5 +74,6 @@ namespace xnor {
       llvm::JITSymbol findMangledSymbol(const std::string& name);
       llvm::JITSymbol findSymbol(const std::string name);
       std::string mangle(const std::string& name);
+      llvm::Value * wrapLogic(llvm::Value * v);
   };
 }

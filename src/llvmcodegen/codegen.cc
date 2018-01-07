@@ -124,19 +124,24 @@ namespace xnor {
         op = ">>"; break;
         */
       case xnor::ast::BinaryOp::Op::COMP_EQUAL:
-        mValue = mBuilder.CreateUIToFP(mBuilder.CreateFCmpOEQ(left, right, "eqtmp"), llvm::Type::getFloatTy(mContext), "cast");
+        mValue = wrapLogic(mBuilder.CreateFCmpOEQ(left, right, "eqtmp"));
+        return;
+      case xnor::ast::BinaryOp::Op::COMP_NOT_EQUAL:
+        mValue = wrapLogic(mBuilder.CreateFCmpONE(left, right, "neqtmp"));
+        return;
+      case xnor::ast::BinaryOp::Op::COMP_GREATER:
+        mValue = wrapLogic(mBuilder.CreateFCmpOGT(left, right, "gttmp"));
+        return;
+      case xnor::ast::BinaryOp::Op::COMP_LESS:
+        mValue = wrapLogic(mBuilder.CreateFCmpOLT(left, right, "lttmp"));
+        return;
+      case xnor::ast::BinaryOp::Op::COMP_GREATER_OR_EQUAL:
+        mValue = wrapLogic(mBuilder.CreateNot(mBuilder.CreateFCmpOLT(left, right, "lttmp"), "nottmp"));
+        return;
+      case xnor::ast::BinaryOp::Op::COMP_LESS_OR_EQUAL:
+        mValue = wrapLogic(mBuilder.CreateNot(mBuilder.CreateFCmpOGT(left, right, "lttmp"), "nottmp"));
         return;
         /*
-      case xnor::ast::BinaryOp::Op::COMP_NOT_EQUAL:
-        op = "!="; break;
-      case xnor::ast::BinaryOp::Op::COMP_GREATER:
-        op = ">"; break;
-      case xnor::ast::BinaryOp::Op::COMP_LESS:
-        op = "<"; break;
-      case xnor::ast::BinaryOp::Op::COMP_GREATER_OR_EQUAL:
-        op = ">="; break;
-      case xnor::ast::BinaryOp::Op::COMP_LESS_OR_EQUAL:
-        op = "<="; break;
       case xnor::ast::BinaryOp::Op::LOGICAL_OR:
         op = "||"; break;
       case xnor::ast::BinaryOp::Op::LOGICAL_AND:
@@ -244,6 +249,10 @@ namespace xnor {
       llvm::Mangler::getNameWithPrefix(MangledNameStream, Name, mDataLayout);
     }
     return MangledName;
+  }
+
+  llvm::Value * LLVMCodeGenVisitor::wrapLogic(llvm::Value * v) {
+    return mBuilder.CreateUIToFP(v, llvm::Type::getFloatTy(mContext), "cast");
   }
 
 }
