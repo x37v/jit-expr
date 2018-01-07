@@ -88,8 +88,12 @@ namespace xnor {
 
     switch (v->op()) {
       case xnor::ast::UnaryOp::Op::BIT_NOT:
-      case xnor::ast::UnaryOp::Op::LOGICAL_NOT:
         throw std::runtime_error("unimplemented");
+        return;
+      case xnor::ast::UnaryOp::Op::LOGICAL_NOT:
+        //logical not is the same as x == 0
+        mValue = wrapLogic(mBuilder.CreateFCmpOEQ(right, llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), 0.0f), "eqtmp"));
+        return;
       case xnor::ast::UnaryOp::Op::NEGATE:
         mValue = mBuilder.CreateNeg(right, "negtmp");
         return;
@@ -143,9 +147,9 @@ namespace xnor {
         return;
         /*
       case xnor::ast::BinaryOp::Op::LOGICAL_OR:
-        op = "||"; break;
+        return;
       case xnor::ast::BinaryOp::Op::LOGICAL_AND:
-        op = "&&"; break;
+        return;
       case xnor::ast::BinaryOp::Op::BIT_AND:
         op = "~"; break;
       case xnor::ast::BinaryOp::Op::BIT_OR:
