@@ -83,6 +83,18 @@ namespace xnor {
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::UnaryOp* v){
+    v->node()->accept(this);
+    auto right = mValue;
+
+    switch (v->op()) {
+      case xnor::ast::UnaryOp::Op::BIT_NOT:
+      case xnor::ast::UnaryOp::Op::LOGICAL_NOT:
+        throw std::runtime_error("unimplemented");
+      case xnor::ast::UnaryOp::Op::NEGATE:
+        mValue = mBuilder.CreateNeg(right, "negtmp");
+        return;
+    }
+    throw std::runtime_error("unimplemented");
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::BinaryOp* v){
