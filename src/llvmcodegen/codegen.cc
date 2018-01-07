@@ -41,12 +41,10 @@ namespace xnor {
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::Value<int>* v){
-    cout << "constant int: " << v->value() << endl;
     mValue = llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), static_cast<float>(v->value()));
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::Value<float>* v){
-    cout << "constant float: " << v->value() << endl;
     mValue = llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), v->value());
   }
 
