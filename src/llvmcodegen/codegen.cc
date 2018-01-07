@@ -12,7 +12,6 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/CallingConv.h>
 #include <llvm/IR/IRPrintingPasses.h>
-#include <llvm/IR/IRBuilder.h>
 #include <llvm/Bitcode/BitstreamReader.h>
 #include <llvm/Bitcode/BitstreamWriter.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
@@ -25,13 +24,16 @@ using std::endl;
 
 namespace xnor {
 
-  LLVMCodeGenVisitor::LLVMCodeGenVisitor() {
-    mModule = new llvm::Module("xnor/expr", mContext);
+  LLVMCodeGenVisitor::LLVMCodeGenVisitor() : mContext(), mBuilder(mContext) {
+    mModule = llvm::make_unique<llvm::Module>("xnor/expr", mContext);
 
     std::vector<llvm::Type*> argTypes;
     llvm::FunctionType *ftype = llvm::FunctionType::get(llvm::Type::getFloatTy(mContext), llvm::makeArrayRef(argTypes), false);
-    mMainFunction = llvm::Function::Create(ftype, llvm::GlobalValue::InternalLinkage, "main", mModule);
+
+    mMainFunction = llvm::Function::Create(ftype, llvm::GlobalValue::InternalLinkage, "main", mModule.get());
     mBlock = llvm::BasicBlock::Create(mContext, "entry", mMainFunction, 0);
+
+    mBuilder.SetInsertPoint(mBlock);
   }
 
   LLVMCodeGenVisitor::~LLVMCodeGenVisitor() {
@@ -64,18 +66,18 @@ namespace xnor {
     v->right()->accept(this);
     auto right = mValue;
 
-    llvm::Instruction::BinaryOps instr;
-
     switch (v->op()) {
       case xnor::ast::BinaryOp::Op::ADD:
-        instr = llvm::Instruction::Add; break;
+        mValue = mBuilder.CreateFAdd(left, right, "addtmp");
+        return;
       case xnor::ast::BinaryOp::Op::SUBTRACT:
-        instr = llvm::Instruction::Sub; break;
+        mValue = mBuilder.CreateFSub(left, right, "subtmp");
+        return;
       case xnor::ast::BinaryOp::Op::MULTIPLY:
-        instr = llvm::Instruction::Mul; break;
-      case xnor::ast::BinaryOp::Op::DIVIDE:
-        instr = llvm::Instruction::SDiv; break;
+        mValue = mBuilder.CreateFMul(left, right, "multmp");
+        return;
         /*
+      case xnor::ast::BinaryOp::Op::DIVIDE:
       case xnor::ast::BinaryOp::Op::SHIFT_LEFT:
         op = "<<"; break;
       case xnor::ast::BinaryOp::Op::SHIFT_RIGHT:
@@ -106,7 +108,6 @@ namespace xnor {
       default:
         throw std::runtime_error("not supported yet");
     }
-    mValue = llvm::BinaryOperator::Create(instr, left, right, "", mBlock);
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::FunctionCall* v){
@@ -125,21 +126,8 @@ namespace xnor {
     if (mValue == nullptr)
       throw std::runtime_error("null return value");
 
-    llvm::ReturnInst::Create(mContext, mValue, mBlock);
-
-    llvm::legacy::PassManager pm;
-    pm.add(llvm::createPrintModulePass(llvm::outs()));
-    pm.run(*mModule);
-
-    std::cout << "Running code...\n";
-    llvm::ExecutionEngine *ee = llvm::EngineBuilder(std::unique_ptr<llvm::Module>(mModule)).create();
-    if (ee == nullptr)
-      throw std::runtime_error("error creating llvm::EngineBuilder");
-    ee->finalizeObject();
-
-    std::vector<llvm::GenericValue> noargs;
-    llvm::GenericValue v = ee->runFunction(mMainFunction, noargs);
-    std::cout << "Code was run.\n";
+    mBuilder.CreateRet(mValue);
+    mModule->print(llvm::errs(), nullptr);
   }
 
 }

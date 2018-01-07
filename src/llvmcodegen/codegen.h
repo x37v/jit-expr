@@ -2,6 +2,8 @@
 
 #include "ast.h"
 #include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/IRBuilder.h>
+#include <memory>
 
 namespace llvm {
   class Module;
@@ -30,7 +32,9 @@ namespace xnor {
       void run();
     private:
       llvm::LLVMContext mContext;
-      llvm::Module * mModule = nullptr;
+      llvm::IRBuilder<> mBuilder;
+
+      std::unique_ptr<llvm::Module> mModule;
       llvm::Function * mMainFunction;
       llvm::Value * mValue;
       llvm::BasicBlock * mBlock;
