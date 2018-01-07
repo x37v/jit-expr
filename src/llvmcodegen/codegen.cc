@@ -12,20 +12,48 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/CallingConv.h>
 #include <llvm/IR/IRPrintingPasses.h>
+#include <llvm/IR/Verifier.h>
 #include <llvm/Bitcode/BitstreamReader.h>
 #include <llvm/Bitcode/BitstreamWriter.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/Target/TargetMachine.h>
+
+#include <llvm/Transforms/Scalar.h>
+#include <llvm/Transforms/Scalar/GVN.h>
 
 using std::cout;
 using std::endl;
 
 namespace xnor {
 
-  LLVMCodeGenVisitor::LLVMCodeGenVisitor() : mContext(), mBuilder(mContext) {
+  LLVMCodeGenVisitor::LLVMCodeGenVisitor() :
+    mContext(),
+    mBuilder(mContext),
+    mTargetMachine(llvm::EngineBuilder().selectTarget()),
+    mDataLayout(mTargetMachine->createDataLayout()),
+    mObjectLayer([]() { return std::make_shared<llvm::SectionMemoryManager>(); }),
+    mCompileLayer(mObjectLayer, llvm::orc::SimpleCompiler(*mTargetMachine))
+  {
+    llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
+
     mModule = llvm::make_unique<llvm::Module>("xnor/expr", mContext);
+    mModule->setDataLayout(mDataLayout);
+
+    mFunctionPassManager = llvm::make_unique<llvm::legacy::FunctionPassManager>(mModule.get());
+
+    // Do simple "peephole" optimizations and bit-twiddling optzns.
+    mFunctionPassManager->add(llvm::createInstructionCombiningPass());
+    // Reassociate expressions.
+    mFunctionPassManager->add(llvm::createReassociatePass());
+    // Eliminate Common SubExpressions.
+    mFunctionPassManager->add(llvm::createGVNPass());
+    // Simplify the control flow graph (deleting unreachable blocks, etc).
+    mFunctionPassManager->add(llvm::createCFGSimplificationPass());
+    mFunctionPassManager->doInitialization();
+
 
     std::vector<llvm::Type*> argTypes;
     llvm::FunctionType *ftype = llvm::FunctionType::get(llvm::Type::getFloatTy(mContext), llvm::makeArrayRef(argTypes), false);
@@ -127,6 +155,9 @@ namespace xnor {
       throw std::runtime_error("null return value");
 
     mBuilder.CreateRet(mValue);
+    llvm::verifyFunction(*mMainFunction);
+    mFunctionPassManager->run(*mMainFunction);
+
     mModule->print(llvm::errs(), nullptr);
   }
 
