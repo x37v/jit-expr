@@ -122,8 +122,11 @@ namespace xnor {
         op = "<<"; break;
       case xnor::ast::BinaryOp::Op::SHIFT_RIGHT:
         op = ">>"; break;
+        */
       case xnor::ast::BinaryOp::Op::COMP_EQUAL:
-        op = "=="; break;
+        mValue = mBuilder.CreateUIToFP(mBuilder.CreateFCmpOEQ(left, right, "eqtmp"), llvm::Type::getFloatTy(mContext), "cast");
+        return;
+        /*
       case xnor::ast::BinaryOp::Op::COMP_NOT_EQUAL:
         op = "!="; break;
       case xnor::ast::BinaryOp::Op::COMP_GREATER:
