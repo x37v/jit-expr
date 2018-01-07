@@ -28,9 +28,9 @@ int main(int argc, char * argv[]) {
       cout << "parsing: " << line << endl;
       auto t = driver.parse_string(line);
       for (auto c: t) {
-        xnor::AstPrintVisitor v;
+        //xnor::AstPrintVisitor v;
+        //c->accept(&v);
         xnor::LLVMCodeGenVisitor cv;
-        c->accept(&v);
         c->accept(&cv);
         cv.run();
       }
