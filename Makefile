@@ -43,4 +43,6 @@ distcheck: dist
 	@rm -fr ${NAME}
 
 test: all
-	./parser examples.txt 2>&1 | less
+	./parser examples.txt 2>&1
+
+	#./parser examples.txt 2>&1 | less

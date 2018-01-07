@@ -69,6 +69,10 @@ namespace xnor {
       ObjLayerT mObjectLayer;
       CompileLayerT mCompileLayer;
 
+      std::vector<ModuleHandleT> mModuleHandles;
+
       llvm::JITSymbol findMangledSymbol(const std::string& name);
+      llvm::JITSymbol findSymbol(const std::string name);
+      std::string mangle(const std::string& name);
   };
 }
