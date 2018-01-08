@@ -75,5 +75,7 @@ namespace xnor {
       llvm::JITSymbol findSymbol(const std::string name);
       std::string mangle(const std::string& name);
       llvm::Value * wrapLogic(llvm::Value * v);
+      llvm::Value * toInt(llvm::Value * v);
+      llvm::Value * toFloat(llvm::Value * v);
   };
 }

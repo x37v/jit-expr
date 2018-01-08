@@ -88,7 +88,7 @@ namespace xnor {
 
     switch (v->op()) {
       case xnor::ast::UnaryOp::Op::BIT_NOT:
-        throw std::runtime_error("unimplemented");
+        mValue = toFloat(mBuilder.CreateNot(toInt(right), "nottmp"));
         return;
       case xnor::ast::UnaryOp::Op::LOGICAL_NOT:
         //logical not is the same as x == 0
@@ -121,12 +121,12 @@ namespace xnor {
       case xnor::ast::BinaryOp::Op::DIVIDE:
         mValue = mBuilder.CreateFDiv(left, right, "divtmp");
         return;
-        /*
       case xnor::ast::BinaryOp::Op::SHIFT_LEFT:
-        op = "<<"; break;
+        mValue = toFloat(mBuilder.CreateShl(toInt(left), toInt(right), "sltmp"));
+        return;
       case xnor::ast::BinaryOp::Op::SHIFT_RIGHT:
-        op = ">>"; break;
-        */
+        mValue = toFloat(mBuilder.CreateLShr(toInt(left), toInt(right), "srtmp"));
+        return;
       case xnor::ast::BinaryOp::Op::COMP_EQUAL:
         mValue = wrapLogic(mBuilder.CreateFCmpOEQ(left, right, "eqtmp"));
         return;
@@ -145,18 +145,25 @@ namespace xnor {
       case xnor::ast::BinaryOp::Op::COMP_LESS_OR_EQUAL:
         mValue = wrapLogic(mBuilder.CreateNot(mBuilder.CreateFCmpOGT(left, right, "lttmp"), "nottmp"));
         return;
-        /*
       case xnor::ast::BinaryOp::Op::LOGICAL_OR:
+        //just use bitwise then not equal 0
+        mValue = wrapLogic(mBuilder.CreateICmpNE(mBuilder.CreateOr(toInt(left), toInt(right), "ortmp"),
+              llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 0), "neqtmp"));
         return;
       case xnor::ast::BinaryOp::Op::LOGICAL_AND:
+        //just use bitwise then not equal 0
+        mValue = wrapLogic(mBuilder.CreateICmpNE(mBuilder.CreateAnd(toInt(left), toInt(right), "andtmp"),
+              llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 0), "neqtmp"));
         return;
       case xnor::ast::BinaryOp::Op::BIT_AND:
-        op = "~"; break;
+        mValue = wrapLogic(mBuilder.CreateAnd(toInt(left), toInt(right), "andtmp"));
+        return;
       case xnor::ast::BinaryOp::Op::BIT_OR:
-        op = "|"; break;
+        mValue = wrapLogic(mBuilder.CreateOr(toInt(left), toInt(right), "ortmp"));
+        return;
       case xnor::ast::BinaryOp::Op::BIT_XOR:
-        op = "^"; break;
-        */
+        mValue = wrapLogic(mBuilder.CreateXor(toInt(left), toInt(right), "xortmp"));
+        return;
       default:
         throw std::runtime_error("not supported yet");
     }
@@ -181,7 +188,7 @@ namespace xnor {
     mBuilder.CreateRet(mValue);
     llvm::verifyFunction(*mMainFunction);
     mFunctionPassManager->run(*mMainFunction);
-    mModule->print(llvm::errs(), nullptr);
+    //mModule->print(llvm::errs(), nullptr);
 
     auto Resolver = llvm::orc::createLambdaResolver(
         [&](const std::string &Name) {
@@ -257,6 +264,14 @@ namespace xnor {
 
   llvm::Value * LLVMCodeGenVisitor::wrapLogic(llvm::Value * v) {
     return mBuilder.CreateUIToFP(v, llvm::Type::getFloatTy(mContext), "cast");
+  }
+
+  llvm::Value * LLVMCodeGenVisitor::toInt(llvm::Value * v) {
+    return mBuilder.CreateFPToSI(v, llvm::Type::getInt32Ty(mContext), "cast");
+  }
+
+  llvm::Value * LLVMCodeGenVisitor::toFloat(llvm::Value * v) {
+    return mBuilder.CreateSIToFP(v, llvm::Type::getFloatTy(mContext), "cast");
   }
 
 }
