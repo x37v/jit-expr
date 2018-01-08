@@ -65,7 +65,7 @@ namespace parse
     }
 
     parse::TreeVector Driver::trees() const { return mTrees; }
-    parse::InputVector Driver::inputs() const { return mInputs; }
+    xnor::ast::VariableVector Driver::inputs() const { return mInputs; }
 
     void Driver::add_tree(xnor::ast::NodePtr v) { mTrees.push_back(v); }
     void Driver::add_input(xnor::ast::VariablePtr v) { mInputs.push_back(v); }

@@ -14,7 +14,6 @@ namespace parse
     class location;
 
     typedef std::vector<xnor::ast::NodePtr> TreeVector;
-    typedef std::vector<xnor::ast::VariablePtr> InputVector;
     class Driver
     {
         public:
@@ -26,7 +25,7 @@ namespace parse
             TreeVector parse_string(const std::string& value);
 
             TreeVector trees() const;
-            InputVector inputs() const;
+            xnor::ast::VariableVector inputs() const;
 
             void reset();
 
@@ -37,7 +36,7 @@ namespace parse
 
         private:
             TreeVector mTrees;
-            InputVector mInputs;
+            xnor::ast::VariableVector mInputs;
 
             Scanner*      scanner_;
             Parser*       parser_;

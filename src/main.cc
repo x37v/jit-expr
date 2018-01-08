@@ -30,7 +30,7 @@ int main(int argc, char * argv[]) {
       for (auto c: t) {
         //xnor::AstPrintVisitor v;
         //c->accept(&v);
-        xnor::LLVMCodeGenVisitor cv;
+        xnor::LLVMCodeGenVisitor cv(driver.inputs());
         c->accept(&cv);
         cv.run();
       }

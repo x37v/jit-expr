@@ -24,6 +24,8 @@ namespace xnor {
     typedef std::shared_ptr<ArrayAccess> ArrayAccessPtr;
     typedef std::function<void(std::string v, unsigned int depth)> PrintFunc;
 
+    typedef std::vector<xnor::ast::VariablePtr> VariableVector;
+
     class Visitor {
       public:
         virtual void visit(Variable* v) = 0;

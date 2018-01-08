@@ -29,7 +29,8 @@ using std::endl;
 
 namespace xnor {
 
-  LLVMCodeGenVisitor::LLVMCodeGenVisitor() :
+  LLVMCodeGenVisitor::LLVMCodeGenVisitor(xnor::ast::VariableVector variables) :
+    mVariables(variables),
     mContext(),
     mBuilder(mContext),
     mTargetMachine(llvm::EngineBuilder().selectTarget()),
@@ -55,6 +56,7 @@ namespace xnor {
     mFunctionPassManager->doInitialization();
 
     std::vector<llvm::Type*> argTypes;
+
     llvm::FunctionType *ftype = llvm::FunctionType::get(llvm::Type::getFloatTy(mContext), llvm::makeArrayRef(argTypes), false);
     //XXX should we use internal linkage and figure out how to grab those symbols?
     mMainFunction = llvm::Function::Create(ftype, llvm::GlobalValue::ExternalLinkage, "expralex", mModule.get());
@@ -164,9 +166,8 @@ namespace xnor {
       case xnor::ast::BinaryOp::Op::BIT_XOR:
         mValue = wrapLogic(mBuilder.CreateXor(toInt(left), toInt(right), "xortmp"));
         return;
-      default:
-        throw std::runtime_error("not supported yet");
     }
+    throw std::runtime_error("not supported yet");
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::FunctionCall* v){
