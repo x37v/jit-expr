@@ -56,18 +56,27 @@ namespace xnor {
     mFunctionPassManager->doInitialization();
 
     std::vector<llvm::Type*> argTypes;
+    for (unsigned int i = 0; i < mVariables.size(); i++)
+      argTypes.push_back(llvm::Type::getFloatTy(mContext));
 
     llvm::FunctionType *ftype = llvm::FunctionType::get(llvm::Type::getFloatTy(mContext), llvm::makeArrayRef(argTypes), false);
     //XXX should we use internal linkage and figure out how to grab those symbols?
     mMainFunction = llvm::Function::Create(ftype, llvm::GlobalValue::ExternalLinkage, "expralex", mModule.get());
     mBlock = llvm::BasicBlock::Create(mContext, "entry", mMainFunction, 0);
     mBuilder.SetInsertPoint(mBlock);
+
+    unsigned int i = 1;
+    for (auto &a: mMainFunction->args()) {
+      a.setName("f" + std::to_string(i++));
+      mArgs.push_back(&a);
+    }
   }
 
   LLVMCodeGenVisitor::~LLVMCodeGenVisitor() {
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::Variable* v){
+    mValue = mArgs.at(v->input_index());
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::Value<int>* v){
@@ -182,14 +191,14 @@ namespace xnor {
   void LLVMCodeGenVisitor::visit(xnor::ast::ArrayAssignment* v){
   }
 
-  void LLVMCodeGenVisitor::run() {
+  void LLVMCodeGenVisitor::run(float arg) {
     if (mValue == nullptr)
       throw std::runtime_error("null return value");
 
     mBuilder.CreateRet(mValue);
     llvm::verifyFunction(*mMainFunction);
     mFunctionPassManager->run(*mMainFunction);
-    //mModule->print(llvm::errs(), nullptr);
+    mModule->print(llvm::errs(), nullptr);
 
     auto Resolver = llvm::orc::createLambdaResolver(
         [&](const std::string &Name) {
@@ -206,8 +215,8 @@ namespace xnor {
     if (!ExprSymbol)
       throw std::runtime_error("couldn't find symbol 'expralex'");
 
-    float (*FP)() = (float (*)())(intptr_t)cantFail(ExprSymbol.getAddress());
-    cout << "Evaluated to " << FP() << endl;
+    float (*FP)(float) = (float (*)(float))(intptr_t)cantFail(ExprSymbol.getAddress());
+    cout << "Evaluated to " << FP(arg) << endl;
   }
 
   llvm::JITSymbol LLVMCodeGenVisitor::findSymbol(const std::string Name) {

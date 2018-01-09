@@ -52,7 +52,7 @@ namespace xnor {
       virtual void visit(xnor::ast::ValueAssignment* v);
       virtual void visit(xnor::ast::ArrayAssignment* v);
 
-      void run();
+      void run(float arg);
 
     private:
       xnor::ast::VariableVector mVariables;
@@ -66,6 +66,7 @@ namespace xnor {
 
       llvm::Function * mMainFunction;
       llvm::Value * mValue;
+      std::vector<llvm::Value *> mArgs;
       llvm::BasicBlock * mBlock;
 
       const llvm::DataLayout mDataLayout;
