@@ -9,7 +9,7 @@ ERROR="<It seems that the build/ directory is missing\nMaybe you forgot to execu
 
 
 all:
-	@make -C build -j4
+	@make -C build
 
 clean:
 	@echo "\033[33m< ---------------------- >\033[37m"
@@ -43,6 +43,4 @@ distcheck: dist
 	@rm -fr ${NAME}
 
 test: all
-	./parser examples.txt 2>&1
-
-	#./parser examples.txt 2>&1 | less
+	./parser examples.txt 2>&1 | less
