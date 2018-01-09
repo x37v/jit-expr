@@ -23,6 +23,7 @@ int main(int argc, char * argv[]) {
 
   parse::Driver driver;
   std::string line;
+  float f = 0;
   while(std::getline(infile, line)) {
     try { 
       cout << "parsing: " << line << endl;
@@ -32,7 +33,7 @@ int main(int argc, char * argv[]) {
         //c->accept(&v);
         xnor::LLVMCodeGenVisitor cv(driver.inputs());
         c->accept(&cv);
-        cv.run();
+        cv.run(f++);
       }
       cout << endl;
     } catch (std::runtime_error& e) {
