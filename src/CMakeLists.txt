@@ -27,4 +27,4 @@ add_executable(
 llvm_map_components_to_libnames(llvm_libs support core irreader mcjit linker
 native)
 
-target_link_libraries(../../parser parse ${llvm_libs})
+target_link_libraries(../../parser parse ${llvm_libs} m)
