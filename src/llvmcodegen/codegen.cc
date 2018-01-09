@@ -2,6 +2,8 @@
 
 #include <vector>
 #include <iostream>
+#include <algorithm>
+#include <cmath>
 
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Function.h>
@@ -26,6 +28,10 @@
 
 using std::cout;
 using std::endl;
+
+namespace {
+  const std::vector<std::string> table_functions = {"Sum", "sum", "size"};
+}
 
 namespace xnor {
 
@@ -180,6 +186,40 @@ namespace xnor {
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::FunctionCall* v){
+    auto n = v->name();
+
+    //alias
+    if (n == "ln")
+      n = "log";
+
+    auto it = std::find(table_functions.begin(), table_functions.end(), n);
+    if (it != table_functions.end())
+      throw std::runtime_error("table functions not supported yet");
+
+    n = n + "f";
+    llvm::Function * f = mModule->getFunction(n);
+    if (!f) {
+      std::vector<llvm::Type *> args;
+      //only table funcs use strings
+      for (auto n: v->args())
+        args.push_back(llvm::Type::getFloatTy(mContext));
+
+      llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getFloatTy(mContext), args, false);
+      f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, n, mModule.get());
+      if (!f)
+        throw std::runtime_error("cannot find function with name: " + v->name());
+
+      //XXX is it a leak if we don't store this somewhere??
+    }
+
+    //visit the children, store them in the args
+    std::vector<llvm::Value *> args;
+    for (auto n: v->args()) {
+      n->accept(this);
+      args.push_back(mValue);
+    }
+
+    mValue = mBuilder.CreateCall(f, args, "calltmp");
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::ArrayAccess* v){
