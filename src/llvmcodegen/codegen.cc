@@ -188,15 +188,22 @@ namespace xnor {
   void LLVMCodeGenVisitor::visit(xnor::ast::FunctionCall* v){
     auto n = v->name();
 
-    //alias
-    if (n == "ln")
-      n = "log";
+    //if
+    if (n == "if")
+      throw std::runtime_error("if not supported yet");
 
+    //table functions
     auto it = std::find(table_functions.begin(), table_functions.end(), n);
     if (it != table_functions.end())
       throw std::runtime_error("table functions not supported yet");
 
+    //all other functions, math taking and returning floats
+
+    //alias
+    if (n == "ln")
+      n = "log";
     n = n + "f"; //we're using the floating point version of these calls
+
     llvm::Function * f = mModule->getFunction(n);
     if (!f) {
       std::vector<llvm::Type *> args;
