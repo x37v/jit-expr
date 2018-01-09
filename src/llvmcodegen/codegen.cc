@@ -196,7 +196,7 @@ namespace xnor {
     if (it != table_functions.end())
       throw std::runtime_error("table functions not supported yet");
 
-    n = n + "f";
+    n = n + "f"; //we're using the floating point version of these calls
     llvm::Function * f = mModule->getFunction(n);
     if (!f) {
       std::vector<llvm::Type *> args;
