@@ -189,8 +189,47 @@ namespace xnor {
     auto n = v->name();
 
     //if
-    if (n == "if")
-      throw std::runtime_error("if not supported yet");
+
+    //XXX could just do mValue = float(cond != 0) * left + float(cond == 0) * right;
+    if (n == "if") {
+#if 1
+      v->args().at(0)->accept(this);
+      auto cond = mValue;
+
+      v->args().at(1)->accept(this);
+      auto t = mValue;
+
+      v->args().at(2)->accept(this);
+      auto f = mValue;
+
+      auto zero = llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), 0.0f);
+      mValue = mBuilder.CreateFAdd(
+          mBuilder.CreateFMul(t,
+            wrapLogic(mBuilder.CreateFCmpONE(cond, zero, "neqtmp")), "true"),
+          mBuilder.CreateFMul(f,
+            wrapLogic(mBuilder.CreateFCmpOEQ(cond, zero, "eqtmp")), "false"), "addtmp");
+#else
+      v->args().at(0)->accept(this);
+
+      //true if not equal to zero
+      auto cond = mBuilder.CreateFCmpONE(mValue, llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), 0.0f), "neqtmp");
+
+      auto t = llvm::BasicBlock::Create(mContext, "tentry", nullptr, 0);
+      mBuilder.SetInsertPoint(t);
+      v->args().at(1)->accept(this);
+      mBuilder.CreateRet(mValue);
+
+
+      auto f = llvm::BasicBlock::Create(mContext, "fentry", nullptr, 0);
+      mBuilder.SetInsertPoint(f);
+      v->args().at(2)->accept(this);
+      mBuilder.CreateRet(mValue);
+
+      mBuilder.SetInsertPoint(mBlock);
+      mValue = mBuilder.CreateCondBr(cond, t, f);
+#endif
+      return;
+    }
 
     //table functions
     auto it = std::find(table_functions.begin(), table_functions.end(), n);
