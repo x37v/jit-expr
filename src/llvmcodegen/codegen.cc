@@ -231,8 +231,8 @@ namespace xnor {
       mBuilder.CreateBr(mergebb);
       thenbb = mBuilder.GetInsertBlock(); //codegen of then can change current block so update thenbb for phi
       mMainFunction->getBasicBlockList().push_back(elsebb);
-      mBuilder.SetInsertPoint(elsebb);
 
+      mBuilder.SetInsertPoint(elsebb);
       v->args().at(2)->accept(this);
       auto elsev = mValue;
       if (!elsev)
@@ -241,9 +241,9 @@ namespace xnor {
       mBuilder.CreateBr(mergebb);
       elsebb = mBuilder.GetInsertBlock(); //codegen can change the current block so update elsebb for phi
       mMainFunction->getBasicBlockList().push_back(mergebb);
-      mBuilder.SetInsertPoint(mergebb);
 
       //bring everything together
+      mBuilder.SetInsertPoint(mergebb);
       auto *phi = mBuilder.CreatePHI(llvm::Type::getFloatTy(mContext), 2, "iftmp");
       phi->addIncoming(thenv, thenbb);
       phi->addIncoming(elsev, elsebb);
