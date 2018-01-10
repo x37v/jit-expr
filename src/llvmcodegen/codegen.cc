@@ -230,6 +230,8 @@ namespace xnor {
       phi->addIncoming(elsev, elsebb);
       mValue = phi;
       return;
+    } else if (n == "fact") {
+      throw std::runtime_error("fact not yet supported");
     }
 
     //table functions
