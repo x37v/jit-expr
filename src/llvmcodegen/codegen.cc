@@ -190,9 +190,9 @@ namespace xnor {
 
     //if
 
-    //XXX could just do mValue = float(cond != 0) * left + float(cond == 0) * right;
     if (n == "if") {
-#if 1
+#if 0
+      //XXX just do mValue = float(cond != 0) * left + float(cond == 0) * right;
       v->args().at(0)->accept(this);
       auto cond = mValue;
 
@@ -209,24 +209,45 @@ namespace xnor {
           mBuilder.CreateFMul(f,
             wrapLogic(mBuilder.CreateFCmpOEQ(cond, zero, "eqtmp")), "false"), "addtmp");
 #else
+      //translated from kaleidoscope example, chapter 5
       v->args().at(0)->accept(this);
 
       //true if not equal to zero
       auto cond = mBuilder.CreateFCmpONE(mValue, llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), 0.0f), "neqtmp");
 
-      auto t = llvm::BasicBlock::Create(mContext, "tentry", nullptr, 0);
-      mBuilder.SetInsertPoint(t);
+      llvm::Function *f = mBuilder.GetInsertBlock()->getParent();
+      auto thenbb = llvm::BasicBlock::Create(mContext, "then", f);
+      auto elsebb = llvm::BasicBlock::Create(mContext, "else");
+      auto mergebb = llvm::BasicBlock::Create(mContext, "ifcont");
+
+      mBuilder.CreateCondBr(cond, thenbb, elsebb);
+
+      mBuilder.SetInsertPoint(thenbb);
       v->args().at(1)->accept(this);
-      mBuilder.CreateRet(mValue);
+      auto thenv = mValue;
+      if (!thenv)
+        throw std::runtime_error("couldn't create true expression");
 
+      mBuilder.CreateBr(mergebb);
+      thenbb = mBuilder.GetInsertBlock(); //codegen of then can change current block so update thenbb for phi
+      mMainFunction->getBasicBlockList().push_back(elsebb);
+      mBuilder.SetInsertPoint(elsebb);
 
-      auto f = llvm::BasicBlock::Create(mContext, "fentry", nullptr, 0);
-      mBuilder.SetInsertPoint(f);
       v->args().at(2)->accept(this);
-      mBuilder.CreateRet(mValue);
+      auto elsev = mValue;
+      if (!elsev)
+        throw std::runtime_error("couldn't create else expression");
 
-      mBuilder.SetInsertPoint(mBlock);
-      mValue = mBuilder.CreateCondBr(cond, t, f);
+      mBuilder.CreateBr(mergebb);
+      elsebb = mBuilder.GetInsertBlock(); //codegen can change the current block so update elsebb for phi
+      mMainFunction->getBasicBlockList().push_back(mergebb);
+      mBuilder.SetInsertPoint(mergebb);
+
+      //bring everything together
+      auto *phi = mBuilder.CreatePHI(llvm::Type::getFloatTy(mContext), 2, "iftmp");
+      phi->addIncoming(thenv, thenbb);
+      phi->addIncoming(elsev, elsebb);
+      mValue = phi;
 #endif
       return;
     }
