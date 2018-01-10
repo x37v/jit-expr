@@ -189,26 +189,7 @@ namespace xnor {
     auto n = v->name();
 
     //if
-
     if (n == "if") {
-#if 0
-      //XXX just do mValue = float(cond != 0) * left + float(cond == 0) * right;
-      v->args().at(0)->accept(this);
-      auto cond = mValue;
-
-      v->args().at(1)->accept(this);
-      auto t = mValue;
-
-      v->args().at(2)->accept(this);
-      auto f = mValue;
-
-      auto zero = llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), 0.0f);
-      mValue = mBuilder.CreateFAdd(
-          mBuilder.CreateFMul(t,
-            wrapLogic(mBuilder.CreateFCmpONE(cond, zero, "neqtmp")), "true"),
-          mBuilder.CreateFMul(f,
-            wrapLogic(mBuilder.CreateFCmpOEQ(cond, zero, "eqtmp")), "false"), "addtmp");
-#else
       //translated from kaleidoscope example, chapter 5
       v->args().at(0)->accept(this);
 
@@ -248,7 +229,6 @@ namespace xnor {
       phi->addIncoming(thenv, thenbb);
       phi->addIncoming(elsev, elsebb);
       mValue = phi;
-#endif
       return;
     }
 
