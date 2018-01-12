@@ -1,11 +1,17 @@
-Notes
+JIT expr/expr~/fexpr~
 ===
+
+The goal of this project is to provide a just-in-time (JIT) version of the
+[expr/expr~/fexpr~](http://yadegari.org/expr/expr.html) [pure data](http://puredata.info/) objects.
+
+Notes
+---
 
 [godbolt](https://godbolt.org/) can be useful for finding what llvm instruction to use.
 `-emit-llvm -S -O0`
 
 Acknowledgements
-===
+---
 
 used this as the starting off point: https://github.com/remusao/Bison-Flex-CPP-template
 
