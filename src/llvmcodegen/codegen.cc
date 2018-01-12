@@ -280,7 +280,7 @@ namespace xnor {
   void LLVMCodeGenVisitor::visit(xnor::ast::ArrayAssignment* v){
   }
 
-  void LLVMCodeGenVisitor::run(float arg) {
+  void LLVMCodeGenVisitor::run(t_inlet ** inlets, t_outlet ** outlets) {
     if (mValue == nullptr)
       throw std::runtime_error("null return value");
 
@@ -304,8 +304,10 @@ namespace xnor {
     if (!ExprSymbol)
       throw std::runtime_error("couldn't find symbol 'expralex'");
 
+    /*
     float (*FP)(float) = (float (*)(float))(intptr_t)cantFail(ExprSymbol.getAddress());
     cout << "Evaluated to " << FP(arg) << endl;
+    */
   }
 
   llvm::JITSymbol LLVMCodeGenVisitor::findSymbol(const std::string Name) {

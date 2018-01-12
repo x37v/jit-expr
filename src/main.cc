@@ -3,6 +3,8 @@
 #include <llvm/Support/TargetSelect.h>
 #include <string>
 
+#include <m_pd.h>
+
 #include <iostream>
 #include <fstream>
 using std::cerr;
@@ -23,7 +25,9 @@ int main(int argc, char * argv[]) {
 
   parse::Driver driver;
   std::string line;
-  float f = 0;
+  std::array<t_inlet *, 10> inlets;
+  std::array<t_outlet *, 10> outlets;
+
   while(std::getline(infile, line)) {
     try { 
       cout << "parsing: " << line << endl;
@@ -33,7 +37,7 @@ int main(int argc, char * argv[]) {
         //c->accept(&v);
         xnor::LLVMCodeGenVisitor cv(driver.inputs());
         c->accept(&cv);
-        cv.run(f++);
+        cv.run(&inlets.front(), &outlets.front());
       }
       cout << endl;
     } catch (std::runtime_error& e) {

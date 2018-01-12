@@ -5,6 +5,8 @@
 #include <llvm/IR/IRBuilder.h>
 #include <memory>
 
+#include <m_pd.h>
+
 #include <llvm/ADT/iterator_range.h>
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
@@ -52,7 +54,7 @@ namespace xnor {
       virtual void visit(xnor::ast::ValueAssignment* v);
       virtual void visit(xnor::ast::ArrayAssignment* v);
 
-      void run(float arg);
+      void run(t_inlet ** inlets, t_outlet ** outlets);
 
     private:
       xnor::ast::VariableVector mVariables;
