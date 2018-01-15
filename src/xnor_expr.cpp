@@ -29,12 +29,11 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
   char buf[1024];
   for (int i = 0; i < argc; i++) {
     atom_string(&argv[i], buf, 1024);
-    line += std::string(buf);
+    line += " " + std::string(buf);
   }
-  poststring(line.c_str());
   
   try {
-    //auto t = x->driver->parse_string(line);
+    auto t = x->driver->parse_string(line);
     /*
     for (auto c: t) {
       xnor::LLVMCodeGenVisitor cv(x->driver.inputs());
@@ -42,7 +41,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
     }
     */
   } catch (std::runtime_error& e) {
-    error("error parsing %s", e.what());
+    error("error parsing \"%s\" %s", line.c_str(), e.what());
   }
 
   //inlet_new(&x->x_obj, &x->x_obj.ob_pd, gensym("list"), gensym("bound"));
