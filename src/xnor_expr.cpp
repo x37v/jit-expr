@@ -2,6 +2,8 @@
 #include <string>
 #include "llvmcodegen/codegen.h"
 #include "parser.hh"
+//#include <stdexcept>
+//#include <llvm/Support/TargetSelect.h>
 
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
 extern "C" void xnor_expr_setup(void);
@@ -13,7 +15,7 @@ typedef struct _xnor_expr {
   t_object x_obj;
   t_inlet **ins;
   t_outlet **outs;
-  parse::Driver driver;
+  parse::Driver * driver;
 } t_xnor_expr;
 }
 
@@ -30,11 +32,17 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
   }
   poststring(line.c_str());
   
-  /*
-  auto t = x->driver.parse_string(line);
-  xnor::LLVMCodeGenVisitor cv(x->driver.inputs());
-  c->accept(&cv);
-  */
+ // try {
+    //auto t = x->driver.parse_string(line);
+    /*
+    for (auto c: t) {
+      xnor::LLVMCodeGenVisitor cv(x->driver.inputs());
+      c->accept(&cv);
+    }
+    */
+  //} catch (std::runtime_error& e) {
+    //error("error parsing %s", e.what());
+  //}
 
   //inlet_new(&x->x_obj, &x->x_obj.ob_pd, gensym("list"), gensym("bound"));
   //floatinlet_new(&x->x_obj, &x->step);
@@ -44,11 +52,9 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
 }
 
 void xnor_expr_setup(void) {
-  /*
-  llvm::InitializeNativeTarget();
-	llvm::InitializeNativeTargetAsmPrinter();
-	llvm::InitializeNativeTargetAsmParser();
-*/
+  //llvm::InitializeNativeTarget();
+	//llvm::InitializeNativeTargetAsmPrinter();
+	//llvm::InitializeNativeTargetAsmParser();
 
   xnor_expr_class = class_new(gensym("xnor_expr"),
       (t_newmethod)xnor_expr_new,
