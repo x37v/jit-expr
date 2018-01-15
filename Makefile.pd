@@ -2,12 +2,15 @@
 # Needs Makefile.pdlibbuilder as helper makefile for platform-dependent build
 # settings and rules.
 
+CXX = clang++
+
+LLVM_COMPONENTS = support core irreader mcjit linker native
+
 # library name
 lib.name = xnor_expr
 
-cxx = clang++
 cflags = --std=c++11 `llvm-config-5.0 --cxxflags` -I/usr/local/include/ -Isrc/ -Isrc/parse/ -Ibuild/src/parse/ -fPIC
-ldflags = `llvm-config-5.0 --ldflags` build/src/parse/libparse.a
+ldflags = `llvm-config-5.0 --ldflags` build/src/parse/libparse.a `llvm-config-5.0 --libs ${LLVM_COMPONENTS}`
 
 # input source file (class name == source file basename)
 class.sources = src/xnor_expr.cpp

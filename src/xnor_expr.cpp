@@ -1,7 +1,7 @@
 #include <m_pd.h>
 #include <string>
-//#include "llvmcodegen/codegen.h"
-//#include "parser.hh"
+#include "llvmcodegen/codegen.h"
+#include "parser.hh"
 
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
 extern "C" void xnor_expr_setup(void);
@@ -13,7 +13,7 @@ typedef struct _xnor_expr {
   t_object x_obj;
   t_inlet **ins;
   t_outlet **outs;
-//  parse::Driver driver;
+  parse::Driver driver;
 } t_xnor_expr;
 }
 
