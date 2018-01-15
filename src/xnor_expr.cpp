@@ -42,6 +42,9 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
     */
   } catch (std::runtime_error& e) {
     error("error parsing \"%s\" %s", line.c_str(), e.what());
+    delete x->driver;
+    x->driver = nullptr;
+    return NULL;
   }
 
   //inlet_new(&x->x_obj, &x->x_obj.ob_pd, gensym("list"), gensym("bound"));
