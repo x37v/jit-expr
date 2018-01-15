@@ -2,3 +2,4 @@ parser
 build/
 core
 .gdb_history
+*.pd_*

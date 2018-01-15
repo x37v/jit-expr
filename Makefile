@@ -44,3 +44,6 @@ distcheck: dist
 
 test: all
 	./parser examples.txt 2>&1 | less
+
+expr: all
+	${CXX} src/xnor_expr.cpp -shared -o xnor_expr.pd_linux -I/usr/local/include/ -Isrc/ -Isrc/parse/ -Ibuild/src/parse/ build/src/parse/libparse.a  --std=c++11 `llvm-config-5.0 --cxxflags`

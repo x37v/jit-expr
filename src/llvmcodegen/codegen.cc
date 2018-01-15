@@ -305,7 +305,7 @@ namespace xnor {
       throw std::runtime_error("couldn't find symbol 'expralex'");
 
     /*
-    float (*FP)(float) = (float (*)(float))(intptr_t)cantFail(ExprSymbol.getAddress());
+    float (*FP)(float) = (float (**)(t_inlet))(intptr_t)cantFail(ExprSymbol.getAddress());
     cout << "Evaluated to " << FP(arg) << endl;
     */
   }
