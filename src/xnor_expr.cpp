@@ -2,7 +2,7 @@
 #include <string>
 #include "llvmcodegen/codegen.h"
 #include "parser.hh"
-//#include <stdexcept>
+#include <stdexcept>
 //#include <llvm/Support/TargetSelect.h>
 
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
@@ -22,6 +22,7 @@ typedef struct _xnor_expr {
 void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
 {
   t_xnor_expr *x = (t_xnor_expr *)pd_new(xnor_expr_class);
+  x->driver = new parse::Driver;
 
   std::string line;
 
@@ -32,17 +33,17 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
   }
   poststring(line.c_str());
   
- // try {
-    //auto t = x->driver.parse_string(line);
+  try {
+    //auto t = x->driver->parse_string(line);
     /*
     for (auto c: t) {
       xnor::LLVMCodeGenVisitor cv(x->driver.inputs());
       c->accept(&cv);
     }
     */
-  //} catch (std::runtime_error& e) {
-    //error("error parsing %s", e.what());
-  //}
+  } catch (std::runtime_error& e) {
+    error("error parsing %s", e.what());
+  }
 
   //inlet_new(&x->x_obj, &x->x_obj.ob_pd, gensym("list"), gensym("bound"));
   //floatinlet_new(&x->x_obj, &x->step);
