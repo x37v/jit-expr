@@ -8,6 +8,7 @@ LLVM_COMPONENTS = support core irreader mcjit linker native
 
 # library name
 lib.name = xnor_expr
+common.sources = src/llvmcodegen/codegen.cc
 
 cflags = --std=c++11 `llvm-config-5.0 --cxxflags` -I/usr/local/include/ -Isrc/ -Isrc/parse/ -Ibuild/src/parse/ -fexceptions
 ldflags = `llvm-config-5.0 --ldflags` `llvm-config-5.0 --libs ${LLVM_COMPONENTS}` 

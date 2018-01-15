@@ -3,7 +3,7 @@
 #include "llvmcodegen/codegen.h"
 #include "parser.hh"
 #include <stdexcept>
-//#include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/TargetSelect.h>
 
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
 extern "C" void xnor_expr_setup(void);
@@ -34,12 +34,10 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
   
   try {
     auto t = x->driver->parse_string(line);
-    /*
     for (auto c: t) {
-      xnor::LLVMCodeGenVisitor cv(x->driver.inputs());
+      xnor::LLVMCodeGenVisitor cv(x->driver->inputs());
       c->accept(&cv);
     }
-    */
   } catch (std::runtime_error& e) {
     error("error parsing \"%s\" %s", line.c_str(), e.what());
     delete x->driver;
@@ -55,9 +53,9 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
 }
 
 void xnor_expr_setup(void) {
-  //llvm::InitializeNativeTarget();
-	//llvm::InitializeNativeTargetAsmPrinter();
-	//llvm::InitializeNativeTargetAsmParser();
+  llvm::InitializeNativeTarget();
+	llvm::InitializeNativeTargetAsmPrinter();
+	llvm::InitializeNativeTargetAsmParser();
 
   xnor_expr_class = class_new(gensym("xnor_expr"),
       (t_newmethod)xnor_expr_new,
