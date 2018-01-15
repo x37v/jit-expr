@@ -1,0 +1,2 @@
+#N canvas 2 72 1362 694 10;
+#X obj 491 257 xnor_expr 3 + 4 + $f1;
