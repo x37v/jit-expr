@@ -19,6 +19,7 @@ typedef struct _xnor_expr {
   std::vector<t_inlet *> ins;
   std::vector<t_outlet *> outs;
   std::vector<struct _xnor_expr_proxy *> proxies;
+  std::vector<float> input_values;
   parse::Driver * driver;
 } t_xnor_expr;
 
@@ -48,6 +49,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
       c->accept(&cv);
     }
     auto inputs = x->driver->inputs();
+    x->input_values.resize(inputs.size());
     if (inputs.size() == 0) {
       x->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_bang, &s_bang));
     } else {
@@ -100,6 +102,7 @@ void xnor_expr_free(t_xnor_expr * x) {
 }
 
 void xnor_expr_bang(t_xnor_expr * x) {
+  post("got bang");
   float i = 0;
   for (auto o: x->outs)
     outlet_float(o, i++);
@@ -107,6 +110,9 @@ void xnor_expr_bang(t_xnor_expr * x) {
 
 void xnor_expr_proxy_float(t_xnor_expr_proxy *p, t_floatarg f) {
   post("%d got float %f", p->index, f);
+  p->parent->input_values.at(p->index) = f;
+  if (p->index == 0)
+    xnor_expr_bang(p->parent);
 }
 
 void xnor_expr_setup(void) {
@@ -120,7 +126,6 @@ void xnor_expr_setup(void) {
       sizeof(t_xnor_expr),
       CLASS_NOINLET,
       A_GIMME, 0);
-
   class_addbang(xnor_expr_class, xnor_expr_bang);
 
 	xnor_expr_proxy_class = class_new(gensym("xnor_expr_proxy"),
