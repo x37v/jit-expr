@@ -9,16 +9,24 @@
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
 extern "C" void xnor_expr_setup(void);
 
-extern "C" {
 static t_class *xnor_expr_class;
+static t_class *xnor_expr_proxy_class;
+
+struct _xnor_expr_proxy;
 
 typedef struct _xnor_expr {
   t_object x_obj;
   std::vector<t_inlet *> ins;
   std::vector<t_outlet *> outs;
+  std::vector<struct _xnor_expr_proxy *> proxies;
   parse::Driver * driver;
 } t_xnor_expr;
-}
+
+typedef struct _xnor_expr_proxy {
+	t_pd p_pd;
+	unsigned int index;
+	t_xnor_expr *parent;
+} t_xnor_expr_proxy;
 
 void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
 {
@@ -47,7 +55,14 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
         switch (i->type()) {
           case xnor::ast::Variable::VarType::FLOAT:
           case xnor::ast::Variable::VarType::INT:
-            x->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_float, &s_float));
+            {
+              t_xnor_expr_proxy *p = (t_xnor_expr_proxy *)pd_new(xnor_expr_proxy_class);
+              p->index = i->input_index();
+              p->parent = x;
+              x->proxies.push_back(p);
+
+              x->ins.push_back(inlet_new(&x->x_obj, &p->p_pd, &s_float, &s_float));
+            }
             break;
           default:
             throw std::runtime_error("input type not handled yet");
@@ -64,10 +79,6 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
     return NULL;
   }
 
-  //inlet_new(&x->x_obj, &x->x_obj.ob_pd, gensym("list"), gensym("bound"));
-  //floatinlet_new(&x->x_obj, &x->step);
-  //x->f_out = outlet_new(&x->x_obj, &s_float);
-  //x->b_out = outlet_new(&x->x_obj, &s_bang);
   return (void *)x;
 }
 
@@ -88,6 +99,16 @@ void xnor_expr_free(t_xnor_expr * x) {
   x->driver = NULL;
 }
 
+void xnor_expr_bang(t_xnor_expr * x) {
+  float i = 0;
+  for (auto o: x->outs)
+    outlet_float(o, i++);
+}
+
+void xnor_expr_proxy_float(t_xnor_expr_proxy *p, t_floatarg f) {
+  post("%d got float %f", p->index, f);
+}
+
 void xnor_expr_setup(void) {
   llvm::InitializeNativeTarget();
 	llvm::InitializeNativeTargetAsmPrinter();
@@ -100,8 +121,16 @@ void xnor_expr_setup(void) {
       CLASS_NOINLET,
       A_GIMME, 0);
 
+  class_addbang(xnor_expr_class, xnor_expr_bang);
+
+	xnor_expr_proxy_class = class_new(gensym("xnor_expr_proxy"),
+      0, 0,
+      sizeof(t_xnor_expr_proxy),
+      CLASS_PD,
+      A_NULL);
+	class_addfloat(xnor_expr_proxy_class, xnor_expr_proxy_float);
+
   /*
-  class_addbang (xnor_expr_class, xnor_expr_bang);
   class_addmethod(xnor_expr_class,
       (t_method)xnor_expr_reset, gensym("reset"), 0);
   class_addmethod(xnor_expr_class,
