@@ -38,6 +38,12 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
       xnor::LLVMCodeGenVisitor cv(x->driver->inputs());
       c->accept(&cv);
     }
+    auto inputs = x->driver->inputs();
+    if (inputs.size() == 0) {
+    } else {
+      for (auto i: inputs) {
+      }
+    }
   } catch (std::runtime_error& e) {
     error("error parsing \"%s\" %s", line.c_str(), e.what());
     delete x->driver;
@@ -52,6 +58,14 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
   return (void *)x;
 }
 
+void xnor_expr_free(t_xnor_expr * x) {
+  if (x == NULL)
+    return;
+  if (x->driver != nullptr)
+    delete x->driver;
+  x->driver = NULL;
+}
+
 void xnor_expr_setup(void) {
   llvm::InitializeNativeTarget();
 	llvm::InitializeNativeTargetAsmPrinter();
@@ -59,7 +73,8 @@ void xnor_expr_setup(void) {
 
   xnor_expr_class = class_new(gensym("xnor_expr"),
       (t_newmethod)xnor_expr_new,
-      0, sizeof(t_xnor_expr),
+      (t_method)xnor_expr_free,
+      sizeof(t_xnor_expr),
       CLASS_DEFAULT,
       A_GIMME, 0);
 
