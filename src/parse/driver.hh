@@ -31,7 +31,7 @@ namespace parse
 
         protected:
             void add_tree(xnor::ast::NodePtr root);
-            void add_input(xnor::ast::VariablePtr var);
+            xnor::ast::VariablePtr add_input(xnor::ast::VariablePtr var);
             void validate();
 
         private:

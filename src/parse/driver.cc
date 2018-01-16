@@ -72,7 +72,14 @@ namespace parse
     }
 
     void Driver::add_tree(xnor::ast::NodePtr v) { mTrees.push_back(v); }
-    void Driver::add_input(xnor::ast::VariablePtr v) { mInputs.push_back(v); }
+    xnor::ast::VariablePtr Driver::add_input(xnor::ast::VariablePtr v) {
+      for (auto i: mInputs) {
+        if (i->input_index() == v->input_index() && i->type() == v->type())
+          return i;
+      }
+      mInputs.push_back(v);
+      return v;
+    }
     void Driver::validate() {
       //make sure we have consecutive inputs
       std::map<unsigned int, xnor::ast::Variable::VarType> inputs;
