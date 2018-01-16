@@ -3,6 +3,7 @@
 #include "llvmcodegen/codegen.h"
 #include "parser.hh"
 #include <stdexcept>
+#include <vector>
 #include <llvm/Support/TargetSelect.h>
 
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
@@ -13,8 +14,8 @@ static t_class *xnor_expr_class;
 
 typedef struct _xnor_expr {
   t_object x_obj;
-  t_inlet **ins;
-  t_outlet **outs;
+  std::vector<t_inlet *> ins;
+  std::vector<t_outlet *> outs;
   parse::Driver * driver;
 } t_xnor_expr;
 }
@@ -40,13 +41,13 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
     }
     auto inputs = x->driver->inputs();
     if (inputs.size() == 0) {
-      inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_bang, &s_bang);
+      x->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_bang, &s_bang));
     } else {
       for (auto i: inputs) {
         switch (i->type()) {
           case xnor::ast::Variable::VarType::FLOAT:
           case xnor::ast::Variable::VarType::INT:
-            inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_float, &s_float);
+            x->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_float, &s_float));
             break;
           default:
             throw std::runtime_error("input type not handled yet");
@@ -72,6 +73,15 @@ void xnor_expr_free(t_xnor_expr * x) {
     return;
   if (x->driver != nullptr)
     delete x->driver;
+
+  for (auto i: x->ins)
+    inlet_free(i);
+  x->ins.clear();
+
+  for (auto i: x->outs)
+    outlet_free(i);
+  x->outs.clear();
+
   x->driver = NULL;
 }
 
