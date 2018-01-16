@@ -9,8 +9,7 @@ ERROR="<It seems that the build/ directory is missing\nMaybe you forgot to execu
 .PHONY: check pit track
 
 
-all:
-	@make -C build
+all: pd
 
 clean:
 	@echo "\033[33m< ---------------------- >\033[37m"
