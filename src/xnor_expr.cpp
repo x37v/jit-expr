@@ -54,6 +54,9 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
         }
       }
     }
+    for (auto c: t) {
+      x->outs.push_back(outlet_new(&x->x_obj, &s_float));
+    }
   } catch (std::runtime_error& e) {
     error("error parsing \"%s\" %s", line.c_str(), e.what());
     delete x->driver;
