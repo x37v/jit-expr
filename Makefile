@@ -18,6 +18,7 @@ clean:
 	@echo "\033[33m< ---------------------- >\033[37m"
 	@rm -f *.dot
 	@if [ -e build/ ] ; then make -C build/ clean ; fi 1>/dev/null
+	@make -f Makefile.pd clean
 
 distclean: clean
 	@echo "\033[34m< Preparing directory for dist >\033[37m"
@@ -45,3 +46,11 @@ distcheck: dist
 
 test: all
 	./parser examples.txt 2>&1 | less
+
+pd:
+	@make -C build
+	@make -f Makefile.pd
+
+test_pd: pd
+	pd -path . -lib xnor_expr test.pd
+
