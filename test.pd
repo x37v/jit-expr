@@ -1,2 +1,18 @@
-#N canvas 2 72 1362 694 10;
-#X obj 491 257 xnor_expr 3 + 4 + $f1;
+#N canvas 2 52 1362 714 10;
+#X floatatom 614 398 5 0 0 0 - - -, f 5;
+#X floatatom 708 392 5 0 0 0 - - -, f 5;
+#X floatatom 522 399 5 0 0 0 - - -, f 5;
+#X obj 599 189 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
+-1 -1 7000 1;
+#X obj 499 140 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
+-1 -1 4200 1;
+#X msg 430 221 bang;
+#X msg 446 115 list 0.3 23;
+#X obj 512 315 xnor_expr 3 + 4 + $f1 + $f2 + $f3 \; $f4 + 23 \; 4;
+#X connect 3 0 7 1;
+#X connect 4 0 7 0;
+#X connect 5 0 7 0;
+#X connect 6 0 7 0;
+#X connect 7 0 2 0;
+#X connect 7 1 0 0;
+#X connect 7 2 1 0;
