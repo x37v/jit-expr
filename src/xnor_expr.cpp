@@ -40,8 +40,17 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
     }
     auto inputs = x->driver->inputs();
     if (inputs.size() == 0) {
+      inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_bang, &s_bang);
     } else {
       for (auto i: inputs) {
+        switch (i->type()) {
+          case xnor::ast::Variable::VarType::FLOAT:
+          case xnor::ast::Variable::VarType::INT:
+            inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_float, &s_float);
+            break;
+          default:
+            throw std::runtime_error("input type not handled yet");
+        }
       }
     }
   } catch (std::runtime_error& e) {
@@ -75,7 +84,7 @@ void xnor_expr_setup(void) {
       (t_newmethod)xnor_expr_new,
       (t_method)xnor_expr_free,
       sizeof(t_xnor_expr),
-      CLASS_DEFAULT,
+      CLASS_NOINLET,
       A_GIMME, 0);
 
   /*
