@@ -67,7 +67,7 @@ namespace xnor {
 
     llvm::FunctionType *ftype = llvm::FunctionType::get(llvm::Type::getFloatTy(mContext), llvm::makeArrayRef(argTypes), false);
     //XXX should we use internal linkage and figure out how to grab those symbols?
-    mMainFunction = llvm::Function::Create(ftype, llvm::GlobalValue::ExternalLinkage, "expralex", mModule.get());
+    mMainFunction = llvm::Function::Create(ftype, llvm::GlobalValue::InternalLinkage, "expralex", mModule.get());
     mBlock = llvm::BasicBlock::Create(mContext, "entry", mMainFunction, 0);
     mBuilder.SetInsertPoint(mBlock);
 
@@ -315,19 +315,7 @@ namespace xnor {
   }
 
   llvm::JITSymbol LLVMCodeGenVisitor::findMangledSymbol(const std::string &Name) {
-
-#ifdef LLVM_ON_WIN32
-    // The symbol lookup of ObjectLinkingLayer uses the SymbolRef::SF_Exported
-    // flag to decide whether a symbol will be visible or not, when we call
-    // IRCompileLayer::findSymbolIn with ExportedSymbolsOnly set to true.
-    //
-    // But for Windows COFF objects, this flag is currently never set.
-    // For a potential solution see: https://reviews.llvm.org/rL258665
-    // For now, we allow non-exported symbols on Windows as a workaround.
     const bool ExportedSymbolsOnly = false;
-#else
-    const bool ExportedSymbolsOnly = true;
-#endif
 
     // Search modules in reverse order: from last added to first added.
     // This is the opposite of the usual search order for dlsym, but makes more
