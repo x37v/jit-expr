@@ -36,7 +36,7 @@ int main(int argc, char * argv[]) {
       out[0] = &value;
 
       xnor::LLVMCodeGenVisitor::input_arg_t * in = new xnor::LLVMCodeGenVisitor::input_arg_t[12];
-      in[0].flt = 53.0;
+      in[0].flt = 53.2;
 
       for (auto c: t) {
         //xnor::AstPrintVisitor v;

@@ -52,7 +52,7 @@ namespace xnor {
     mFunctionPassManager = llvm::make_unique<llvm::legacy::FunctionPassManager>(mModule.get());
 
     //XXX TMP, DITCH OPTIMIZE
-#if 0
+#if 1
     // Do simple "peephole" optimizations and bit-twiddling optzns.
     mFunctionPassManager->add(llvm::createInstructionCombiningPass());
     // Reassociate expressions.
@@ -116,9 +116,26 @@ namespace xnor {
         mValue = mBuilder.CreateLoad(cur);
         break;
       case xnor::ast::Variable::VarType::INT:
-        //XXX DO CAST
-        cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0));
-        mValue = mBuilder.CreateLoad(cur);
+        {
+          cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0));
+          mValue = mBuilder.CreateLoad(cur);
+
+          //use floorf function
+          auto n = "floorf";
+          llvm::Function * f = mModule->getFunction(n);
+          if (!f) {
+            std::vector<llvm::Type *> args = {llvm::Type::getFloatTy(mContext)};
+            llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getFloatTy(mContext), args, false);
+            f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, n, mModule.get());
+            if (!f)
+              throw std::runtime_error("cannot find floorf function");
+            //XXX is it a leak if we don't store this somewhere??
+          }
+
+          //visit the children, store them in the args
+          std::vector<llvm::Value *> args = { mValue };
+          mValue = mBuilder.CreateCall(f, args, "calltmp");
+        }
         break;
       default:
         throw std::runtime_error("type not supported yet");
