@@ -31,6 +31,7 @@ using std::endl;
 
 namespace {
   const std::vector<std::string> table_functions = {"Sum", "sum", "size"};
+  const std::string main_function_name = "expralex";
 }
 
 namespace xnor {
@@ -67,7 +68,7 @@ namespace xnor {
 
     llvm::FunctionType *ftype = llvm::FunctionType::get(llvm::Type::getFloatTy(mContext), llvm::makeArrayRef(argTypes), false);
     //XXX should we use internal linkage and figure out how to grab those symbols?
-    mMainFunction = llvm::Function::Create(ftype, llvm::GlobalValue::InternalLinkage, "expralex", mModule.get());
+    mMainFunction = llvm::Function::Create(ftype, llvm::GlobalValue::InternalLinkage, main_function_name, mModule.get());
     mBlock = llvm::BasicBlock::Create(mContext, "entry", mMainFunction, 0);
     mBuilder.SetInsertPoint(mBlock);
 
@@ -280,7 +281,7 @@ namespace xnor {
   void LLVMCodeGenVisitor::visit(xnor::ast::ArrayAssignment* v){
   }
 
-  void LLVMCodeGenVisitor::run(t_inlet ** inlets, t_outlet ** outlets) {
+  LLVMCodeGenVisitor::function_t LLVMCodeGenVisitor::function() {
     if (mValue == nullptr)
       throw std::runtime_error("null return value");
 
@@ -299,15 +300,12 @@ namespace xnor {
     auto H = llvm::cantFail(mCompileLayer.addModule(std::move(mModule), std::move(Resolver)));
     mModuleHandles.push_back(H);
 
-
-    auto ExprSymbol = findSymbol("expralex");
+    auto ExprSymbol = findSymbol(main_function_name);
     if (!ExprSymbol)
-      throw std::runtime_error("couldn't find symbol 'expralex'");
+      throw std::runtime_error("couldn't find symbol " + main_function_name);
 
-    /*
-    float (*FP)(float) = (float (**)(t_inlet))(intptr_t)cantFail(ExprSymbol.getAddress());
-    cout << "Evaluated to " << FP(arg) << endl;
-    */
+    function_t func = reinterpret_cast<function_t>((uintptr_t)cantFail(ExprSymbol.getAddress()));
+    return func;
   }
 
   llvm::JITSymbol LLVMCodeGenVisitor::findSymbol(const std::string Name) {

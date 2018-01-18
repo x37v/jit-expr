@@ -25,8 +25,6 @@ int main(int argc, char * argv[]) {
 
   parse::Driver driver;
   std::string line;
-  std::array<t_inlet *, 10> inlets;
-  std::array<t_outlet *, 10> outlets;
 
   while(std::getline(infile, line)) {
     try { 
@@ -37,7 +35,7 @@ int main(int argc, char * argv[]) {
         //c->accept(&v);
         xnor::LLVMCodeGenVisitor cv(driver.inputs());
         c->accept(&cv);
-        cv.run(&inlets.front(), &outlets.front());
+        cv.function();
       }
       cout << endl;
     } catch (std::runtime_error& e) {

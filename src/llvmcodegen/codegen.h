@@ -35,6 +35,13 @@ namespace llvm {
 namespace xnor {
   class LLVMCodeGenVisitor : public xnor::ast::Visitor {
     public:
+      typedef union {
+        t_float flt;
+        t_symbol * sym;
+        t_sample * samp;
+      } input_arg_t;
+
+      typedef void(*function_t)(float **, input_arg_t *);
 
       using ObjLayerT = llvm::orc::RTDyldObjectLinkingLayer;
       using CompileLayerT = llvm::orc::IRCompileLayer<ObjLayerT, llvm::orc::SimpleCompiler>;
@@ -54,8 +61,7 @@ namespace xnor {
       virtual void visit(xnor::ast::ValueAssignment* v);
       virtual void visit(xnor::ast::ArrayAssignment* v);
 
-      void run(t_inlet ** inlets, t_outlet ** outlets);
-
+      function_t function();
     private:
       xnor::ast::VariableVector mVariables;
 
