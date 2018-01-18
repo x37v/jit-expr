@@ -36,8 +36,7 @@ namespace {
 
 namespace xnor {
 
-  LLVMCodeGenVisitor::LLVMCodeGenVisitor(xnor::ast::VariableVector variables) :
-    mVariables(variables),
+  LLVMCodeGenVisitor::LLVMCodeGenVisitor() :
     mContext(),
     mBuilder(mContext),
     mTargetMachine(llvm::EngineBuilder().selectTarget()),
@@ -52,6 +51,8 @@ namespace xnor {
 
     mFunctionPassManager = llvm::make_unique<llvm::legacy::FunctionPassManager>(mModule.get());
 
+    //XXX TMP, DITCH OPTIMIZE
+#if 0
     // Do simple "peephole" optimizations and bit-twiddling optzns.
     mFunctionPassManager->add(llvm::createInstructionCombiningPass());
     // Reassociate expressions.
@@ -60,30 +61,39 @@ namespace xnor {
     mFunctionPassManager->add(llvm::createGVNPass());
     // Simplify the control flow graph (deleting unreachable blocks, etc).
     mFunctionPassManager->add(llvm::createCFGSimplificationPass());
+#endif
+
     mFunctionPassManager->doInitialization();
 
     std::vector<llvm::Type*> argTypes;
-    for (unsigned int i = 0; i < mVariables.size(); i++)
-      argTypes.push_back(llvm::Type::getFloatTy(mContext));
+    //for (unsigned int i = 0; i < mVariables.size(); i++)
+      //argTypes.push_back(llvm::Type::getFloatTy(mContext));
+    argTypes.push_back(llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0));
 
-    llvm::FunctionType *ftype = llvm::FunctionType::get(llvm::Type::getFloatTy(mContext), llvm::makeArrayRef(argTypes), false);
+    //XXX TMP
+    argTypes.push_back(llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0));
+
+    llvm::FunctionType *ftype = llvm::FunctionType::get(llvm::Type::getVoidTy(mContext), llvm::makeArrayRef(argTypes), false);
     //XXX should we use internal linkage and figure out how to grab those symbols?
     mMainFunction = llvm::Function::Create(ftype, llvm::GlobalValue::InternalLinkage, main_function_name, mModule.get());
     mBlock = llvm::BasicBlock::Create(mContext, "entry", mMainFunction, 0);
     mBuilder.SetInsertPoint(mBlock);
 
-    unsigned int i = 1;
-    for (auto &a: mMainFunction->args()) {
-      a.setName("f" + std::to_string(i++));
-      mArgs.push_back(&a);
-    }
+    //setup arguments 
+    auto it = mMainFunction->args().begin();
+    it->setName("out");
+    mOutput = it;
+
+    it++;
+    it->setName("in");
+    mInput = it;
   }
 
   LLVMCodeGenVisitor::~LLVMCodeGenVisitor() {
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::Variable* v){
-    mValue = mArgs.at(v->input_index());
+    //mValue = mArgs.at(v->input_index());
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::Value<int>* v){
@@ -285,7 +295,28 @@ namespace xnor {
     if (mValue == nullptr)
       throw std::runtime_error("null return value");
 
-    mBuilder.CreateRet(mValue);
+
+
+    //auto inargt = llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0);
+    //llvm::Value * input = mBuilder.CreateAlloca(inargt, (unsigned)0);
+    //llvm::Value * inarg = mBuilder.CreateStore(input, mInput);
+
+    llvm::Value * cur = nullptr;
+
+
+    auto outargt = llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0);
+    llvm::Value * output = mBuilder.CreateAlloca(outargt, (unsigned)0);
+    /*llvm::Value * outarg =*/ mBuilder.CreateStore(mOutput, output);
+    
+    auto zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 0); //XXX is there a better index?
+    cur = mBuilder.CreateLoad(output);
+    cur = mBuilder.CreateInBoundsGEP(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), cur, zero);
+    cur = mBuilder.CreateLoad(cur);
+    cur = mBuilder.CreateInBoundsGEP(llvm::Type::getFloatTy(mContext), cur, zero);
+    mBuilder.CreateStore(mValue, cur);
+
+
+    mBuilder.CreateRet(nullptr);
     llvm::verifyFunction(*mMainFunction);
     mFunctionPassManager->run(*mMainFunction);
     mModule->print(llvm::errs(), nullptr);

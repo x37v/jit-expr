@@ -47,7 +47,7 @@ namespace xnor {
       using CompileLayerT = llvm::orc::IRCompileLayer<ObjLayerT, llvm::orc::SimpleCompiler>;
       using ModuleHandleT = CompileLayerT::ModuleHandleT;
 
-      LLVMCodeGenVisitor(xnor::ast::VariableVector variables = xnor::ast::VariableVector());
+      LLVMCodeGenVisitor();
       virtual ~LLVMCodeGenVisitor();
       virtual void visit(xnor::ast::Variable* v);
       virtual void visit(xnor::ast::Value<int>* v);
@@ -63,8 +63,6 @@ namespace xnor {
 
       function_t function();
     private:
-      xnor::ast::VariableVector mVariables;
-
       llvm::LLVMContext mContext;
       llvm::IRBuilder<> mBuilder;
 
@@ -74,7 +72,8 @@ namespace xnor {
 
       llvm::Function * mMainFunction;
       llvm::Value * mValue;
-      std::vector<llvm::Value *> mArgs;
+      llvm::Value * mOutput;
+      llvm::Value * mInput;
       llvm::BasicBlock * mBlock;
 
       const llvm::DataLayout mDataLayout;

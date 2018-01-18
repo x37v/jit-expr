@@ -45,7 +45,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
   try {
     auto t = x->driver->parse_string(line);
     for (auto c: t) {
-      xnor::LLVMCodeGenVisitor cv(x->driver->inputs());
+      xnor::LLVMCodeGenVisitor cv;
       c->accept(&cv);
       /* auto f = */ cv.function();
     }
