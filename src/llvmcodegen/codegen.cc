@@ -66,12 +66,14 @@ namespace xnor {
     mFunctionPassManager->doInitialization();
 
     std::vector<llvm::Type*> argTypes;
-    //for (unsigned int i = 0; i < mVariables.size(); i++)
-      //argTypes.push_back(llvm::Type::getFloatTy(mContext));
     argTypes.push_back(llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0));
 
-    //XXX TMP
-    argTypes.push_back(llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0));
+    std::vector<llvm::Type*> unionTypes;
+    unionTypes.push_back(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0));
+    auto s = llvm::StructType::create(llvm::makeArrayRef(unionTypes), "union.input_arg_t");
+    auto sp = llvm::PointerType::get(s, 0);
+    argTypes.push_back(sp);
+    mInputType = s;
 
     llvm::FunctionType *ftype = llvm::FunctionType::get(llvm::Type::getVoidTy(mContext), llvm::makeArrayRef(argTypes), false);
     //XXX should we use internal linkage and figure out how to grab those symbols?
@@ -86,14 +88,41 @@ namespace xnor {
 
     it++;
     it->setName("in");
+
     mInput = it;
+    llvm::Value * input = mBuilder.CreateAlloca(sp, (unsigned)0);
+    /*llvm::Value * inarg =*/ mBuilder.CreateStore(mInput, input);
+    mInput = input;
   }
 
   LLVMCodeGenVisitor::~LLVMCodeGenVisitor() {
   }
+#if 0
+  %5 = load %union._ut*, %union._ut** %4, align 8, !dbg !27
+  %6 = getelementptr inbounds %union._ut, %union._ut* %5, i64 0, !dbg !27
+  %7 = bitcast %union._ut* %6 to float*, !dbg !28
+  %8 = load float, float* %7, align 8, !dbg !28
+#endif
 
   void LLVMCodeGenVisitor::visit(xnor::ast::Variable* v){
-    //mValue = mArgs.at(v->input_index());
+    //XXX is there a better index?
+    auto index = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), v->input_index());
+
+    llvm::Value * cur = mBuilder.CreateLoad(mInput);
+    cur = mBuilder.CreateInBoundsGEP(mInputType, cur, index);
+    switch(v->type()) {
+      case xnor::ast::Variable::VarType::FLOAT:
+        cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0));
+        mValue = mBuilder.CreateLoad(cur);
+        break;
+      case xnor::ast::Variable::VarType::INT:
+        //XXX DO CAST
+        cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0));
+        mValue = mBuilder.CreateLoad(cur);
+        break;
+      default:
+        throw std::runtime_error("type not supported yet");
+    }
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::Value<int>* v){
@@ -295,14 +324,7 @@ namespace xnor {
     if (mValue == nullptr)
       throw std::runtime_error("null return value");
 
-
-
-    //auto inargt = llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0);
-    //llvm::Value * input = mBuilder.CreateAlloca(inargt, (unsigned)0);
-    //llvm::Value * inarg = mBuilder.CreateStore(input, mInput);
-
     llvm::Value * cur = nullptr;
-
 
     auto outargt = llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0);
     llvm::Value * output = mBuilder.CreateAlloca(outargt, (unsigned)0);

@@ -75,6 +75,7 @@ namespace xnor {
       llvm::Value * mOutput;
       llvm::Value * mInput;
       llvm::BasicBlock * mBlock;
+      llvm::Type * mInputType;
 
       const llvm::DataLayout mDataLayout;
       ObjLayerT mObjectLayer;

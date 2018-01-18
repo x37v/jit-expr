@@ -30,12 +30,22 @@ int main(int argc, char * argv[]) {
     try { 
       cout << "parsing: " << line << endl;
       auto t = driver.parse_string(line);
+
+      float value = 0;
+      float ** out = new float*[1];
+      out[0] = &value;
+
+      xnor::LLVMCodeGenVisitor::input_arg_t * in = new xnor::LLVMCodeGenVisitor::input_arg_t[12];
+      in[0].flt = 53.0;
+
       for (auto c: t) {
         //xnor::AstPrintVisitor v;
         //c->accept(&v);
         xnor::LLVMCodeGenVisitor cv;
         c->accept(&cv);
-        cv.function();
+        auto f = cv.function();
+        f(out, in);
+        cout << "output " << value << endl;
       }
       cout << endl;
     } catch (std::runtime_error& e) {

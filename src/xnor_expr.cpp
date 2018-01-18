@@ -44,11 +44,18 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
   
   try {
     auto t = x->driver->parse_string(line);
+
+    float value = 0;
+    float ** out = new float*[1];
     for (auto c: t) {
       xnor::LLVMCodeGenVisitor cv;
       c->accept(&cv);
-      /* auto f = */ cv.function();
+      auto f = cv.function();
+      xnor::LLVMCodeGenVisitor::input_arg_t * in = nullptr;
+      f(out, in);
     }
+    delete out;
+
     auto inputs = x->driver->inputs();
     x->input_values.resize(inputs.size());
     if (inputs.size() == 0) {
