@@ -13,7 +13,7 @@ struct _xnor_expr;
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
 extern "C" void xnor_expr_free(struct _xnor_expr * x);
 extern "C" void xnor_expr_setup(void);
-extern "C" float factf(float v);
+extern "C" float xnor_expr_factf(float v);
 
 static t_class *xnor_expr_class;
 static t_class *xnor_expr_proxy_class;
@@ -182,13 +182,15 @@ void xnor_expr_setup(void) {
 
 //utility functions
 
-int facti(int i) {
-  if (i <= 0)
-    return 1;
-  return i * facti(i - 1);
+namespace {
+  int facti(int i) {
+    if (i <= 0)
+      return 1;
+    return i * facti(i - 1);
+  }
 }
 
-float factf(float v) {
+float xnor_expr_factf(float v) {
   return static_cast<float>(facti(static_cast<int>(v)));
 }
 

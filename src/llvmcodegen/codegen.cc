@@ -307,6 +307,8 @@ namespace xnor {
     //alias
     if (n == "ln")
       n = "log";
+    else if (n == "fact")
+      n = "xnor_expr_fact";
     n = n + "f"; //we're using the floating point version of these calls
 
     llvm::Function * f = mModule->getFunction(n);
