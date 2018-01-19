@@ -80,7 +80,7 @@ namespace xnor {
     auto sp = llvm::PointerType::get(mInputType, 0);
     argTypes.push_back(sp);
 
-    argTypes.push_back(llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getInt32Ty(mContext), 0), 0));
+    argTypes.push_back(llvm::Type::getInt32Ty(mContext));
 
     //opaque
     mSymbolType = llvm::StructType::create(mContext, "t_symbol_ptr");
@@ -103,6 +103,9 @@ namespace xnor {
     llvm::Value * input = mBuilder.CreateAlloca(sp, (unsigned)0);
     /*llvm::Value * inarg =*/ mBuilder.CreateStore(mInput, input);
     mInput = input;
+
+    it++;
+    it->setName("veclen");
   }
 
   LLVMCodeGenVisitor::~LLVMCodeGenVisitor() {
@@ -365,6 +368,7 @@ namespace xnor {
 
     //XXX is there a better index?
     auto zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 0);
+
     for (unsigned int i = 0; i < statements.size(); i++) {
       auto index = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), i);
       cur = mBuilder.CreateLoad(output);
