@@ -66,7 +66,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
     for (size_t i = 0; i < x->outarg.size(); i++)
       x->outarg[i] = &x->outfloat[i];
 
-    for (size_t i = 0; i < inputs.size(); i++) {
+    for (size_t i = 1; i < inputs.size(); i++) {
       auto v = inputs.at(i);
       switch (v->type()) {
         case xnor::ast::Variable::VarType::FLOAT:
@@ -76,9 +76,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
             p->index = v->input_index();
             p->parent = x;
             x->proxies.push_back(p);
-
-            if (i != 0)
-              x->ins.push_back(inlet_new(&x->x_obj, &p->p_pd, &s_float, &s_float));
+            x->ins.push_back(inlet_new(&x->x_obj, &p->p_pd, &s_float, &s_float));
           }
           break;
         default:
