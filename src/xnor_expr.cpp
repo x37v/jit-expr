@@ -17,6 +17,37 @@ namespace {
     VECTOR,
     SAMPLE
   };
+
+  struct cpp_expr {
+    std::vector<t_inlet *> ins;
+    std::vector<t_outlet *> outs;
+    std::vector<struct _xnor_expr_proxy *> proxies;
+
+    parse::Driver driver;
+    xnor::LLVMCodeGenVisitor cv;
+
+    xnor::LLVMCodeGenVisitor::function_t func;
+    XnorExpr expr_type = XnorExpr::CONTROL;
+
+    std::vector<float> outfloat;
+    std::vector<float *> outarg;
+    std::vector<float> infloats;
+    std::vector<xnor::LLVMCodeGenVisitor::input_arg_t> inarg;
+    std::vector<xnor::ast::Variable::VarType> input_types;
+    int signal_inputs = 0; //could just calc from input_types
+
+    //constructor
+    cpp_expr(XnorExpr t) : expr_type(t) { };
+    ~cpp_expr() {
+      for (auto i: ins)
+        inlet_free(i);
+      ins.clear();
+
+      for (auto i: outs)
+        outlet_free(i);
+      outs.clear();
+    }
+  };
 }
 
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
@@ -30,21 +61,7 @@ static t_class *xnor_expr_tilde_class;
 
 typedef struct _xnor_expr {
   t_object x_obj;
-  std::vector<t_inlet *> ins;
-  std::vector<t_outlet *> outs;
-  std::vector<struct _xnor_expr_proxy *> proxies;
-
-  std::shared_ptr<parse::Driver> driver;
-  std::shared_ptr<xnor::LLVMCodeGenVisitor> cv;
-
-  xnor::LLVMCodeGenVisitor::function_t func;
-  XnorExpr expr_type = XnorExpr::CONTROL;
-
-  std::vector<float> outfloat;
-  std::vector<float *> outarg;
-  std::vector<float> infloats;
-  std::vector<xnor::LLVMCodeGenVisitor::input_arg_t> inarg;
-
+  std::shared_ptr<cpp_expr> cpp;
   float exp_f;   		/* control value to be transformed to signal */
 } t_xnor_expr;
 
@@ -62,7 +79,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
 
 	if (strcmp("xnor/expr~", s->s_name) == 0) {
     x = (t_xnor_expr *)pd_new(xnor_expr_tilde_class);
-    x->expr_type = XnorExpr::VECTOR;
+    x->cpp = std::make_shared<cpp_expr>(XnorExpr::VECTOR);
   } else if (strcmp("xnor/fexpr~", s->s_name) == 0) {
     error("fexpr~ not implemented yet");
     return NULL; // XXX NOT IMPLEMENTED YET
@@ -70,11 +87,8 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
     if (strcmp("xnor/expr", s->s_name) != 0)
       error("xnor_expr_new: bad object name '%s'", s->s_name);
     x = (t_xnor_expr *)pd_new(xnor_expr_class);
-    x->expr_type = XnorExpr::CONTROL;
+    x->cpp = std::make_shared<cpp_expr>(XnorExpr::CONTROL);
 	}
-
-  x->driver = std::make_shared<parse::Driver>();
-  x->cv = std::make_shared<xnor::LLVMCodeGenVisitor>();
 
   //read in the arguments into a string
   char buf[1024];
@@ -86,16 +100,20 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
   
   //parse and setup
   try {
-    auto statements = x->driver->parse_string(line);
-    x->func = x->cv->function(statements, print_code);
+    auto statements = x->cpp->driver.parse_string(line);
+    x->cpp->func = x->cpp->cv.function(statements, print_code);
 
-    auto inputs = x->driver->inputs();
+    auto inputs = x->cpp->driver.inputs();
 
     //we have a minimum of 1 input, we might not use all these floats [in signal domain] but, whatever
-    x->infloats.resize(std::max((size_t)1, inputs.size()), 0);
-    x->inarg.resize(std::max((size_t)1, inputs.size()));
+    x->cpp->infloats.resize(std::max((size_t)1, inputs.size()), 0);
+    x->cpp->inarg.resize(std::max((size_t)1, inputs.size()));
+    x->cpp->input_types.resize(std::max((size_t)1, inputs.size()), xnor::ast::Variable::VarType::FLOAT);
 
-    if (x->expr_type == XnorExpr::CONTROL) {
+    x->cpp->signal_inputs = 0;
+    x->cpp->outarg.resize(statements.size());
+
+    if (x->cpp->expr_type == XnorExpr::CONTROL) {
       if (inputs.size() >= 1 &&
           inputs.at(0)->type() != xnor::ast::Variable::VarType::FLOAT &&
           inputs.at(0)->type() != xnor::ast::Variable::VarType::INT) {
@@ -105,13 +123,13 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
       }
 
       //there will always be at least one output
-      x->outfloat.resize(statements.size());
-      x->outarg.resize(statements.size());
+      x->cpp->outfloat.resize(statements.size());
 
-      for (size_t i = 0; i < x->outarg.size(); i++) {
-        x->outarg[i] = &x->outfloat[i];
-        x->outs.push_back(outlet_new(&x->x_obj, &s_float));
+      for (size_t i = 0; i < x->cpp->outarg.size(); i++) {
+        x->cpp->outarg[i] = &x->cpp->outfloat[i];
+        x->cpp->outs.push_back(outlet_new(&x->x_obj, &s_float));
       }
+      x->cpp->input_types[0] = xnor::ast::Variable::VarType::FLOAT;
     } else {
       if (inputs.size() >= 1 &&
           inputs.at(0)->type() != xnor::ast::Variable::VarType::VECTOR) {
@@ -119,13 +137,16 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
         xnor_expr_free(x);
         return NULL;
       }
-      for (size_t i = 0; i < statements.size(); i++) {
-        x->outs.push_back(outlet_new(&x->x_obj, &s_signal));
-      }
+      x->cpp->input_types[0] = xnor::ast::Variable::VarType::VECTOR;
+      x->cpp->signal_inputs = 1;
+
+      for (size_t i = 0; i < statements.size(); i++)
+        x->cpp->outs.push_back(outlet_new(&x->x_obj, &s_signal));
     }
 
     for (size_t i = 1; i < inputs.size(); i++) {
       auto v = inputs.at(i);
+      x->cpp->input_types[i] = v->type();
       switch (v->type()) {
         case xnor::ast::Variable::VarType::FLOAT:
         case xnor::ast::Variable::VarType::INT:
@@ -133,17 +154,18 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
             t_xnor_expr_proxy *p = (t_xnor_expr_proxy *)pd_new(xnor_expr_proxy_class);
             p->index = v->input_index();
             p->parent = x;
-            x->proxies.push_back(p);
-            x->ins.push_back(inlet_new(&x->x_obj, &p->p_pd, &s_float, &s_float));
+            x->cpp->proxies.push_back(p);
+            x->cpp->ins.push_back(inlet_new(&x->x_obj, &p->p_pd, &s_float, &s_float));
           }
           break;
         case xnor::ast::Variable::VarType::VECTOR:
-          if (x->expr_type == XnorExpr::CONTROL) {
+          if (x->cpp->expr_type == XnorExpr::CONTROL) {
             error("cannot create vector inlet for xnor/expr");
             xnor_expr_free(x);
             return NULL;
           }
-          x->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal));
+          x->cpp->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal));
+          x->cpp->signal_inputs += 1;
           break;
         default:
           throw std::runtime_error("input type not handled yet");
@@ -161,36 +183,26 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
 void xnor_expr_free(t_xnor_expr * x) {
   if (x == NULL)
     return;
-
-  x->driver = nullptr;
-  x->cv = nullptr;
-
-  for (auto i: x->ins)
-    inlet_free(i);
-  x->ins.clear();
-
-  for (auto i: x->outs)
-    outlet_free(i);
-  x->outs.clear();
+  x->cpp = nullptr;
 }
 
 void xnor_expr_bang(t_xnor_expr * x) {
   //assign input values
-  for (size_t i = 0; i < x->inarg.size(); i++)
-    x->inarg.at(i).flt = x->infloats.at(i);
+  for (size_t i = 0; i < x->cpp->inarg.size(); i++)
+    x->cpp->inarg.at(i).flt = x->cpp->infloats.at(i);
 
   //execute function
-  x->func(&x->outarg.front(), &x->inarg.front(), 1);
+  x->cpp->func(&x->cpp->outarg.front(), &x->cpp->inarg.front(), 1);
 
   //output!
-  for (unsigned int i = 0; i < x->outarg.size(); i++)
-    outlet_float(x->outs.at(i), *(x->outarg.at(i)));
+  for (unsigned int i = 0; i < x->cpp->outarg.size(); i++)
+    outlet_float(x->cpp->outs.at(i), *(x->cpp->outarg.at(i)));
 }
 
 static void xnor_expr_list(t_xnor_expr *x, t_symbol *s, int argc, const t_atom *argv) {
-  for (int i = 0; i < std::min(argc, (int)x->infloats.size()); i++) {
+  for (int i = 0; i < std::min(argc, (int)x->cpp->infloats.size()); i++) {
 		if (argv[i].a_type == A_FLOAT) {
-      x->infloats.at(i) = argv[i].a_w.w_float;
+      x->cpp->infloats.at(i) = argv[i].a_w.w_float;
 		} else {
 			pd_error(x, "expr: type mismatch");
 		}
@@ -200,11 +212,57 @@ static void xnor_expr_list(t_xnor_expr *x, t_symbol *s, int argc, const t_atom *
 
 void xnor_expr_proxy_float(t_xnor_expr_proxy *p, t_floatarg f) {
   //post("%d got float %f", p->index, f);
-  p->parent->infloats.at(p->index) = f;
+  p->parent->cpp->infloats.at(p->index) = f;
+}
+
+
+static t_int *xnor_expr_tilde_perform(t_int *w) {
+  t_xnor_expr *x = (t_xnor_expr *)(w[1]);
+  int n = (int)(w[2]);
+
+  int vector_index = 3;
+  for (unsigned int i = 0; i < x->cpp->input_types.size(); i++) {
+    switch (x->cpp->input_types.at(i)) {
+        case xnor::ast::Variable::VarType::FLOAT:
+        case xnor::ast::Variable::VarType::INT:
+          x->cpp->inarg.at(i).flt = x->cpp->infloats.at(i);
+          break;
+        case xnor::ast::Variable::VarType::VECTOR:
+          x->cpp->inarg.at(i).vec = (t_sample*)w[vector_index++];
+          break;
+        default:
+          //XXX
+          break;
+    }
+  }
+
+  for (unsigned int i = 0; i < x->cpp->outarg.size(); i++)
+    x->cpp->outarg.at(i) = (float *)w[vector_index++];
+
+  //x->cpp->func(&x->outarg.front(), &x->inarg.front(), n);
 }
 
 static void xnor_expr_tilde_dsp(t_xnor_expr *x, t_signal **sp)
 {
+  int input_signals = x->cpp->signal_inputs;
+  int output_signals = x->cpp->outarg.size();
+
+  int vecsize = input_signals + output_signals + 2;
+  t_int ** vec = (t_int **)getbytes(sizeof(t_int) * vecsize);
+  vec[0] = (t_int*)x;
+  vec[1] = (t_int*)sp[0]->s_n;
+
+  //add the inputs
+  int voffset = 2;
+  for (int i = 0; i < input_signals; i++)
+    vec[i + voffset] = (t_int*)sp[i]->s_vec;
+
+  //then the outputs
+  voffset += input_signals;
+  for (int i = 0; i < output_signals; i++)
+    vec[i + voffset] = (t_int*)sp[i + input_signals]->s_vec;
+  dsp_addv(xnor_expr_tilde_perform, vecsize, (t_int*)vec);
+  freebytes(vec, sizeof(t_int) * vecsize);
 }
 
 void xnor_expr_setup(void) {
@@ -236,18 +294,6 @@ void xnor_expr_setup(void) {
 	class_addmethod(xnor_expr_tilde_class, nullfn, gensym("signal"), A_NULL);
 	CLASS_MAINSIGNALIN(xnor_expr_tilde_class, t_xnor_expr, exp_f);
 	class_addmethod(xnor_expr_tilde_class, (t_method)xnor_expr_tilde_dsp, gensym("dsp"), A_NULL);
-
-  /*
-  class_addmethod(xnor_expr_class,
-      (t_method)xnor_expr_reset, gensym("reset"), 0);
-  class_addmethod(xnor_expr_class,
-      (t_method)xnor_expr_set, gensym("set"),
-      A_DEFFLOAT, 0);
-  class_addmethod(xnor_expr_class,
-      (t_method)xnor_expr_bound, gensym("bound"),
-      A_DEFFLOAT, A_DEFFLOAT, 0);
-  class_sethelpsymbol(xnor_expr_class, gensym("help-xnor_expr"));
-      */
 }
 
 //utility functions
