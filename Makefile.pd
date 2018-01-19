@@ -10,7 +10,7 @@ LLVM_COMPONENTS = support core irreader mcjit linker native
 lib.name = xnor_expr
 common.sources = src/llvmcodegen/codegen.cc
 
-cflags = --std=c++11 `llvm-config-5.0 --cxxflags` -I/usr/local/include/ -Isrc/ -Isrc/parse/ -Ibuild/src/parse/ -fexceptions
+cflags = --std=c++11 `llvm-config-5.0 --cxxflags` -I/usr/local/include/ -Isrc/ -Isrc/parse/ -Ibuild/src/parse/ -fexceptions -g
 ldflags = `llvm-config-5.0 --ldflags` `llvm-config-5.0 --libs ${LLVM_COMPONENTS}` 
 ldlibs += build/src/parse/libparse.a
 

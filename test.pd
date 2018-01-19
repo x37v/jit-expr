@@ -16,12 +16,15 @@
 #X obj 439 456 expr 3 + 4 + $f1 + $i2 + $f3 \; sin($f4) + 23 \; 4;
 #X obj 512 315 xnor/expr 3 + 4 + $f1 + $i2 + $f3 \; sin($f4) + 23 \;
 4;
-#X obj 869 381 expr 324;
-#X obj 951 383 xnor/expr 324;
 #X floatatom 897 428 5 0 0 0 - - -, f 5;
 #X floatatom 963 430 5 0 0 0 - - -, f 5;
 #X obj 902 326 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
 -1 -1;
+#X obj 1066 470 xnor/expr fact(4);
+#X obj 831 379 expr pow(4 \, 2);
+#X obj 951 383 xnor/expr pow(4 \, 2);
+#X obj 1029 308 xnor/expr~ $v1;
+#X msg 1034 126 \; pd dsp 1;
 #X connect 3 0 11 1;
 #X connect 3 0 12 1;
 #X connect 4 0 11 0;
@@ -38,7 +41,7 @@
 #X connect 12 0 2 0;
 #X connect 12 1 0 0;
 #X connect 12 2 1 0;
-#X connect 13 0 15 0;
-#X connect 14 0 16 0;
+#X connect 15 0 17 0;
+#X connect 15 0 18 0;
 #X connect 17 0 13 0;
-#X connect 17 0 14 0;
+#X connect 18 0 14 0;
