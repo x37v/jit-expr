@@ -40,7 +40,7 @@ namespace xnor {
       typedef union {
         t_float flt;
         t_symbol * sym;
-        t_sample * samp;
+        t_sample * vec;
       } input_arg_t;
 
       typedef void(*function_t)(float **, input_arg_t *, int nframes);
