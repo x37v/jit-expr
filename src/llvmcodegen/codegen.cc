@@ -139,6 +139,12 @@ namespace xnor {
           mValue = mBuilder.CreateCall(f, args, "calltmp");
         }
         break;
+      case xnor::ast::Variable::VarType::VECTOR:
+        {
+          //XXX TEMP!!
+          mValue = llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), 0);
+        }
+        break;
       default:
         throw std::runtime_error("type not supported yet");
     }
