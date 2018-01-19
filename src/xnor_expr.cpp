@@ -143,7 +143,7 @@ static void xnor_expr_list(t_xnor_expr *x, t_symbol *s, int argc, const t_atom *
 }
 
 void xnor_expr_proxy_float(t_xnor_expr_proxy *p, t_floatarg f) {
-  post("%d got float %f", p->index, f);
+  //post("%d got float %f", p->index, f);
   p->parent->infloats.at(p->index) = f;
 }
 
