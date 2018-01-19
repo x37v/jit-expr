@@ -56,7 +56,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
     x->func = x->cv->function(t);
 
     auto inputs = x->driver->inputs();
-    x->infloats.resize(inputs.size());
+    x->infloats.resize(inputs.size(), 0);
     x->inarg.resize(inputs.size());
 
     x->outfloat.resize(t.size());
@@ -115,6 +115,7 @@ void xnor_expr_free(t_xnor_expr * x) {
 }
 
 void xnor_expr_bang(t_xnor_expr * x) {
+  post("GOT BANGGG!!!");
   //assign input values
   for (size_t i = 0; i < x->inarg.size(); i++)
     x->inarg.at(i).flt = x->infloats.at(i);
@@ -125,6 +126,17 @@ void xnor_expr_bang(t_xnor_expr * x) {
   //output!
   for (unsigned int i = 0; i < x->outarg.size(); i++)
     outlet_float(x->outs.at(i), *(x->outarg.at(i)));
+}
+
+static void xnor_expr_list(t_xnor_expr *x, t_symbol *s, int argc, const t_atom *argv) {
+  for (int i = 0; i < std::min(argc, (int)x->infloats.size()); i++) {
+		if (argv[i].a_type == A_FLOAT) {
+      x->infloats.at(i) = argv[i].a_w.w_float;
+		} else {
+			pd_error(x, "expr: type mismatch");
+		}
+  }
+  xnor_expr_bang(x);
 }
 
 void xnor_expr_proxy_float(t_xnor_expr_proxy *p, t_floatarg f) {
@@ -143,6 +155,8 @@ void xnor_expr_setup(void) {
       sizeof(t_xnor_expr),
       CLASS_NOINLET,
       A_GIMME, 0);
+
+  class_addlist(xnor_expr_class, xnor_expr_list);
   class_addbang(xnor_expr_class, xnor_expr_bang);
 
 	xnor_expr_proxy_class = class_new(gensym("xnor_expr_proxy"),
