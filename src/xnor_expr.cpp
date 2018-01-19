@@ -13,6 +13,7 @@ struct _xnor_expr;
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
 extern "C" void xnor_expr_free(struct _xnor_expr * x);
 extern "C" void xnor_expr_setup(void);
+extern "C" float factf(float v);
 
 static t_class *xnor_expr_class;
 static t_class *xnor_expr_proxy_class;
@@ -39,6 +40,7 @@ typedef struct _xnor_expr_proxy {
 	unsigned int index;
 	t_xnor_expr *parent;
 } t_xnor_expr_proxy;
+
 
 void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
 {
@@ -177,3 +179,13 @@ void xnor_expr_setup(void) {
   class_sethelpsymbol(xnor_expr_class, gensym("help-xnor_expr"));
       */
 }
+
+//utility functions
+
+float factf(float v) {
+  v = floorf(v);
+  if (v <= 0)
+    return 1;
+  return v * factf(v - 1);
+}
+
