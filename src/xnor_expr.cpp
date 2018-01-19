@@ -182,10 +182,13 @@ void xnor_expr_setup(void) {
 
 //utility functions
 
-float factf(float v) {
-  v = floorf(v);
-  if (v <= 0)
+int facti(int i) {
+  if (i <= 0)
     return 1;
-  return v * factf(v - 1);
+  return i * facti(i - 1);
+}
+
+float factf(float v) {
+  return static_cast<float>(facti(static_cast<int>(v)));
 }
 
