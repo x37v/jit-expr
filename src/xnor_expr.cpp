@@ -7,13 +7,15 @@
 #include <memory>
 #include <algorithm>
 
+struct _xnor_expr_proxy;
+struct _xnor_expr;
+
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
+extern "C" void xnor_expr_free(struct _xnor_expr * x);
 extern "C" void xnor_expr_setup(void);
 
 static t_class *xnor_expr_class;
 static t_class *xnor_expr_proxy_class;
-
-struct _xnor_expr_proxy;
 
 typedef struct _xnor_expr {
   t_object x_obj;
@@ -40,31 +42,37 @@ typedef struct _xnor_expr_proxy {
 
 void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
 {
+  //create the driver and code visitor
   t_xnor_expr *x = (t_xnor_expr *)pd_new(xnor_expr_class);
   x->driver = std::make_shared<parse::Driver>();
   x->cv = std::make_shared<xnor::LLVMCodeGenVisitor>();
 
-  std::string line;
-
+  //read in the arguments into a string
   char buf[1024];
+  std::string line;
   for (int i = 0; i < argc; i++) {
     atom_string(&argv[i], buf, 1024);
     line += " " + std::string(buf);
   }
   
+  //parse and setup
   try {
-    auto t = x->driver->parse_string(line);
-    x->func = x->cv->function(t);
+    auto statements = x->driver->parse_string(line);
+    x->func = x->cv->function(statements);
 
+    //we have a minimum of 1 input
     auto inputs = x->driver->inputs();
     x->infloats.resize(std::max((size_t)1, inputs.size()), 0);
     x->inarg.resize(std::max((size_t)1, inputs.size()));
 
-    x->outfloat.resize(t.size());
-    x->outarg.resize(t.size());
+    //there will always be at least one output
+    x->outfloat.resize(statements.size());
+    x->outarg.resize(statements.size());
 
-    for (size_t i = 0; i < x->outarg.size(); i++)
+    for (size_t i = 0; i < x->outarg.size(); i++) {
       x->outarg[i] = &x->outfloat[i];
+      x->outs.push_back(outlet_new(&x->x_obj, &s_float));
+    }
 
     for (size_t i = 1; i < inputs.size(); i++) {
       auto v = inputs.at(i);
@@ -83,12 +91,9 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
           throw std::runtime_error("input type not handled yet");
       }
     }
-    for (auto c: t) {
-      x->outs.push_back(outlet_new(&x->x_obj, &s_float));
-    }
   } catch (std::runtime_error& e) {
     error("error parsing \"%s\" %s", line.c_str(), e.what());
-    x->driver = nullptr;
+    xnor_expr_free(x);
     return NULL;
   }
 
