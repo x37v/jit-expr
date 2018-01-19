@@ -19,7 +19,6 @@ typedef struct _xnor_expr {
   std::vector<t_inlet *> ins;
   std::vector<t_outlet *> outs;
   std::vector<struct _xnor_expr_proxy *> proxies;
-  std::vector<float> input_values;
 
   std::shared_ptr<parse::Driver> driver;
   std::shared_ptr<xnor::LLVMCodeGenVisitor> cv;
@@ -28,8 +27,8 @@ typedef struct _xnor_expr {
 
   std::vector<float> outfloat;
   std::vector<float *> outarg;
+  std::vector<float> infloats;
   std::vector<xnor::LLVMCodeGenVisitor::input_arg_t> inarg;
-
 } t_xnor_expr;
 
 typedef struct _xnor_expr_proxy {
@@ -57,7 +56,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
     x->func = x->cv->function(t);
 
     auto inputs = x->driver->inputs();
-    x->input_values.resize(inputs.size());
+    x->infloats.resize(inputs.size());
     x->inarg.resize(inputs.size());
 
     x->outfloat.resize(t.size());
@@ -102,8 +101,10 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
 void xnor_expr_free(t_xnor_expr * x) {
   if (x == NULL)
     return;
+
   x->driver = nullptr;
   x->cv = nullptr;
+
   for (auto i: x->ins)
     inlet_free(i);
   x->ins.clear();
@@ -111,14 +112,12 @@ void xnor_expr_free(t_xnor_expr * x) {
   for (auto i: x->outs)
     outlet_free(i);
   x->outs.clear();
-
-  x->driver = NULL;
 }
 
 void xnor_expr_bang(t_xnor_expr * x) {
   //assign input values
   for (size_t i = 0; i < x->inarg.size(); i++)
-    x->inarg.at(i).flt = x->input_values.at(i);
+    x->inarg.at(i).flt = x->infloats.at(i);
 
   //execute function
   x->func(&x->outarg.front(), &x->inarg.front());
@@ -130,7 +129,7 @@ void xnor_expr_bang(t_xnor_expr * x) {
 
 void xnor_expr_proxy_float(t_xnor_expr_proxy *p, t_floatarg f) {
   post("%d got float %f", p->index, f);
-  p->parent->input_values.at(p->index) = f;
+  p->parent->infloats.at(p->index) = f;
   if (p->index == 0)
     xnor_expr_bang(p->parent);
 }
