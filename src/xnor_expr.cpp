@@ -90,6 +90,11 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
     x->func = x->cv->function(statements, print_code);
 
     auto inputs = x->driver->inputs();
+
+    //we have a minimum of 1 input, we might not use all these floats [in signal domain] but, whatever
+    x->infloats.resize(std::max((size_t)1, inputs.size()), 0);
+    x->inarg.resize(std::max((size_t)1, inputs.size()));
+
     if (x->expr_type == XnorExpr::CONTROL) {
       if (inputs.size() >= 1 &&
           inputs.at(0)->type() != xnor::ast::Variable::VarType::FLOAT &&
@@ -98,9 +103,6 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
         xnor_expr_free(x);
         return NULL;
       }
-      //we have a minimum of 1 input
-      x->infloats.resize(std::max((size_t)1, inputs.size()), 0);
-      x->inarg.resize(std::max((size_t)1, inputs.size()));
 
       //there will always be at least one output
       x->outfloat.resize(statements.size());
@@ -111,6 +113,15 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
         x->outs.push_back(outlet_new(&x->x_obj, &s_float));
       }
     } else {
+      if (inputs.size() >= 1 &&
+          inputs.at(0)->type() != xnor::ast::Variable::VarType::VECTOR) {
+        error("the first inlet of xnor/expr~ must be a vector");
+        xnor_expr_free(x);
+        return NULL;
+      }
+      for (size_t i = 0; i < statements.size(); i++) {
+        x->outs.push_back(outlet_new(&x->x_obj, &s_signal));
+      }
     }
 
     for (size_t i = 1; i < inputs.size(); i++) {
@@ -125,6 +136,14 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
             x->proxies.push_back(p);
             x->ins.push_back(inlet_new(&x->x_obj, &p->p_pd, &s_float, &s_float));
           }
+          break;
+        case xnor::ast::Variable::VarType::VECTOR:
+          if (x->expr_type == XnorExpr::CONTROL) {
+            error("cannot create vector inlet for xnor/expr");
+            xnor_expr_free(x);
+            return NULL;
+          }
+          x->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal));
           break;
         default:
           throw std::runtime_error("input type not handled yet");
