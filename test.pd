@@ -3,19 +3,19 @@
 #X floatatom 708 392 5 0 0 0 - - -, f 5;
 #X floatatom 522 399 5 0 0 0 - - -, f 5;
 #X obj 599 189 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
--1 -1 3100 1;
+-1 -1 0 1;
 #X obj 499 140 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
--1 -1 7800 1;
+-1 -1 0 1;
 #X msg 430 221 bang;
 #X obj 711 227 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
--1 -1 5700 1;
+-1 -1 0 1;
 #X floatatom 541 539 5 0 0 0 - - -, f 5;
 #X floatatom 635 533 5 0 0 0 - - -, f 5;
 #X floatatom 449 540 5 0 0 0 - - -, f 5;
 #X msg 446 115 list 0.3 1 1 1 1;
-#X obj 512 315 xnor_expr 3 + 4 + $f1 + $i2 + $f3 \; sin($f4) + 23 \;
-4;
 #X obj 439 456 expr 3 + 4 + $f1 + $i2 + $f3 \; sin($f4) + 23 \; 4;
+#X obj 512 315 xnor/expr 3 + 4 + $f1 + $i2 + $f3 \; sin($f4) + 23 \;
+4;
 #X connect 3 0 11 1;
 #X connect 3 0 12 1;
 #X connect 4 0 11 0;
@@ -26,9 +26,9 @@
 #X connect 6 0 12 3;
 #X connect 10 0 11 0;
 #X connect 10 0 12 0;
-#X connect 11 0 2 0;
-#X connect 11 1 0 0;
-#X connect 11 2 1 0;
-#X connect 12 0 9 0;
-#X connect 12 1 7 0;
-#X connect 12 2 8 0;
+#X connect 11 0 9 0;
+#X connect 11 1 7 0;
+#X connect 11 2 8 0;
+#X connect 12 0 2 0;
+#X connect 12 1 0 0;
+#X connect 12 2 1 0;

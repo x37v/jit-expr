@@ -137,7 +137,7 @@ void xnor_expr_proxy_float(t_xnor_expr_proxy *p, t_floatarg f) {
 void xnor_expr_setup(void) {
   xnor::LLVMCodeGenVisitor::init();
 
-  xnor_expr_class = class_new(gensym("xnor_expr"),
+  xnor_expr_class = class_new(gensym("xnor/expr"),
       (t_newmethod)xnor_expr_new,
       (t_method)xnor_expr_free,
       sizeof(t_xnor_expr),
