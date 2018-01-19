@@ -239,7 +239,8 @@ static t_int *xnor_expr_tilde_perform(t_int *w) {
   for (unsigned int i = 0; i < x->cpp->outarg.size(); i++)
     x->cpp->outarg.at(i) = (float *)w[vector_index++];
 
-  //x->cpp->func(&x->outarg.front(), &x->inarg.front(), n);
+  x->cpp->func(&x->cpp->outarg.front(), &x->cpp->inarg.front(), n);
+  return w + vector_index;
 }
 
 static void xnor_expr_tilde_dsp(t_xnor_expr *x, t_signal **sp)
