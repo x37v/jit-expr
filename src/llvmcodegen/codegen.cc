@@ -76,10 +76,12 @@ namespace xnor {
 
     std::vector<llvm::Type*> unionTypes;
     unionTypes.push_back(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0));
-    auto s = llvm::StructType::create(llvm::makeArrayRef(unionTypes), "union.input_arg_t");
-    auto sp = llvm::PointerType::get(s, 0);
+    mInputType = llvm::StructType::create(llvm::makeArrayRef(unionTypes), "union.input_arg_t");
+    auto sp = llvm::PointerType::get(mInputType, 0);
     argTypes.push_back(sp);
-    mInputType = s;
+
+    //opaque
+    mSymbolType = llvm::StructType::create(mContext, "t_symbol_ptr");
 
     llvm::FunctionType *ftype = llvm::FunctionType::get(llvm::Type::getVoidTy(mContext), llvm::makeArrayRef(argTypes), false);
     //XXX should we use internal linkage and figure out how to grab those symbols?
@@ -151,9 +153,15 @@ namespace xnor {
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::Value<std::string>* v){
+    /*
+    t_symbol * sym = gensym(v->value().c_str());
+    auto pt = llvm::PointerType::get(mSymbolType, 0);
+    */
+    throw std::runtime_error("not implemented");
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::Quoted* v){
+    throw std::runtime_error("not implemented");
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::UnaryOp* v){
@@ -287,8 +295,6 @@ namespace xnor {
       phi->addIncoming(elsev, elsebb);
       mValue = phi;
       return;
-    } else if (n == "fact") {
-      throw std::runtime_error("fact not yet supported");
     }
 
     //table functions
@@ -329,12 +335,15 @@ namespace xnor {
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::ArrayAccess* v){
+    throw std::runtime_error("not implemented");
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::ValueAssignment* v){
+    throw std::runtime_error("not implemented");
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::ArrayAssignment* v){
+    throw std::runtime_error("not implemented");
   }
 
   LLVMCodeGenVisitor::function_t LLVMCodeGenVisitor::function(std::vector<xnor::ast::NodePtr> statements, bool print) {
