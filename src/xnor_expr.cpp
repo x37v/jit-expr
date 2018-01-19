@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <vector>
 #include <memory>
+#include <algorithm>
 
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
 extern "C" void xnor_expr_setup(void);
@@ -56,8 +57,8 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
     x->func = x->cv->function(t);
 
     auto inputs = x->driver->inputs();
-    x->infloats.resize(inputs.size(), 0);
-    x->inarg.resize(inputs.size());
+    x->infloats.resize(std::max((size_t)1, inputs.size()), 0);
+    x->inarg.resize(std::max((size_t)1, inputs.size()));
 
     x->outfloat.resize(t.size());
     x->outarg.resize(t.size());
@@ -65,25 +66,23 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
     for (size_t i = 0; i < x->outarg.size(); i++)
       x->outarg[i] = &x->outfloat[i];
 
-    if (inputs.size() == 0) {
-      x->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_bang, &s_bang));
-    } else {
-      for (auto i: inputs) {
-        switch (i->type()) {
-          case xnor::ast::Variable::VarType::FLOAT:
-          case xnor::ast::Variable::VarType::INT:
-            {
-              t_xnor_expr_proxy *p = (t_xnor_expr_proxy *)pd_new(xnor_expr_proxy_class);
-              p->index = i->input_index();
-              p->parent = x;
-              x->proxies.push_back(p);
+    for (size_t i = 0; i < inputs.size(); i++) {
+      auto v = inputs.at(i);
+      switch (v->type()) {
+        case xnor::ast::Variable::VarType::FLOAT:
+        case xnor::ast::Variable::VarType::INT:
+          {
+            t_xnor_expr_proxy *p = (t_xnor_expr_proxy *)pd_new(xnor_expr_proxy_class);
+            p->index = v->input_index();
+            p->parent = x;
+            x->proxies.push_back(p);
 
+            if (i != 0)
               x->ins.push_back(inlet_new(&x->x_obj, &p->p_pd, &s_float, &s_float));
-            }
-            break;
-          default:
-            throw std::runtime_error("input type not handled yet");
-        }
+          }
+          break;
+        default:
+          throw std::runtime_error("input type not handled yet");
       }
     }
     for (auto c: t) {
