@@ -12,6 +12,11 @@ struct _xnor_expr;
 
 namespace {
   const bool print_code = true; //XXX for debugging
+  enum class XnorExpr {
+    CONTROL,
+    VECTOR,
+    SAMPLE
+  };
 }
 
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
@@ -21,6 +26,7 @@ extern "C" float xnor_expr_factf(float v);
 
 static t_class *xnor_expr_class;
 static t_class *xnor_expr_proxy_class;
+static t_class *xnor_expr_tilde_class;
 
 typedef struct _xnor_expr {
   t_object x_obj;
@@ -32,11 +38,14 @@ typedef struct _xnor_expr {
   std::shared_ptr<xnor::LLVMCodeGenVisitor> cv;
 
   xnor::LLVMCodeGenVisitor::function_t func;
+  XnorExpr expr_type = XnorExpr::CONTROL;
 
   std::vector<float> outfloat;
   std::vector<float *> outarg;
   std::vector<float> infloats;
   std::vector<xnor::LLVMCodeGenVisitor::input_arg_t> inarg;
+
+  float exp_f;   		/* control value to be transformed to signal */
 } t_xnor_expr;
 
 typedef struct _xnor_expr_proxy {
@@ -49,7 +58,21 @@ typedef struct _xnor_expr_proxy {
 void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
 {
   //create the driver and code visitor
-  t_xnor_expr *x = (t_xnor_expr *)pd_new(xnor_expr_class);
+  t_xnor_expr *x = NULL;
+
+	if (strcmp("xnor/expr~", s->s_name) == 0) {
+    x = (t_xnor_expr *)pd_new(xnor_expr_tilde_class);
+    x->expr_type = XnorExpr::VECTOR;
+  } else if (strcmp("xnor/fexpr~", s->s_name) == 0) {
+    error("fexpr~ not implemented yet");
+    return NULL; // XXX NOT IMPLEMENTED YET
+	} else {
+    if (strcmp("xnor/expr", s->s_name) != 0)
+      error("xnor_expr_new: bad object name '%s'", s->s_name);
+    x = (t_xnor_expr *)pd_new(xnor_expr_class);
+    x->expr_type = XnorExpr::CONTROL;
+	}
+
   x->driver = std::make_shared<parse::Driver>();
   x->cv = std::make_shared<xnor::LLVMCodeGenVisitor>();
 
@@ -66,18 +89,28 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
     auto statements = x->driver->parse_string(line);
     x->func = x->cv->function(statements, print_code);
 
-    //we have a minimum of 1 input
     auto inputs = x->driver->inputs();
-    x->infloats.resize(std::max((size_t)1, inputs.size()), 0);
-    x->inarg.resize(std::max((size_t)1, inputs.size()));
+    if (x->expr_type == XnorExpr::CONTROL) {
+      if (inputs.size() >= 1 &&
+          inputs.at(0)->type() != xnor::ast::Variable::VarType::FLOAT &&
+          inputs.at(0)->type() != xnor::ast::Variable::VarType::INT) {
+        error("the first inlet of xnor/expr must be a float or int");
+        xnor_expr_free(x);
+        return NULL;
+      }
+      //we have a minimum of 1 input
+      x->infloats.resize(std::max((size_t)1, inputs.size()), 0);
+      x->inarg.resize(std::max((size_t)1, inputs.size()));
 
-    //there will always be at least one output
-    x->outfloat.resize(statements.size());
-    x->outarg.resize(statements.size());
+      //there will always be at least one output
+      x->outfloat.resize(statements.size());
+      x->outarg.resize(statements.size());
 
-    for (size_t i = 0; i < x->outarg.size(); i++) {
-      x->outarg[i] = &x->outfloat[i];
-      x->outs.push_back(outlet_new(&x->x_obj, &s_float));
+      for (size_t i = 0; i < x->outarg.size(); i++) {
+        x->outarg[i] = &x->outfloat[i];
+        x->outs.push_back(outlet_new(&x->x_obj, &s_float));
+      }
+    } else {
     }
 
     for (size_t i = 1; i < inputs.size(); i++) {
@@ -151,6 +184,10 @@ void xnor_expr_proxy_float(t_xnor_expr_proxy *p, t_floatarg f) {
   p->parent->infloats.at(p->index) = f;
 }
 
+static void xnor_expr_tilde_dsp(t_xnor_expr *x, t_signal **sp)
+{
+}
+
 void xnor_expr_setup(void) {
   xnor::LLVMCodeGenVisitor::init();
 
@@ -170,6 +207,16 @@ void xnor_expr_setup(void) {
       CLASS_PD,
       A_NULL);
 	class_addfloat(xnor_expr_proxy_class, xnor_expr_proxy_float);
+
+  xnor_expr_tilde_class = class_new(gensym("xnor/expr~"),
+      (t_newmethod)xnor_expr_new,
+      (t_method)xnor_expr_free,
+      sizeof(t_xnor_expr),
+      0,
+      A_GIMME, 0);
+	class_addmethod(xnor_expr_tilde_class, nullfn, gensym("signal"), A_NULL);
+	CLASS_MAINSIGNALIN(xnor_expr_tilde_class, t_xnor_expr, exp_f);
+	class_addmethod(xnor_expr_tilde_class, (t_method)xnor_expr_tilde_dsp, gensym("dsp"), A_NULL);
 
   /*
   class_addmethod(xnor_expr_class,
