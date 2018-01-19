@@ -21,6 +21,7 @@
 #include <llvm/ExecutionEngine/MCJIT.h>
 #include <llvm/ExecutionEngine/GenericValue.h>
 #include <llvm/Support/raw_ostream.h>
+#include <llvm/Support/TargetSelect.h>
 #include <llvm/Target/TargetMachine.h>
 
 #include <llvm/Transforms/Scalar.h>
@@ -35,6 +36,12 @@ namespace {
 }
 
 namespace xnor {
+
+  void LLVMCodeGenVisitor::init() {
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmPrinter();
+    llvm::InitializeNativeTargetAsmParser();
+  }
 
   LLVMCodeGenVisitor::LLVMCodeGenVisitor() :
     mContext(),
@@ -51,7 +58,6 @@ namespace xnor {
 
     mFunctionPassManager = llvm::make_unique<llvm::legacy::FunctionPassManager>(mModule.get());
 
-    //XXX TMP, DITCH OPTIMIZE
 #if 1
     // Do simple "peephole" optimizations and bit-twiddling optzns.
     mFunctionPassManager->add(llvm::createInstructionCombiningPass());
@@ -97,12 +103,6 @@ namespace xnor {
 
   LLVMCodeGenVisitor::~LLVMCodeGenVisitor() {
   }
-#if 0
-  %5 = load %union._ut*, %union._ut** %4, align 8, !dbg !27
-  %6 = getelementptr inbounds %union._ut, %union._ut* %5, i64 0, !dbg !27
-  %7 = bitcast %union._ut* %6 to float*, !dbg !28
-  %8 = load float, float* %7, align 8, !dbg !28
-#endif
 
   void LLVMCodeGenVisitor::visit(xnor::ast::Variable* v){
     //XXX is there a better index?
@@ -337,28 +337,31 @@ namespace xnor {
   void LLVMCodeGenVisitor::visit(xnor::ast::ArrayAssignment* v){
   }
 
-  LLVMCodeGenVisitor::function_t LLVMCodeGenVisitor::function() {
-    if (mValue == nullptr)
-      throw std::runtime_error("null return value");
-
+  LLVMCodeGenVisitor::function_t LLVMCodeGenVisitor::function(std::vector<xnor::ast::NodePtr> statements, bool print) {
     llvm::Value * cur = nullptr;
 
     auto outargt = llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0);
     llvm::Value * output = mBuilder.CreateAlloca(outargt, (unsigned)0);
-    /*llvm::Value * outarg =*/ mBuilder.CreateStore(mOutput, output);
-    
-    auto zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 0); //XXX is there a better index?
-    cur = mBuilder.CreateLoad(output);
-    cur = mBuilder.CreateInBoundsGEP(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), cur, zero);
-    cur = mBuilder.CreateLoad(cur);
-    cur = mBuilder.CreateInBoundsGEP(llvm::Type::getFloatTy(mContext), cur, zero);
-    mBuilder.CreateStore(mValue, cur);
+    mBuilder.CreateStore(mOutput, output);
 
+    //XXX is there a better index?
+    auto zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 0);
+    for (unsigned int i = 0; i < statements.size(); i++) {
+      auto index = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), i);
+      cur = mBuilder.CreateLoad(output);
+      cur = mBuilder.CreateInBoundsGEP(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), cur, index);
+      cur = mBuilder.CreateLoad(cur);
+      cur = mBuilder.CreateInBoundsGEP(llvm::Type::getFloatTy(mContext), cur, zero);
+
+      statements.at(i)->accept(this);
+      mBuilder.CreateStore(mValue, cur);
+    }
 
     mBuilder.CreateRet(nullptr);
     llvm::verifyFunction(*mMainFunction);
     mFunctionPassManager->run(*mMainFunction);
-    mModule->print(llvm::errs(), nullptr);
+    if (print)
+      mModule->print(llvm::errs(), nullptr);
 
     auto Resolver = llvm::orc::createLambdaResolver(
         [&](const std::string &Name) {

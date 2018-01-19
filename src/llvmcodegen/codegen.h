@@ -35,6 +35,8 @@ namespace llvm {
 namespace xnor {
   class LLVMCodeGenVisitor : public xnor::ast::Visitor {
     public:
+      static void init();
+
       typedef union {
         t_float flt;
         t_symbol * sym;
@@ -61,7 +63,7 @@ namespace xnor {
       virtual void visit(xnor::ast::ValueAssignment* v);
       virtual void visit(xnor::ast::ArrayAssignment* v);
 
-      function_t function();
+      function_t function(std::vector<xnor::ast::NodePtr> statements, bool print = false);
     private:
       llvm::LLVMContext mContext;
       llvm::IRBuilder<> mBuilder;

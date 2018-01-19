@@ -4,7 +4,6 @@
 #include "parser.hh"
 #include <stdexcept>
 #include <vector>
-#include <llvm/Support/TargetSelect.h>
 
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
 extern "C" void xnor_expr_setup(void);
@@ -21,6 +20,8 @@ typedef struct _xnor_expr {
   std::vector<struct _xnor_expr_proxy *> proxies;
   std::vector<float> input_values;
   parse::Driver * driver;
+  xnor::LLVMCodeGenVisitor * cv;
+  xnor::LLVMCodeGenVisitor::function_t func;
 } t_xnor_expr;
 
 typedef struct _xnor_expr_proxy {
@@ -33,6 +34,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
 {
   t_xnor_expr *x = (t_xnor_expr *)pd_new(xnor_expr_class);
   x->driver = new parse::Driver;
+  x->cv = new xnor::LLVMCodeGenVisitor;
 
   std::string line;
 
@@ -44,17 +46,15 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
   
   try {
     auto t = x->driver->parse_string(line);
+    x->func = x->cv->function(t);
 
+    /*
     float value = 0;
     float ** out = new float*[1];
-    for (auto c: t) {
-      xnor::LLVMCodeGenVisitor cv;
-      c->accept(&cv);
-      auto f = cv.function();
-      xnor::LLVMCodeGenVisitor::input_arg_t * in = nullptr;
-      f(out, in);
-    }
+    xnor::LLVMCodeGenVisitor::input_arg_t * in = nullptr;
+    f(out, in);
     delete out;
+    */
 
     auto inputs = x->driver->inputs();
     x->input_values.resize(inputs.size());
@@ -85,6 +85,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
   } catch (std::runtime_error& e) {
     error("error parsing \"%s\" %s", line.c_str(), e.what());
     delete x->driver;
+    delete x->cv;
     x->driver = nullptr;
     return NULL;
   }
@@ -97,6 +98,8 @@ void xnor_expr_free(t_xnor_expr * x) {
     return;
   if (x->driver != nullptr)
     delete x->driver;
+  if (x->cv != nullptr)
+    delete x->cv;
 
   for (auto i: x->ins)
     inlet_free(i);
@@ -124,9 +127,7 @@ void xnor_expr_proxy_float(t_xnor_expr_proxy *p, t_floatarg f) {
 }
 
 void xnor_expr_setup(void) {
-  llvm::InitializeNativeTarget();
-	llvm::InitializeNativeTargetAsmPrinter();
-	llvm::InitializeNativeTargetAsmParser();
+  xnor::LLVMCodeGenVisitor::init();
 
   xnor_expr_class = class_new(gensym("xnor_expr"),
       (t_newmethod)xnor_expr_new,

@@ -17,9 +17,7 @@ int main(int argc, char * argv[]) {
   if (argc != 2)
     throw std::runtime_error("must provide a file as an argument");
   
-  llvm::InitializeNativeTarget();
-	llvm::InitializeNativeTargetAsmPrinter();
-	llvm::InitializeNativeTargetAsmParser();
+  xnor::LLVMCodeGenVisitor::init();
 
   std::ifstream infile(argv[1]);
 
@@ -32,21 +30,19 @@ int main(int argc, char * argv[]) {
       auto t = driver.parse_string(line);
 
       float value = 0;
-      float ** out = new float*[1];
+      float ** out = new float*[4];
       out[0] = &value;
+      out[1] = &value;
+      out[2] = &value;
+      out[3] = &value;
 
       xnor::LLVMCodeGenVisitor::input_arg_t * in = new xnor::LLVMCodeGenVisitor::input_arg_t[12];
       in[0].flt = 53.2;
 
-      for (auto c: t) {
-        //xnor::AstPrintVisitor v;
-        //c->accept(&v);
-        xnor::LLVMCodeGenVisitor cv;
-        c->accept(&cv);
-        auto f = cv.function();
-        f(out, in);
-        cout << "output " << value << endl;
-      }
+      xnor::LLVMCodeGenVisitor cv;
+      auto f = cv.function(t, true);
+      f(out, in);
+      cout << "output " << value << endl;
       cout << endl;
     } catch (std::runtime_error& e) {
       cerr << "fail: " << e.what() << endl;
