@@ -80,6 +80,8 @@ namespace xnor {
     auto sp = llvm::PointerType::get(mInputType, 0);
     argTypes.push_back(sp);
 
+    argTypes.push_back(llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getInt32Ty(mContext), 0), 0));
+
     //opaque
     mSymbolType = llvm::StructType::create(mContext, "t_symbol_ptr");
 

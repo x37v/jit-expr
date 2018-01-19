@@ -43,7 +43,7 @@ namespace xnor {
         t_sample * samp;
       } input_arg_t;
 
-      typedef void(*function_t)(float **, input_arg_t *);
+      typedef void(*function_t)(float **, input_arg_t *, int nframes);
 
       using ObjLayerT = llvm::orc::RTDyldObjectLinkingLayer;
       using CompileLayerT = llvm::orc::IRCompileLayer<ObjLayerT, llvm::orc::SimpleCompiler>;

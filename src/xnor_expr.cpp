@@ -180,7 +180,7 @@ void xnor_expr_bang(t_xnor_expr * x) {
     x->inarg.at(i).flt = x->infloats.at(i);
 
   //execute function
-  x->func(&x->outarg.front(), &x->inarg.front());
+  x->func(&x->outarg.front(), &x->inarg.front(), 1);
 
   //output!
   for (unsigned int i = 0; i < x->outarg.size(); i++)

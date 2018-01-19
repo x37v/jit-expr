@@ -41,7 +41,7 @@ int main(int argc, char * argv[]) {
 
       xnor::LLVMCodeGenVisitor cv;
       auto f = cv.function(t, true);
-      f(out, in);
+      f(out, in, 1);
       cout << "output " << value << endl;
       cout << endl;
     } catch (std::runtime_error& e) {
