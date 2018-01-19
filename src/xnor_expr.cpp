@@ -4,6 +4,7 @@
 #include "parser.hh"
 #include <stdexcept>
 #include <vector>
+#include <memory>
 
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
 extern "C" void xnor_expr_setup(void);
@@ -19,8 +20,10 @@ typedef struct _xnor_expr {
   std::vector<t_outlet *> outs;
   std::vector<struct _xnor_expr_proxy *> proxies;
   std::vector<float> input_values;
-  parse::Driver * driver;
-  xnor::LLVMCodeGenVisitor * cv;
+
+  std::shared_ptr<parse::Driver> driver;
+  std::shared_ptr<xnor::LLVMCodeGenVisitor> cv;
+
   xnor::LLVMCodeGenVisitor::function_t func;
 
   std::vector<float> outfloat;
@@ -38,8 +41,8 @@ typedef struct _xnor_expr_proxy {
 void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
 {
   t_xnor_expr *x = (t_xnor_expr *)pd_new(xnor_expr_class);
-  x->driver = new parse::Driver;
-  x->cv = new xnor::LLVMCodeGenVisitor;
+  x->driver = std::make_shared<parse::Driver>();
+  x->cv = std::make_shared<xnor::LLVMCodeGenVisitor>();
 
   std::string line;
 
@@ -89,8 +92,6 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
     }
   } catch (std::runtime_error& e) {
     error("error parsing \"%s\" %s", line.c_str(), e.what());
-    delete x->driver;
-    delete x->cv;
     x->driver = nullptr;
     return NULL;
   }
@@ -101,11 +102,8 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
 void xnor_expr_free(t_xnor_expr * x) {
   if (x == NULL)
     return;
-  if (x->driver != nullptr)
-    delete x->driver;
-  if (x->cv != nullptr)
-    delete x->cv;
-
+  x->driver = nullptr;
+  x->cv = nullptr;
   for (auto i: x->ins)
     inlet_free(i);
   x->ins.clear();
