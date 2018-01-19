@@ -10,6 +10,10 @@
 struct _xnor_expr_proxy;
 struct _xnor_expr;
 
+namespace {
+  const bool print_code = true; //XXX for debugging
+}
+
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
 extern "C" void xnor_expr_free(struct _xnor_expr * x);
 extern "C" void xnor_expr_setup(void);
@@ -60,7 +64,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
   //parse and setup
   try {
     auto statements = x->driver->parse_string(line);
-    x->func = x->cv->function(statements);
+    x->func = x->cv->function(statements, print_code);
 
     //we have a minimum of 1 input
     auto inputs = x->driver->inputs();
