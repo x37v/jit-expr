@@ -76,6 +76,8 @@ namespace xnor {
       llvm::Value * mValue;
       llvm::Value * mOutput;
       llvm::Value * mInput;
+      llvm::Value * mFrameIndex;
+      llvm::Value * mFrameCount;
       llvm::BasicBlock * mBlock;
       llvm::Type * mInputType;
       llvm::Type * mSymbolType;

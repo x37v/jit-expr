@@ -106,6 +106,7 @@ namespace xnor {
 
     it++;
     it->setName("veclen");
+    mFrameCount = it;
   }
 
   LLVMCodeGenVisitor::~LLVMCodeGenVisitor() {
@@ -366,19 +367,51 @@ namespace xnor {
     llvm::Value * output = mBuilder.CreateAlloca(outargt, (unsigned)0);
     mBuilder.CreateStore(mOutput, output);
 
-    //XXX is there a better index?
-    auto zero = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 0);
+    //loop start
+    llvm::Value * StartVal = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 0);
+    llvm::Function *TheFunction = mBuilder.GetInsertBlock()->getParent();
+    llvm::BasicBlock *PreheaderBB = mBuilder.GetInsertBlock();
+    llvm::BasicBlock *LoopBB = llvm::BasicBlock::Create(mContext, "loop", TheFunction);
 
+    // Insert an explicit fall through from the current block to the LoopBB.
+    mBuilder.CreateBr(LoopBB);
+    // Start insertion in LoopBB.
+    mBuilder.SetInsertPoint(LoopBB);
+
+    // Start the PHI node with an entry for Start.
+    llvm::PHINode *Variable = mBuilder.CreatePHI(llvm::Type::getInt32Ty(mContext), 2, "loopvar");
+    Variable->addIncoming(StartVal, PreheaderBB);
+
+    mFrameIndex = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 0); //XXX fix up
+    //add statements
     for (unsigned int i = 0; i < statements.size(); i++) {
       auto index = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), i);
       cur = mBuilder.CreateLoad(output);
       cur = mBuilder.CreateInBoundsGEP(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), cur, index);
       cur = mBuilder.CreateLoad(cur);
-      cur = mBuilder.CreateInBoundsGEP(llvm::Type::getFloatTy(mContext), cur, zero);
+      cur = mBuilder.CreateInBoundsGEP(llvm::Type::getFloatTy(mContext), cur, mFrameIndex);
 
       statements.at(i)->accept(this);
       mBuilder.CreateStore(mValue, cur);
     }
+
+    // Emit the step value.
+    llvm::Value *NextVar = mBuilder.CreateAdd(Variable, llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 1), "nextvar");
+    llvm::Value *EndVal = mFrameCount;
+    llvm::Value *EndCond = mBuilder.CreateICmpNE(EndVal, NextVar);
+
+    // Create the "after loop" block and insert it.
+    llvm::BasicBlock *LoopEndBB = mBuilder.GetInsertBlock();
+    llvm::BasicBlock *AfterBB = llvm::BasicBlock::Create(mContext, "afterloop", TheFunction);
+
+    // Insert the conditional branch into the end of LoopEndBB.
+    mBuilder.CreateCondBr(EndCond, LoopBB, AfterBB);
+
+    // Any new code will be inserted in AfterBB.
+    mBuilder.SetInsertPoint(AfterBB);
+
+    // Add a new entry to the PHI node for the backedge.
+    Variable->addIncoming(NextVar, LoopEndBB);
 
     mBuilder.CreateRet(nullptr);
     llvm::verifyFunction(*mMainFunction);

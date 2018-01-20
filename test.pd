@@ -23,8 +23,20 @@
 #X obj 1066 470 xnor/expr fact(4);
 #X obj 831 379 expr pow(4 \, 2);
 #X obj 951 383 xnor/expr pow(4 \, 2);
-#X obj 1029 308 xnor/expr~ $v1;
 #X msg 1034 126 \; pd dsp 1;
+#X obj 1096 369 dac~;
+#X obj 1029 230 osc~ 440;
+#X obj 1034 304 xnor/expr~ $v1 * $v2 \; $v1;
+#X msg 1132 133 \; pd dsp 0;
+#X obj 737 51 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
+-1 -1 8200 1;
+#X floatatom 792 128 5 0 0 0 - - -, f 5;
+#X floatatom 752 135 5 0 0 0 - - -, f 5;
+#X obj 752 112 + 4;
+#X obj 854 131 xnor/expr ($f1 + 3) * 3;
+#X obj 864 91 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
+-1 -1 5800 1;
+#X floatatom 854 154 5 0 0 0 - - -, f 5;
 #X connect 3 0 11 1;
 #X connect 3 0 12 1;
 #X connect 4 0 11 0;
@@ -45,3 +57,11 @@
 #X connect 15 0 18 0;
 #X connect 17 0 13 0;
 #X connect 18 0 14 0;
+#X connect 21 0 22 0;
+#X connect 22 0 20 0;
+#X connect 22 1 20 1;
+#X connect 24 0 25 0;
+#X connect 24 0 27 0;
+#X connect 27 0 26 0;
+#X connect 28 0 30 0;
+#X connect 29 0 28 0;
