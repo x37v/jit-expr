@@ -58,7 +58,7 @@ namespace xnor {
 
     mFunctionPassManager = llvm::make_unique<llvm::legacy::FunctionPassManager>(mModule.get());
 
-#if 1
+#if 0
     // Do simple "peephole" optimizations and bit-twiddling optzns.
     mFunctionPassManager->add(llvm::createInstructionCombiningPass());
     // Reassociate expressions.
@@ -382,7 +382,7 @@ namespace xnor {
     llvm::PHINode *Variable = mBuilder.CreatePHI(llvm::Type::getInt32Ty(mContext), 2, "loopvar");
     Variable->addIncoming(StartVal, PreheaderBB);
 
-    mFrameIndex = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 0); //XXX fix up
+    mFrameIndex = Variable;
     //add statements
     for (unsigned int i = 0; i < statements.size(); i++) {
       auto index = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), i);
