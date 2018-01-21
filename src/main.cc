@@ -29,20 +29,22 @@ int main(int argc, char * argv[]) {
       cout << "parsing: " << line << endl;
       auto t = driver.parse_string(line);
 
-      float value = 0;
-      float ** out = new float*[4];
-      out[0] = &value;
-      out[1] = &value;
-      out[2] = &value;
-      out[3] = &value;
+      std::array<float, 4> value {{ 0, 0, 0, 0 }};
+      std::array<float *, 4> out {{
+        &value.front(),
+        &value.front(),
+        &value.front(),
+        &value.front(),
+      }};
 
+      //std::array<float, 4> invec {{ 0, 0, 0, 0 }};
       xnor::LLVMCodeGenVisitor::input_arg_t * in = new xnor::LLVMCodeGenVisitor::input_arg_t[12];
       in[0].flt = 53.2;
 
       xnor::LLVMCodeGenVisitor cv;
       auto f = cv.function(t, true);
-      f(out, in, 2);
-      cout << "output " << value << endl;
+      f(&out.front(), in, 2);
+      cout << "output " << value[0] << endl;
       cout << endl;
     } catch (std::runtime_error& e) {
       cerr << "fail: " << e.what() << endl;
