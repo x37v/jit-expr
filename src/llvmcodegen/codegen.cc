@@ -58,7 +58,7 @@ namespace xnor {
 
     mFunctionPassManager = llvm::make_unique<llvm::legacy::FunctionPassManager>(mModule.get());
 
-#if 0
+#if 1
     // Do simple "peephole" optimizations and bit-twiddling optzns.
     mFunctionPassManager->add(llvm::createInstructionCombiningPass());
     // Reassociate expressions.

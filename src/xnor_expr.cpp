@@ -227,6 +227,10 @@ static t_int *xnor_expr_tilde_perform(t_int *w) {
         case xnor::ast::Variable::VarType::INT:
           x->cpp->inarg.at(i).flt = x->cpp->infloats.at(i);
           break;
+        case xnor::ast::Variable::VarType::INPUT:
+          //XXX DO COPY
+          x->cpp->inarg.at(i).vec = (t_sample*)w[vector_index++];
+          break;
         case xnor::ast::Variable::VarType::VECTOR:
           x->cpp->inarg.at(i).vec = (t_sample*)w[vector_index++];
           break;
