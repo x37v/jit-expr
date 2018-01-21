@@ -147,8 +147,10 @@ namespace xnor {
         break;
       case xnor::ast::Variable::VarType::VECTOR:
         {
-          //XXX TEMP!!
-          mValue = llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), 0);
+          cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0));
+          cur = mBuilder.CreateLoad(cur);
+          cur = mBuilder.CreateInBoundsGEP(llvm::Type::getFloatTy(mContext), cur, mFrameIndex);
+          mValue = mBuilder.CreateLoad(cur);
         }
         break;
       default:
