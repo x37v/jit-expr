@@ -30,6 +30,8 @@
 using std::cout;
 using std::endl;
 
+namespace ast = xnor::ast;
+
 namespace {
   const std::vector<std::string> table_functions = {"Sum", "sum", "size"};
   const std::string main_function_name = "expralex";
@@ -112,18 +114,18 @@ namespace xnor {
   LLVMCodeGenVisitor::~LLVMCodeGenVisitor() {
   }
 
-  void LLVMCodeGenVisitor::visit(xnor::ast::Variable* v){
+  void LLVMCodeGenVisitor::visit(ast::Variable* v){
     //XXX is there a better index?
     auto index = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), v->input_index());
 
     llvm::Value * cur = mBuilder.CreateLoad(mInput);
     cur = mBuilder.CreateInBoundsGEP(mInputType, cur, index);
     switch(v->type()) {
-      case xnor::ast::Variable::VarType::FLOAT:
+      case ast::Variable::VarType::FLOAT:
         cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0));
         mValue = mBuilder.CreateLoad(cur);
         break;
-      case xnor::ast::Variable::VarType::INT:
+      case ast::Variable::VarType::INT:
         {
           cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0));
           mValue = mBuilder.CreateLoad(cur);
@@ -145,7 +147,7 @@ namespace xnor {
           mValue = mBuilder.CreateCall(f, args, "calltmp");
         }
         break;
-      case xnor::ast::Variable::VarType::VECTOR:
+      case ast::Variable::VarType::VECTOR:
         {
           cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0));
           cur = mBuilder.CreateLoad(cur);
@@ -158,15 +160,15 @@ namespace xnor {
     }
   }
 
-  void LLVMCodeGenVisitor::visit(xnor::ast::Value<int>* v){
+  void LLVMCodeGenVisitor::visit(ast::Value<int>* v){
     mValue = llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), static_cast<float>(v->value()));
   }
 
-  void LLVMCodeGenVisitor::visit(xnor::ast::Value<float>* v){
+  void LLVMCodeGenVisitor::visit(ast::Value<float>* v){
     mValue = llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), v->value());
   }
 
-  void LLVMCodeGenVisitor::visit(xnor::ast::Value<std::string>* v){
+  void LLVMCodeGenVisitor::visit(ast::Value<std::string>* /*v*/){
     /*
     t_symbol * sym = gensym(v->value().c_str());
     auto pt = llvm::PointerType::get(mSymbolType, 0);
@@ -174,30 +176,30 @@ namespace xnor {
     throw std::runtime_error("not implemented");
   }
 
-  void LLVMCodeGenVisitor::visit(xnor::ast::Quoted* v){
+  void LLVMCodeGenVisitor::visit(ast::Quoted* /*v*/){
     throw std::runtime_error("not implemented");
   }
 
-  void LLVMCodeGenVisitor::visit(xnor::ast::UnaryOp* v){
+  void LLVMCodeGenVisitor::visit(ast::UnaryOp* v){
     v->node()->accept(this);
     auto right = mValue;
 
     switch (v->op()) {
-      case xnor::ast::UnaryOp::Op::BIT_NOT:
+      case ast::UnaryOp::Op::BIT_NOT:
         mValue = toFloat(mBuilder.CreateNot(toInt(right), "nottmp"));
         return;
-      case xnor::ast::UnaryOp::Op::LOGICAL_NOT:
+      case ast::UnaryOp::Op::LOGICAL_NOT:
         //logical not is the same as x == 0
         mValue = wrapLogic(mBuilder.CreateFCmpOEQ(right, llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), 0.0f), "eqtmp"));
         return;
-      case xnor::ast::UnaryOp::Op::NEGATE:
+      case ast::UnaryOp::Op::NEGATE:
         mValue = mBuilder.CreateNeg(right, "negtmp");
         return;
     }
     throw std::runtime_error("unimplemented");
   }
 
-  void LLVMCodeGenVisitor::visit(xnor::ast::BinaryOp* v){
+  void LLVMCodeGenVisitor::visit(ast::BinaryOp* v){
     v->left()->accept(this);
     auto left = mValue;
 
@@ -205,66 +207,66 @@ namespace xnor {
     auto right = mValue;
 
     switch (v->op()) {
-      case xnor::ast::BinaryOp::Op::ADD:
+      case ast::BinaryOp::Op::ADD:
         mValue = mBuilder.CreateFAdd(left, right, "addtmp");
         return;
-      case xnor::ast::BinaryOp::Op::SUBTRACT:
+      case ast::BinaryOp::Op::SUBTRACT:
         mValue = mBuilder.CreateFSub(left, right, "subtmp");
         return;
-      case xnor::ast::BinaryOp::Op::MULTIPLY:
+      case ast::BinaryOp::Op::MULTIPLY:
         mValue = mBuilder.CreateFMul(left, right, "multmp");
         return;
-      case xnor::ast::BinaryOp::Op::DIVIDE:
+      case ast::BinaryOp::Op::DIVIDE:
         mValue = mBuilder.CreateFDiv(left, right, "divtmp");
         return;
-      case xnor::ast::BinaryOp::Op::SHIFT_LEFT:
+      case ast::BinaryOp::Op::SHIFT_LEFT:
         mValue = toFloat(mBuilder.CreateShl(toInt(left), toInt(right), "sltmp"));
         return;
-      case xnor::ast::BinaryOp::Op::SHIFT_RIGHT:
+      case ast::BinaryOp::Op::SHIFT_RIGHT:
         mValue = toFloat(mBuilder.CreateLShr(toInt(left), toInt(right), "srtmp"));
         return;
-      case xnor::ast::BinaryOp::Op::COMP_EQUAL:
+      case ast::BinaryOp::Op::COMP_EQUAL:
         mValue = wrapLogic(mBuilder.CreateFCmpOEQ(left, right, "eqtmp"));
         return;
-      case xnor::ast::BinaryOp::Op::COMP_NOT_EQUAL:
+      case ast::BinaryOp::Op::COMP_NOT_EQUAL:
         mValue = wrapLogic(mBuilder.CreateFCmpONE(left, right, "neqtmp"));
         return;
-      case xnor::ast::BinaryOp::Op::COMP_GREATER:
+      case ast::BinaryOp::Op::COMP_GREATER:
         mValue = wrapLogic(mBuilder.CreateFCmpOGT(left, right, "gttmp"));
         return;
-      case xnor::ast::BinaryOp::Op::COMP_LESS:
+      case ast::BinaryOp::Op::COMP_LESS:
         mValue = wrapLogic(mBuilder.CreateFCmpOLT(left, right, "lttmp"));
         return;
-      case xnor::ast::BinaryOp::Op::COMP_GREATER_OR_EQUAL:
+      case ast::BinaryOp::Op::COMP_GREATER_OR_EQUAL:
         mValue = wrapLogic(mBuilder.CreateNot(mBuilder.CreateFCmpOLT(left, right, "lttmp"), "nottmp"));
         return;
-      case xnor::ast::BinaryOp::Op::COMP_LESS_OR_EQUAL:
+      case ast::BinaryOp::Op::COMP_LESS_OR_EQUAL:
         mValue = wrapLogic(mBuilder.CreateNot(mBuilder.CreateFCmpOGT(left, right, "lttmp"), "nottmp"));
         return;
-      case xnor::ast::BinaryOp::Op::LOGICAL_OR:
+      case ast::BinaryOp::Op::LOGICAL_OR:
         //just use bitwise then not equal 0
         mValue = wrapLogic(mBuilder.CreateICmpNE(mBuilder.CreateOr(toInt(left), toInt(right), "ortmp"),
               llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 0), "neqtmp"));
         return;
-      case xnor::ast::BinaryOp::Op::LOGICAL_AND:
+      case ast::BinaryOp::Op::LOGICAL_AND:
         //just use bitwise then not equal 0
         mValue = wrapLogic(mBuilder.CreateICmpNE(mBuilder.CreateAnd(toInt(left), toInt(right), "andtmp"),
               llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 0), "neqtmp"));
         return;
-      case xnor::ast::BinaryOp::Op::BIT_AND:
+      case ast::BinaryOp::Op::BIT_AND:
         mValue = wrapLogic(mBuilder.CreateAnd(toInt(left), toInt(right), "andtmp"));
         return;
-      case xnor::ast::BinaryOp::Op::BIT_OR:
+      case ast::BinaryOp::Op::BIT_OR:
         mValue = wrapLogic(mBuilder.CreateOr(toInt(left), toInt(right), "ortmp"));
         return;
-      case xnor::ast::BinaryOp::Op::BIT_XOR:
+      case ast::BinaryOp::Op::BIT_XOR:
         mValue = wrapLogic(mBuilder.CreateXor(toInt(left), toInt(right), "xortmp"));
         return;
     }
     throw std::runtime_error("not supported yet");
   }
 
-  void LLVMCodeGenVisitor::visit(xnor::ast::FunctionCall* v){
+  void LLVMCodeGenVisitor::visit(ast::FunctionCall* v){
     auto n = v->name();
 
     //if
@@ -329,7 +331,7 @@ namespace xnor {
     if (!f) {
       std::vector<llvm::Type *> args;
       //only table funcs use strings
-      for (auto n: v->args())
+      for (auto a: v->args())
         args.push_back(llvm::Type::getFloatTy(mContext));
 
       llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getFloatTy(mContext), args, false);
@@ -342,27 +344,64 @@ namespace xnor {
 
     //visit the children, store them in the args
     std::vector<llvm::Value *> args;
-    for (auto n: v->args()) {
-      n->accept(this);
+    for (auto a: v->args()) {
+      a->accept(this);
       args.push_back(mValue);
     }
 
     mValue = mBuilder.CreateCall(f, args, "calltmp");
   }
 
-  void LLVMCodeGenVisitor::visit(xnor::ast::ArrayAccess* v){
+  void LLVMCodeGenVisitor::visit(ast::SampleAccess* v) {
+    //get the index node
+    v->index_node()->accept(this);
+    auto index = mValue;
+
+    //get the variable
+    v->source()->accept(this);
+    auto var = mValue; //this is a pointer to a float
+
+    float clamp_top = (v->source()->type() == ast::Variable::VarType::OUTPUT) ? -1.0f : 0;
+    auto top = llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), clamp_top);
+    auto bottom = mBuilder.CreateNeg(mFrameCount, "bottom");
+    auto zero = llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), 0.0f);
+
+    //clamp index between -frame_size and clamp_top
+    //index < top ? index : top
+    auto lt = mBuilder.CreateFCmpOLT(index, top, "lttmp");
+    index = mBuilder.CreateSelect(lt, index, top);
+
+    //index < bottom ? bottom : index
+    lt = mBuilder.CreateFCmpOLT(index, bottom, "lttmp");
+    index = mBuilder.CreateSelect(lt, bottom, index);
+
+    //offset with the current sample index
+    index = mBuilder.CreateFAdd(index, mFrameIndex, "offset");
+
+    //index < 0 : frame_count + index : index
+    lt = mBuilder.CreateFCmpOLT(index, zero, "ltmp");
+    auto offset = mBuilder.CreateSelect(lt, mFrameCount, zero);
+    index = mBuilder.CreateFAdd(index, offset);
+
+    //XXX TMP truncate, do interpolation later
+    index = toInt(index);
+    auto p = mBuilder.CreateInBoundsGEP(llvm::Type::getFloatTy(mContext), var, index);
+    mValue = mBuilder.CreateLoad(p);
+  }
+
+  void LLVMCodeGenVisitor::visit(ast::ArrayAccess* /*v*/){
     throw std::runtime_error("not implemented");
   }
 
-  void LLVMCodeGenVisitor::visit(xnor::ast::ValueAssignment* v){
+  void LLVMCodeGenVisitor::visit(ast::ValueAssignment* /*v*/){
     throw std::runtime_error("not implemented");
   }
 
-  void LLVMCodeGenVisitor::visit(xnor::ast::ArrayAssignment* v){
+  void LLVMCodeGenVisitor::visit(ast::ArrayAssignment* /*v*/){
     throw std::runtime_error("not implemented");
   }
 
-  LLVMCodeGenVisitor::function_t LLVMCodeGenVisitor::function(std::vector<xnor::ast::NodePtr> statements, bool print) {
+  LLVMCodeGenVisitor::function_t LLVMCodeGenVisitor::function(std::vector<ast::NodePtr> statements, bool print) {
     llvm::Value * cur = nullptr;
 
     auto outargt = llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0);
@@ -427,7 +466,7 @@ namespace xnor {
             return Sym;
           return llvm::JITSymbol(nullptr);
         },
-        [](const std::string &S) { return nullptr; });
+        [](const std::string &/*S*/) { return nullptr; });
     auto H = llvm::cantFail(mCompileLayer.addModule(std::move(mModule), std::move(Resolver)));
     mModuleHandles.push_back(H);
 
