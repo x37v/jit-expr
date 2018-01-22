@@ -267,8 +267,8 @@ static t_int *xnor_expr_tilde_perform(t_int *w) {
           {
             float * in = (t_sample*)w[vector_index++];
             float * buf = &x->cpp->saved_inputs.at(i).front();
-            memcpy(buf + n, buf, n); //copy the old data forward
-            memcpy(buf, in, n); //copy the new data in
+            memcpy(buf + n, buf, n * sizeof(float)); //copy the old data forward
+            memcpy(buf, in, n * sizeof(float)); //copy the new data in
             x->cpp->inarg.at(i).vec = buf;
           }
           break;
