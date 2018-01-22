@@ -123,7 +123,7 @@ namespace xnor {
     switch(v->type()) {
       case ast::Variable::VarType::FLOAT:
         cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0));
-        mValue = mBuilder.CreateLoad(cur);
+        mValue = mBuilder.CreateLoad(cur, "inputf" + std::to_string(v->input_index()));
         break;
       case ast::Variable::VarType::INT:
         {
@@ -144,7 +144,7 @@ namespace xnor {
 
           //visit the children, store them in the args
           std::vector<llvm::Value *> args = { mValue };
-          mValue = mBuilder.CreateCall(f, args, "calltmp");
+          mValue = mBuilder.CreateCall(f, args, "inputi" + std::to_string(v->input_index()));
         }
         break;
       case ast::Variable::VarType::VECTOR:
@@ -152,7 +152,14 @@ namespace xnor {
           cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0));
           cur = mBuilder.CreateLoad(cur);
           cur = mBuilder.CreateInBoundsGEP(llvm::Type::getFloatTy(mContext), cur, mFrameIndex);
-          mValue = mBuilder.CreateLoad(cur);
+          mValue = mBuilder.CreateLoad(cur, "inputv" + std::to_string(v->input_index()));
+        }
+        break;
+      case ast::Variable::VarType::INPUT:
+        {
+          //returns a float pointer
+          cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0));
+          mValue = mBuilder.CreateLoad(cur, "inputx" + std::to_string(v->input_index()));
         }
         break;
       default:
@@ -363,8 +370,8 @@ namespace xnor {
 
     float clamp_top = (v->source()->type() == ast::Variable::VarType::OUTPUT) ? -1.0f : 0;
     auto top = llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), clamp_top);
-    auto bottom = mBuilder.CreateNeg(mFrameCount, "bottom");
     auto zero = llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), 0.0f);
+    auto bottom = mBuilder.CreateFSub(zero, toFloat(mFrameCount), "bottom");
 
     //clamp index between -frame_size and clamp_top
     //index < top ? index : top
@@ -380,7 +387,14 @@ namespace xnor {
 
     //index < 0 : frame_count + index : index
     lt = mBuilder.CreateFCmpOLT(index, zero, "ltmp");
-    auto offset = mBuilder.CreateSelect(lt, mFrameCount, zero);
+
+    llvm::Value * offset;
+    //input buffers are actually 2x as long because you have to be able to previous values as well
+    if (v->source()->type() == ast::Variable::VarType::INPUT)
+      offset = toFloat(mBuilder.CreateShl(mFrameCount, llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 1)));
+    else
+      offset = toFloat(mFrameCount);
+    offset = mBuilder.CreateSelect(lt, offset, zero);
     index = mBuilder.CreateFAdd(index, offset);
 
     //XXX TMP truncate, do interpolation later
@@ -407,6 +421,11 @@ namespace xnor {
     auto outargt = llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0);
     llvm::Value * output = mBuilder.CreateAlloca(outargt, (unsigned)0);
     mBuilder.CreateStore(mOutput, output);
+
+    //store
+    llvm::Value * fcount = mBuilder.CreateAlloca(llvm::Type::getInt32Ty(mContext), (unsigned)0);
+    mBuilder.CreateStore(mFrameCount, fcount);
+    mFrameCount = mBuilder.CreateLoad(fcount, "framecnt");
 
     //loop start
     llvm::Value * StartVal = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 0);
