@@ -12,7 +12,7 @@ struct _xnor_expr;
 
 namespace {
   const bool print_code = true; //XXX for debugging
-  const unsigned int buffer_size = 64;
+  const int buffer_size = 64;
 
   enum class XnorExpr {
     CONTROL,
@@ -137,7 +137,6 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
             x->cpp->outarg[i] = &x->cpp->outfloat[i];
             x->cpp->outs.push_back(outlet_new(&x->x_obj, &s_float));
           }
-          x->cpp->input_types[0] = xnor::ast::Variable::VarType::FLOAT;
         }
         break;
       case XnorExpr::VECTOR: 
@@ -148,8 +147,6 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
             xnor_expr_free(x);
             return NULL;
           }
-          x->cpp->input_types[0] = xnor::ast::Variable::VarType::VECTOR;
-          x->cpp->signal_inputs = 1;
 
           for (size_t i = 0; i < statements.size(); i++)
             x->cpp->outs.push_back(outlet_new(&x->x_obj, &s_signal));
@@ -162,21 +159,19 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
             xnor_expr_free(x);
             return NULL;
           }
-          x->cpp->input_types[0] = xnor::ast::Variable::VarType::INPUT;
-          x->cpp->signal_inputs = 1;
 
           for (size_t i = 0; i < statements.size(); i++)
             x->cpp->outs.push_back(outlet_new(&x->x_obj, &s_signal));
         }
     }
 
-    for (size_t i = 1; i < inputs.size(); i++) {
+    for (size_t i = 0; i < inputs.size(); i++) {
       auto v = inputs.at(i);
       x->cpp->input_types[i] = v->type();
       switch (v->type()) {
         case xnor::ast::Variable::VarType::FLOAT:
         case xnor::ast::Variable::VarType::INT:
-          {
+          if (i != 0) {
             t_xnor_expr_proxy *p = (t_xnor_expr_proxy *)pd_new(xnor_expr_proxy_class);
             p->index = v->input_index();
             p->parent = x;
@@ -190,7 +185,8 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
             xnor_expr_free(x);
             return NULL;
           }
-          x->cpp->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal));
+          if (i != 0)
+            x->cpp->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal));
           x->cpp->signal_inputs += 1;
           break;
         case xnor::ast::Variable::VarType::INPUT:
@@ -199,9 +195,10 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
             xnor_expr_free(x);
             return NULL;
           }
-          x->cpp->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal));
+          if (i != 0)
+            x->cpp->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal));
           x->cpp->signal_inputs += 1;
-          x->cpp->saved_inputs[v->input_index()].resize(buffer_size, 0);
+          x->cpp->saved_inputs[v->input_index()].resize(buffer_size * 2, 0); //input buffers need access to last input as well
           break;
         default:
           throw std::runtime_error("input type not handled yet");
@@ -254,7 +251,7 @@ void xnor_expr_proxy_float(t_xnor_expr_proxy *p, t_floatarg f) {
 
 static t_int *xnor_expr_tilde_perform(t_int *w) {
   t_xnor_expr *x = (t_xnor_expr *)(w[1]);
-  int n = (int)(w[2]);
+  int n = std::min((int)(w[2]), buffer_size); //XXX how do we figure out the real buffer size?
 
   int vector_index = 3;
   for (unsigned int i = 0; i < x->cpp->input_types.size(); i++) {
@@ -265,6 +262,15 @@ static t_int *xnor_expr_tilde_perform(t_int *w) {
           break;
         case xnor::ast::Variable::VarType::VECTOR:
           x->cpp->inarg.at(i).vec = (t_sample*)w[vector_index++];
+          break;
+        case xnor::ast::Variable::VarType::INPUT:
+          {
+            float * in = (t_sample*)w[vector_index++];
+            float * buf = &x->cpp->saved_inputs.at(i).front();
+            memcpy(buf + n, buf, n); //copy the old data forward
+            memcpy(buf, in, n); //copy the new data in
+            x->cpp->inarg.at(i).vec = buf;
+          }
           break;
         default:
           //XXX
