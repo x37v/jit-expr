@@ -383,7 +383,7 @@ namespace xnor {
     index = mBuilder.CreateSelect(lt, bottom, index);
 
     //offset with the current sample index
-    index = mBuilder.CreateFAdd(index, mFrameIndex, "offset");
+    index = mBuilder.CreateFAdd(index, toFloat(mFrameIndex), "offset");
 
     //index < 0 : frame_count + index : index
     lt = mBuilder.CreateFCmpOLT(index, zero, "ltmp");
