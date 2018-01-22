@@ -162,6 +162,14 @@ namespace xnor {
           mValue = mBuilder.CreateLoad(cur, "inputx" + std::to_string(v->input_index()));
         }
         break;
+      case ast::Variable::VarType::OUTPUT:
+        {
+          //returns a float pointer
+          cur = mBuilder.CreateLoad(mOutput);
+          cur = mBuilder.CreateInBoundsGEP(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), cur, llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), v->input_index()));
+          mValue = mBuilder.CreateLoad(cur, "inputy" + std::to_string(v->input_index()));
+        }
+        break;
       default:
         throw std::runtime_error("type not supported yet");
     }
@@ -421,6 +429,7 @@ namespace xnor {
     auto outargt = llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0);
     llvm::Value * output = mBuilder.CreateAlloca(outargt, (unsigned)0);
     mBuilder.CreateStore(mOutput, output);
+    mOutput = output;
 
     //store
     llvm::Value * fcount = mBuilder.CreateAlloca(llvm::Type::getInt32Ty(mContext), (unsigned)0);
@@ -446,7 +455,7 @@ namespace xnor {
     //add statements
     for (unsigned int i = 0; i < statements.size(); i++) {
       auto index = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), i);
-      cur = mBuilder.CreateLoad(output);
+      cur = mBuilder.CreateLoad(mOutput);
       cur = mBuilder.CreateInBoundsGEP(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), cur, index);
       cur = mBuilder.CreateLoad(cur);
       cur = mBuilder.CreateInBoundsGEP(llvm::Type::getFloatTy(mContext), cur, mFrameIndex);

@@ -160,8 +160,10 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
             return NULL;
           }
 
-          for (size_t i = 0; i < statements.size(); i++)
+          for (size_t i = 0; i < statements.size(); i++) {
             x->cpp->outs.push_back(outlet_new(&x->x_obj, &s_signal));
+            x->cpp->saved_outputs[i].resize(buffer_size, 0); //XXX saving a copy of the buffer, we may not actually need it though
+          }
         }
     }
 
@@ -201,7 +203,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
           x->cpp->saved_inputs[v->input_index()].resize(buffer_size * 2, 0); //input buffers need access to last input as well
           break;
         default:
-          throw std::runtime_error("input type not handled yet");
+          throw std::runtime_error("input type not handled " + std::to_string(v->input_index()));
       }
     }
   } catch (std::runtime_error& e) {
@@ -278,10 +280,24 @@ static t_int *xnor_expr_tilde_perform(t_int *w) {
     }
   }
 
-  for (unsigned int i = 0; i < x->cpp->outarg.size(); i++)
-    x->cpp->outarg.at(i) = (float *)w[vector_index++];
+  if (x->cpp->expr_type == XnorExpr::SAMPLE) {
+    //render to the saved buffers [which has some old needed data into it]
+    for (unsigned int i = 0; i < x->cpp->outarg.size(); i++) {
+      x->cpp->outarg.at(i) = &x->cpp->saved_outputs.at(i).front();
+    }
+    x->cpp->func(&x->cpp->outarg.front(), &x->cpp->inarg.front(), n);
 
-  x->cpp->func(&x->cpp->outarg.front(), &x->cpp->inarg.front(), n);
+    //copy out the saved buffers
+    for (unsigned int i = 0; i < x->cpp->outarg.size(); i++) {
+      auto f = (float *)w[vector_index++];
+      memcpy(f, &x->cpp->saved_outputs.at(i).front(), sizeof(float) * n);
+    }
+  } else {
+    for (unsigned int i = 0; i < x->cpp->outarg.size(); i++) {
+      x->cpp->outarg.at(i) = (float *)w[vector_index++];
+    }
+    x->cpp->func(&x->cpp->outarg.front(), &x->cpp->inarg.front(), n);
+  }
   return w + vector_index;
 }
 
