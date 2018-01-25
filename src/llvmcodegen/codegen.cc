@@ -411,7 +411,7 @@ namespace xnor {
     mValue = mBuilder.CreateLoad(p);
   }
 
-  void LLVMCodeGenVisitor::visit(ast::ArrayAccess* /*v*/){
+  void LLVMCodeGenVisitor::visit(ast::ArrayValue* /*v*/){
     throw std::runtime_error("not implemented");
   }
 
@@ -558,5 +558,8 @@ namespace xnor {
   llvm::Value * LLVMCodeGenVisitor::toFloat(llvm::Value * v) {
     return mBuilder.CreateSIToFP(v, llvm::Type::getFloatTy(mContext), "cast");
   }
+
+  //llvm::Value * LLVMCodeGenVisitor::linterpWithWrap(llvm::Value * fptr, llvm::Value * findex, llvm::Value * ilength) {
+  //}
 
 }

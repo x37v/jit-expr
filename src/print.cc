@@ -112,11 +112,11 @@ namespace xnor {
       print_child(c);
   }
 
-  void AstPrintVisitor::visit(xnor::ast::ArrayAccess* v){
+  void AstPrintVisitor::visit(xnor::ast::ArrayValue* v){
     if (v->name().size()) {
-      print("ArrayAccess: " + v->name() + " value: ");
+      print("ArrayValue: " + v->name() + " value: ");
     } else {
-      print("ArrayAccess name: ");
+      print("ArrayValue name: ");
       print_child(v->name_var());
       print("value: ");
     }

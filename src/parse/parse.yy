@@ -78,7 +78,7 @@
 %token <std::string> VAR VAR_DOLLAR VAR_INDEXED VAR_SYMBOL
 
 %type <xnor::ast::VariablePtr> var
-%type <xnor::ast::ArrayAccessPtr> array_op
+%type <xnor::ast::ArrayValuePtr> array_op
 %type <xnor::ast::SampleAccessPtr> sample_op
 %type <xnor::ast::NodePtr> constant binary_op unary_op statement function_call assign quoted call_arg
 %type <std::vector<xnor::ast::NodePtr>> call_args
@@ -172,11 +172,11 @@ unary_op : UNOP_LOGICAL_NOT statement { $$ = std::make_shared<xnor::ast::UnaryOp
          | UNOP_BIT_NOT statement { $$ = std::make_shared<xnor::ast::UnaryOp>(xnor::ast::UnaryOp::Op::BIT_NOT, $2); }
          ;
 
-array_op : STRING OPEN_BRACKET statement CLOSE_BRACKET { $$ = std::make_shared<xnor::ast::ArrayAccess>($1, $3); }
+array_op : STRING OPEN_BRACKET statement CLOSE_BRACKET { $$ = std::make_shared<xnor::ast::ArrayValue>($1, $3); }
          | VAR_SYMBOL OPEN_BRACKET statement CLOSE_BRACKET {
               xnor::ast::VariablePtr var = std::make_shared<xnor::ast::Variable>($1);
               var = driver.add_input(var);
-              $$ = std::make_shared<xnor::ast::ArrayAccess>(var, $3);
+              $$ = std::make_shared<xnor::ast::ArrayValue>(var, $3);
             }
          ;
 

@@ -18,13 +18,13 @@ namespace xnor {
     class BinaryOp;
     class FunctionCall;
     class SampleAccess;
-    class ArrayAccess;
+    class ArrayValue;
     class ValueAssignment;
     class ArrayAssignment;
     typedef std::shared_ptr<Node> NodePtr;
     typedef std::shared_ptr<Variable> VariablePtr;
     typedef std::shared_ptr<SampleAccess> SampleAccessPtr;
-    typedef std::shared_ptr<ArrayAccess> ArrayAccessPtr;
+    typedef std::shared_ptr<ArrayValue> ArrayValuePtr;
     typedef std::function<void(std::string v, unsigned int depth)> PrintFunc;
 
     typedef std::vector<xnor::ast::VariablePtr> VariableVector;
@@ -40,7 +40,7 @@ namespace xnor {
         virtual void visit(BinaryOp* v) = 0;
         virtual void visit(FunctionCall* v) = 0;
         virtual void visit(SampleAccess* v) = 0;
-        virtual void visit(ArrayAccess* v) = 0;
+        virtual void visit(ArrayValue* v) = 0;
         virtual void visit(ValueAssignment* v) = 0;
         virtual void visit(ArrayAssignment* v) = 0;
     };
@@ -176,10 +176,10 @@ namespace xnor {
         NodePtr mAccessor;
     };
 
-    class ArrayAccess : public VNode<ArrayAccess> {
+    class ArrayValue : public VNode<ArrayValue> {
       public:
-        ArrayAccess(const std::string& name, NodePtr accessor);
-        ArrayAccess(VariablePtr varNode, NodePtr accessor);
+        ArrayValue(const std::string& name, NodePtr accessor);
+        ArrayValue(VariablePtr varNode, NodePtr accessor);
 
         std::string name() const { return mArrayName; }
         VariablePtr name_var() const { return mArrayVar; }
@@ -203,12 +203,12 @@ namespace xnor {
 
     class ArrayAssignment : public VNode<ArrayAssignment> {
       public:
-        ArrayAssignment(ArrayAccessPtr array, NodePtr node);
+        ArrayAssignment(ArrayValuePtr array, NodePtr node);
 
-        ArrayAccessPtr array() const { return mArray; }
+        ArrayValuePtr array() const { return mArray; }
         NodePtr value_node() const { return mValueNode; }
       private:
-        ArrayAccessPtr mArray;
+        ArrayValuePtr mArray;
         NodePtr mValueNode;
     };
   }

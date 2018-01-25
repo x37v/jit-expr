@@ -60,7 +60,7 @@ namespace xnor {
       virtual void visit(xnor::ast::BinaryOp* v);
       virtual void visit(xnor::ast::FunctionCall* v);
       virtual void visit(xnor::ast::SampleAccess* v);
-      virtual void visit(xnor::ast::ArrayAccess* v);
+      virtual void visit(xnor::ast::ArrayValue* v);
       virtual void visit(xnor::ast::ValueAssignment* v);
       virtual void visit(xnor::ast::ArrayAssignment* v);
 
@@ -95,5 +95,8 @@ namespace xnor {
       llvm::Value * wrapLogic(llvm::Value * v);
       llvm::Value * toInt(llvm::Value * v);
       llvm::Value * toFloat(llvm::Value * v);
+
+      //returns float
+      //llvm::Value * linterpWithWrap(llvm::Value * fptr, llvm::Value * findex, llvm::Value * ilength);
   };
 }
