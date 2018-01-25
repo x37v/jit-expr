@@ -411,7 +411,7 @@ namespace xnor {
     mValue = mBuilder.CreateLoad(p);
   }
 
-  void LLVMCodeGenVisitor::visit(ast::ArrayValue* /*v*/){
+  void LLVMCodeGenVisitor::visit(ast::ArrayAccess* /*v*/){
     throw std::runtime_error("not implemented");
   }
 

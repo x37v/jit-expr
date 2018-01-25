@@ -78,7 +78,7 @@
 %token <std::string> VAR VAR_DOLLAR VAR_INDEXED VAR_SYMBOL
 
 %type <xnor::ast::VariablePtr> var
-%type <xnor::ast::ArrayValuePtr> array_op
+%type <xnor::ast::ArrayAccessPtr> array_op
 %type <xnor::ast::SampleAccessPtr> sample_op
 %type <xnor::ast::NodePtr> constant binary_op unary_op statement function_call assign quoted call_arg
 %type <std::vector<xnor::ast::NodePtr>> call_args
@@ -115,7 +115,7 @@ statement:
     | binary_op { $$ = $1; }
     | unary_op { $$ = $1; }
     | function_call { $$ = $1; }
-    | array_op { $$ = $1; }
+    | array_op { $$ = std::make_shared<xnor::ast::Deref>($1); }
     | sample_op { $$ = $1; }
     | OPEN_PAREN statement CLOSE_PAREN { $$ = $2; }
     | assign { $$ = $1; }
@@ -125,14 +125,7 @@ statement:
 
 assign :
        STRING ASSIGN statement { $$ = std::make_shared<xnor::ast::ValueAssignment>($1, $3); }
-       | STRING OPEN_BRACKET statement CLOSE_BRACKET ASSIGN statement {
-          $$ = std::make_shared<xnor::ast::ArrayAssignment>($1, $3, $6);
-       }
-       | VAR_SYMBOL OPEN_BRACKET statement CLOSE_BRACKET ASSIGN statement {
-          xnor::ast::VariablePtr var = std::make_shared<xnor::ast::Variable>($1);
-          var = driver.add_input(var);
-          $$ = std::make_shared<xnor::ast::ArrayAssignment>(var, $3, $6);
-       }
+       | array_op ASSIGN statement { $$ = std::make_shared<xnor::ast::ArrayAssignment>($1, $3); }
        ;
 
 var : VAR  {
@@ -179,11 +172,11 @@ unary_op : UNOP_LOGICAL_NOT statement { $$ = std::make_shared<xnor::ast::UnaryOp
          | UNOP_BIT_NOT statement { $$ = std::make_shared<xnor::ast::UnaryOp>(xnor::ast::UnaryOp::Op::BIT_NOT, $2); }
          ;
 
-array_op : STRING OPEN_BRACKET statement CLOSE_BRACKET { $$ = std::make_shared<xnor::ast::ArrayValue>($1, $3); }
+array_op : STRING OPEN_BRACKET statement CLOSE_BRACKET { $$ = std::make_shared<xnor::ast::ArrayAccess>($1, $3); }
          | VAR_SYMBOL OPEN_BRACKET statement CLOSE_BRACKET {
               xnor::ast::VariablePtr var = std::make_shared<xnor::ast::Variable>($1);
               var = driver.add_input(var);
-              $$ = std::make_shared<xnor::ast::ArrayValue>(var, $3);
+              $$ = std::make_shared<xnor::ast::ArrayAccess>(var, $3);
             }
          ;
 

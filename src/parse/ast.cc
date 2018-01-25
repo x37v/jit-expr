@@ -136,12 +136,12 @@ namespace ast {
       throw std::runtime_error("only input and output variables can be accessed at the sample level");
   }
 
-  ArrayValue::ArrayValue(const std::string& name, NodePtr accessor) :
+  ArrayAccess::ArrayAccess(const std::string& name, NodePtr accessor) :
     mArrayName(name), mAccessor(accessor)
   {
   }
 
-  ArrayValue::ArrayValue(VariablePtr varNode, NodePtr accessor) :
+  ArrayAccess::ArrayAccess(VariablePtr varNode, NodePtr accessor) :
     mArrayVar(varNode), mAccessor(accessor)
   {
   }
@@ -150,15 +150,10 @@ namespace ast {
   {
   }
 
-  ArrayAssignment::ArrayAssignment(const std::string& name, NodePtr index, NodePtr value) :
-    mArrayName(name), mIndexNode(index), mValueNode(value)
+  ArrayAssignment::ArrayAssignment(ArrayAccessPtr array, NodePtr node) : mArray(array), mValueNode(node)
   {
   }
 
-  ArrayAssignment::ArrayAssignment(VariablePtr varNode, NodePtr index, NodePtr value) :
-    mArrayVar(varNode), mIndexNode(index), mValueNode(value)
-  {
-  }
-
+  Deref::Deref(ArrayAccessPtr array) : mValue(array) {}
 }
 }

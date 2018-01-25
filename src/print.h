@@ -14,9 +14,10 @@ namespace xnor {
       virtual void visit(xnor::ast::BinaryOp* v);
       virtual void visit(xnor::ast::FunctionCall* v);
       virtual void visit(xnor::ast::SampleAccess* v);
-      virtual void visit(xnor::ast::ArrayValue* v);
+      virtual void visit(xnor::ast::ArrayAccess* v);
       virtual void visit(xnor::ast::ValueAssignment* v);
       virtual void visit(xnor::ast::ArrayAssignment* v);
+      virtual void visit(xnor::ast::Deref* v);
 
     private:
       unsigned int mDepth = 0;
