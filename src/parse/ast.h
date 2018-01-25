@@ -203,12 +203,17 @@ namespace xnor {
 
     class ArrayAssignment : public VNode<ArrayAssignment> {
       public:
-        ArrayAssignment(ArrayValuePtr array, NodePtr node);
+        ArrayAssignment(const std::string& name, NodePtr index, NodePtr value);
+        ArrayAssignment(VariablePtr varNode, NodePtr index, NodePtr value);
 
-        ArrayValuePtr array() const { return mArray; }
+        std::string name() const { return mArrayName; }
+        VariablePtr name_var() const { return mArrayVar; }
+        NodePtr index_node() const { return mIndexNode; }
         NodePtr value_node() const { return mValueNode; }
       private:
-        ArrayValuePtr mArray;
+        std::string mArrayName;
+        VariablePtr mArrayVar = nullptr;
+        NodePtr mIndexNode;
         NodePtr mValueNode;
     };
   }

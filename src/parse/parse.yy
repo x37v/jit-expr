@@ -125,7 +125,14 @@ statement:
 
 assign :
        STRING ASSIGN statement { $$ = std::make_shared<xnor::ast::ValueAssignment>($1, $3); }
-       | array_op ASSIGN statement { $$ = std::make_shared<xnor::ast::ArrayAssignment>($1, $3); }
+       | STRING OPEN_BRACKET statement CLOSE_BRACKET ASSIGN statement {
+          $$ = std::make_shared<xnor::ast::ArrayAssignment>($1, $3, $6);
+       }
+       | VAR_SYMBOL OPEN_BRACKET statement CLOSE_BRACKET ASSIGN statement {
+          xnor::ast::VariablePtr var = std::make_shared<xnor::ast::Variable>($1);
+          var = driver.add_input(var);
+          $$ = std::make_shared<xnor::ast::ArrayAssignment>(var, $3, $6);
+       }
        ;
 
 var : VAR  {

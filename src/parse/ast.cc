@@ -150,8 +150,15 @@ namespace ast {
   {
   }
 
-  ArrayAssignment::ArrayAssignment(ArrayValuePtr array, NodePtr node) : mArray(array), mValueNode(node)
+  ArrayAssignment::ArrayAssignment(const std::string& name, NodePtr index, NodePtr value) :
+    mArrayName(name), mIndexNode(index), mValueNode(value)
   {
   }
+
+  ArrayAssignment::ArrayAssignment(VariablePtr varNode, NodePtr index, NodePtr value) :
+    mArrayVar(varNode), mIndexNode(index), mValueNode(value)
+  {
+  }
+
 }
 }
