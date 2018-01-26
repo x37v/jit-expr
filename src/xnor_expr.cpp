@@ -58,7 +58,10 @@ namespace {
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
 extern "C" void xnor_expr_free(struct _xnor_expr * x);
 extern "C" void xnor_expr_setup(void);
+
+//functions called from generated code
 extern "C" float xnor_expr_factf(float v);
+extern "C" float * xnor_expr_table_value_ptr(t_symbol * name, float findex);
 
 static t_class *xnor_expr_class;
 static t_class *xnor_expr_proxy_class;
@@ -151,6 +154,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
           for (size_t i = 0; i < statements.size(); i++)
             x->cpp->outs.push_back(outlet_new(&x->x_obj, &s_signal));
         }
+        break;
       case XnorExpr::SAMPLE: 
         {
           if (inputs.size() >= 1 &&
@@ -165,6 +169,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
             x->cpp->saved_outputs[i].resize(buffer_size, 0); //XXX saving a copy of the buffer, we may not actually need it though
           }
         }
+        break;
     }
 
     for (size_t i = 0; i < inputs.size(); i++) {
@@ -234,7 +239,7 @@ void xnor_expr_bang(t_xnor_expr * x) {
     outlet_float(x->cpp->outs.at(i), *(x->cpp->outarg.at(i)));
 }
 
-static void xnor_expr_list(t_xnor_expr *x, t_symbol *s, int argc, const t_atom *argv) {
+static void xnor_expr_list(t_xnor_expr *x, t_symbol * /*s*/, int argc, const t_atom *argv) {
   for (int i = 0; i < std::min(argc, (int)x->cpp->infloats.size()); i++) {
 		if (argv[i].a_type == A_FLOAT) {
       x->cpp->infloats.at(i) = argv[i].a_w.w_float;
@@ -377,5 +382,19 @@ namespace {
 
 float xnor_expr_factf(float v) {
   return static_cast<float>(facti(static_cast<int>(v)));
+}
+
+//adapted from max_ex_tab x_vexpr_if.c
+float * xnor_expr_table_value_ptr(t_symbol * name, float findex) {
+  t_garray * a;
+  int size = 0;
+  t_word *vec;
+  if (!name || !(a = (t_garray *)pd_findbyclass(name, garray_class)) || !garray_getfloatwords(a, &size, &vec)) {
+    //XXX post error
+    return nullptr;
+  }
+
+  int index = std::min(std::max(0, static_cast<int>(findex)), size - 1);
+  return &(vec[index].w_float);
 }
 
