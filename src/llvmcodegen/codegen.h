@@ -63,6 +63,7 @@ namespace xnor {
       virtual void visit(xnor::ast::ArrayAccess* v);
       virtual void visit(xnor::ast::ValueAssignment* v);
       virtual void visit(xnor::ast::ArrayAssignment* v);
+      virtual void visit(xnor::ast::Deref* v);
 
       function_t function(std::vector<xnor::ast::NodePtr> statements, bool print = false);
     private:
@@ -98,5 +99,10 @@ namespace xnor {
 
       //returns float
       //llvm::Value * linterpWithWrap(llvm::Value * fptr, llvm::Value * findex, llvm::Value * ilength);
+      
+      llvm::Value * createFunctionCall(
+          const std::string& func_name,
+          llvm::FunctionType *ft,
+          std::vector<llvm::Value *> args, std::string callname = "tmpfcall");
   };
 }

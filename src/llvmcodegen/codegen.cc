@@ -128,23 +128,10 @@ namespace xnor {
       case ast::Variable::VarType::INT:
         {
           cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0));
-          mValue = mBuilder.CreateLoad(cur);
-
-          //use floorf function
-          auto n = "floorf";
-          llvm::Function * f = mModule->getFunction(n);
-          if (!f) {
-            std::vector<llvm::Type *> args = {llvm::Type::getFloatTy(mContext)};
-            llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getFloatTy(mContext), args, false);
-            f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, n, mModule.get());
-            if (!f)
-              throw std::runtime_error("cannot find floorf function");
-            //XXX is it a leak if we don't store this somewhere??
-          }
-
-          //visit the children, store them in the args
-          std::vector<llvm::Value *> args = { mValue };
-          mValue = mBuilder.CreateCall(f, args, "inputi" + std::to_string(v->input_index()));
+          cur = mBuilder.CreateLoad(cur);
+          mValue = createFunctionCall("floorf", 
+              llvm::FunctionType::get(llvm::Type::getFloatTy(mContext), {llvm::Type::getFloatTy(mContext)}, false),
+              { cur }, "inputi" + std::to_string(v->input_index()));
         }
         break;
       case ast::Variable::VarType::VECTOR:
@@ -423,6 +410,11 @@ namespace xnor {
     throw std::runtime_error("not implemented");
   }
 
+  void LLVMCodeGenVisitor::visit(xnor::ast::Deref* v) {
+    v->value_node()->accept(this); //returns a pointer to a float
+    mValue = mBuilder.CreateLoad(mValue, "deref");
+  }
+
   LLVMCodeGenVisitor::function_t LLVMCodeGenVisitor::function(std::vector<ast::NodePtr> statements, bool print) {
     llvm::Value * cur = nullptr;
 
@@ -561,5 +553,19 @@ namespace xnor {
 
   //llvm::Value * LLVMCodeGenVisitor::linterpWithWrap(llvm::Value * fptr, llvm::Value * findex, llvm::Value * ilength) {
   //}
+  llvm::Value * LLVMCodeGenVisitor::createFunctionCall(
+      const std::string& func_name,
+      llvm::FunctionType *func_type,
+      std::vector<llvm::Value *> args, std::string callname) {
+
+    llvm::Function * f = mModule->getFunction(func_name);
+    if (!f) {
+      f = llvm::Function::Create(func_type, llvm::Function::ExternalLinkage, func_name, mModule.get());
+      if (!f)
+        throw std::runtime_error("cannot find function with name " + func_name);
+      //XXX is it a leak if we don't store this somewhere??
+    }
+    return mBuilder.CreateCall(f, args, callname);
+  }
 
 }
