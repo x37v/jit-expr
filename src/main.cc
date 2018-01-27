@@ -1,7 +1,5 @@
 #include "parse/driver.hh"
-#include "llvmcodegen/codegen.h"
 #include "print.h"
-#include <llvm/Support/TargetSelect.h>
 #include <string>
 
 #include <m_pd.h>
@@ -18,8 +16,6 @@ int main(int argc, char * argv[]) {
   if (argc != 2)
     throw std::runtime_error("must provide a file as an argument");
   
-  xnor::LLVMCodeGenVisitor::init();
-
   std::ifstream infile(argv[1]);
 
   parse::Driver driver;

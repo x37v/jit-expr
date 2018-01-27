@@ -81,8 +81,11 @@ namespace xnor {
       llvm::Value * mFrameIndex;
       llvm::Value * mFrameCount;
       llvm::BasicBlock * mBlock;
+
+      llvm::Type * mFloatType;
+      llvm::Type * mIntType;
       llvm::Type * mInputType;
-      llvm::Type * mSymbolType;
+      llvm::Type * mSymbolPtrType;
 
       const llvm::DataLayout mDataLayout;
       ObjLayerT mObjectLayer;

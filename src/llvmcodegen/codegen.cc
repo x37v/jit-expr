@@ -9,6 +9,7 @@
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Type.h>
 #include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/GlobalVariable.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/IR/Instructions.h>
@@ -58,6 +59,10 @@ namespace xnor {
     mModule = llvm::make_unique<llvm::Module>("xnor/expr", mContext);
     mModule->setDataLayout(mDataLayout);
 
+    mSymbolPtrType = llvm::PointerType::get(llvm::StructType::create(mContext, "t_symbol_ptr"), 0); //opaque
+    mFloatType = llvm::Type::getFloatTy(mContext);
+    mIntType = llvm::Type::getInt32Ty(mContext);
+
     mFunctionPassManager = llvm::make_unique<llvm::legacy::FunctionPassManager>(mModule.get());
 
 #if 0
@@ -74,18 +79,15 @@ namespace xnor {
     mFunctionPassManager->doInitialization();
 
     std::vector<llvm::Type*> argTypes;
-    argTypes.push_back(llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0));
+    argTypes.push_back(llvm::PointerType::get(llvm::PointerType::get(mFloatType, 0), 0));
 
     std::vector<llvm::Type*> unionTypes;
-    unionTypes.push_back(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0));
+    unionTypes.push_back(llvm::PointerType::get(mFloatType, 0));
     mInputType = llvm::StructType::create(llvm::makeArrayRef(unionTypes), "union.input_arg_t");
     auto sp = llvm::PointerType::get(mInputType, 0);
     argTypes.push_back(sp);
 
-    argTypes.push_back(llvm::Type::getInt32Ty(mContext));
-
-    //opaque
-    mSymbolType = llvm::StructType::create(mContext, "t_symbol_ptr");
+    argTypes.push_back(mIntType);
 
     llvm::FunctionType *ftype = llvm::FunctionType::get(llvm::Type::getVoidTy(mContext), llvm::makeArrayRef(argTypes), false);
     //XXX should we use internal linkage and figure out how to grab those symbols?
@@ -116,36 +118,36 @@ namespace xnor {
 
   void LLVMCodeGenVisitor::visit(ast::Variable* v){
     //XXX is there a better index?
-    auto index = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), v->input_index());
+    auto index = llvm::ConstantInt::get(mIntType, v->input_index());
 
     llvm::Value * cur = mBuilder.CreateLoad(mInput);
     cur = mBuilder.CreateInBoundsGEP(mInputType, cur, index);
     switch(v->type()) {
       case ast::Variable::VarType::FLOAT:
-        cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0));
+        cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(mFloatType, 0));
         mValue = mBuilder.CreateLoad(cur, "inputf" + std::to_string(v->input_index()));
         break;
       case ast::Variable::VarType::INT:
         {
-          cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0));
+          cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(mFloatType, 0));
           cur = mBuilder.CreateLoad(cur);
           mValue = createFunctionCall("floorf", 
-              llvm::FunctionType::get(llvm::Type::getFloatTy(mContext), {llvm::Type::getFloatTy(mContext)}, false),
+              llvm::FunctionType::get(mFloatType, {mFloatType}, false),
               { cur }, "inputi" + std::to_string(v->input_index()));
         }
         break;
       case ast::Variable::VarType::VECTOR:
         {
-          cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0));
+          cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::PointerType::get(mFloatType, 0), 0));
           cur = mBuilder.CreateLoad(cur);
-          cur = mBuilder.CreateInBoundsGEP(llvm::Type::getFloatTy(mContext), cur, mFrameIndex);
+          cur = mBuilder.CreateInBoundsGEP(mFloatType, cur, mFrameIndex);
           mValue = mBuilder.CreateLoad(cur, "inputv" + std::to_string(v->input_index()));
         }
         break;
       case ast::Variable::VarType::INPUT:
         {
           //returns a float pointer
-          cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0));
+          cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(llvm::PointerType::get(mFloatType, 0), 0));
           mValue = mBuilder.CreateLoad(cur, "inputx" + std::to_string(v->input_index()));
         }
         break;
@@ -153,7 +155,7 @@ namespace xnor {
         {
           //returns a float pointer
           cur = mBuilder.CreateLoad(mOutput);
-          cur = mBuilder.CreateInBoundsGEP(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), cur, llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), v->input_index()));
+          cur = mBuilder.CreateInBoundsGEP(llvm::PointerType::get(mFloatType, 0), cur, llvm::ConstantInt::get(mIntType, v->input_index()));
           mValue = mBuilder.CreateLoad(cur, "inputy" + std::to_string(v->input_index()));
         }
         break;
@@ -163,17 +165,17 @@ namespace xnor {
   }
 
   void LLVMCodeGenVisitor::visit(ast::Value<int>* v){
-    mValue = llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), static_cast<float>(v->value()));
+    mValue = llvm::ConstantFP::get(mFloatType, static_cast<float>(v->value()));
   }
 
   void LLVMCodeGenVisitor::visit(ast::Value<float>* v){
-    mValue = llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), v->value());
+    mValue = llvm::ConstantFP::get(mFloatType, v->value());
   }
 
   void LLVMCodeGenVisitor::visit(ast::Value<std::string>* /*v*/){
     /*
     t_symbol * sym = gensym(v->value().c_str());
-    auto pt = llvm::PointerType::get(mSymbolType, 0);
+    auto pt = llvm::PointerType::get(mSymbolPtrType, 0);
     */
     throw std::runtime_error("not implemented");
   }
@@ -192,7 +194,7 @@ namespace xnor {
         return;
       case ast::UnaryOp::Op::LOGICAL_NOT:
         //logical not is the same as x == 0
-        mValue = wrapLogic(mBuilder.CreateFCmpOEQ(right, llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), 0.0f), "eqtmp"));
+        mValue = wrapLogic(mBuilder.CreateFCmpOEQ(right, llvm::ConstantFP::get(mFloatType, 0.0f), "eqtmp"));
         return;
       case ast::UnaryOp::Op::NEGATE:
         mValue = mBuilder.CreateNeg(right, "negtmp");
@@ -248,12 +250,12 @@ namespace xnor {
       case ast::BinaryOp::Op::LOGICAL_OR:
         //just use bitwise then not equal 0
         mValue = wrapLogic(mBuilder.CreateICmpNE(mBuilder.CreateOr(toInt(left), toInt(right), "ortmp"),
-              llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 0), "neqtmp"));
+              llvm::ConstantInt::get(mIntType, 0), "neqtmp"));
         return;
       case ast::BinaryOp::Op::LOGICAL_AND:
         //just use bitwise then not equal 0
         mValue = wrapLogic(mBuilder.CreateICmpNE(mBuilder.CreateAnd(toInt(left), toInt(right), "andtmp"),
-              llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 0), "neqtmp"));
+              llvm::ConstantInt::get(mIntType, 0), "neqtmp"));
         return;
       case ast::BinaryOp::Op::BIT_AND:
         mValue = wrapLogic(mBuilder.CreateAnd(toInt(left), toInt(right), "andtmp"));
@@ -277,7 +279,7 @@ namespace xnor {
       v->args().at(0)->accept(this);
 
       //true if not equal to zero
-      auto cond = mBuilder.CreateFCmpONE(mValue, llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), 0.0f), "neqtmp");
+      auto cond = mBuilder.CreateFCmpONE(mValue, llvm::ConstantFP::get(mFloatType, 0.0f), "neqtmp");
 
       llvm::Function *f = mBuilder.GetInsertBlock()->getParent();
       auto thenbb = llvm::BasicBlock::Create(mContext, "then", f);
@@ -308,7 +310,7 @@ namespace xnor {
 
       //bring everything together
       mBuilder.SetInsertPoint(mergebb);
-      auto *phi = mBuilder.CreatePHI(llvm::Type::getFloatTy(mContext), 2, "iftmp");
+      auto *phi = mBuilder.CreatePHI(mFloatType, 2, "iftmp");
       phi->addIncoming(thenv, thenbb);
       phi->addIncoming(elsev, elsebb);
       mValue = phi;
@@ -334,9 +336,9 @@ namespace xnor {
       std::vector<llvm::Type *> args;
       //only table funcs use strings
       for (auto a: v->args())
-        args.push_back(llvm::Type::getFloatTy(mContext));
+        args.push_back(mFloatType);
 
-      llvm::FunctionType *ft = llvm::FunctionType::get(llvm::Type::getFloatTy(mContext), args, false);
+      llvm::FunctionType *ft = llvm::FunctionType::get(mFloatType, args, false);
       f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, n, mModule.get());
       if (!f)
         throw std::runtime_error("cannot find function with name: " + v->name());
@@ -364,8 +366,8 @@ namespace xnor {
     auto var = mValue; //this is a pointer to a float
 
     float clamp_top = (v->source()->type() == ast::Variable::VarType::OUTPUT) ? -1.0f : 0;
-    auto top = llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), clamp_top);
-    auto zero = llvm::ConstantFP::get(llvm::Type::getFloatTy(mContext), 0.0f);
+    auto top = llvm::ConstantFP::get(mFloatType, clamp_top);
+    auto zero = llvm::ConstantFP::get(mFloatType, 0.0f);
     auto bottom = mBuilder.CreateFSub(zero, toFloat(mFrameCount), "bottom");
 
     //clamp index between -frame_size and clamp_top
@@ -386,7 +388,7 @@ namespace xnor {
     llvm::Value * offset;
     //input buffers are actually 2x as long because you have to be able to previous values as well
     if (v->source()->type() == ast::Variable::VarType::INPUT)
-      offset = toFloat(mBuilder.CreateShl(mFrameCount, llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 1)));
+      offset = toFloat(mBuilder.CreateShl(mFrameCount, llvm::ConstantInt::get(mIntType, 1)));
     else
       offset = toFloat(mFrameCount);
     offset = mBuilder.CreateSelect(lt, offset, zero);
@@ -394,12 +396,29 @@ namespace xnor {
 
     //XXX TMP truncate, do interpolation later
     index = toInt(index);
-    auto p = mBuilder.CreateInBoundsGEP(llvm::Type::getFloatTy(mContext), var, index);
+    auto p = mBuilder.CreateInBoundsGEP(mFloatType, var, index);
     mValue = mBuilder.CreateLoad(p);
   }
 
-  void LLVMCodeGenVisitor::visit(ast::ArrayAccess* /*v*/){
-    throw std::runtime_error("not implemented");
+  void LLVMCodeGenVisitor::visit(ast::ArrayAccess* v){
+    if (v->name().size()) {
+      t_symbol * sym = gensym(v->name().c_str()); //XXX hold onto symbol and free later?
+      if (!sym)
+        throw std::runtime_error("couldn't get symbol " + v->name());
+      mValue = llvm::ConstantInt::get(mDataLayout.getIntPtrType(mContext, 0), reinterpret_cast<uintptr_t>(sym));
+      mValue = mBuilder.CreateBitCast(mValue, mSymbolPtrType);
+    } else {
+      v->name_var()->accept(this);
+    }
+
+    auto name = mValue;
+
+    v->index_node()->accept(this);
+    auto index = mValue;
+
+    mValue = createFunctionCall("xnor_expr_table_value_ptr", 
+        llvm::FunctionType::get(llvm::PointerType::get(mFloatType, 0), {mSymbolPtrType, mFloatType}, false),
+        { name, index }, "tmparrayaccess");
   }
 
   void LLVMCodeGenVisitor::visit(ast::ValueAssignment* /*v*/){
@@ -418,18 +437,18 @@ namespace xnor {
   LLVMCodeGenVisitor::function_t LLVMCodeGenVisitor::function(std::vector<ast::NodePtr> statements, bool print) {
     llvm::Value * cur = nullptr;
 
-    auto outargt = llvm::PointerType::get(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), 0);
+    auto outargt = llvm::PointerType::get(llvm::PointerType::get(mFloatType, 0), 0);
     llvm::Value * output = mBuilder.CreateAlloca(outargt, (unsigned)0);
     mBuilder.CreateStore(mOutput, output);
     mOutput = output;
 
     //store
-    llvm::Value * fcount = mBuilder.CreateAlloca(llvm::Type::getInt32Ty(mContext), (unsigned)0);
+    llvm::Value * fcount = mBuilder.CreateAlloca(mIntType, (unsigned)0);
     mBuilder.CreateStore(mFrameCount, fcount);
     mFrameCount = mBuilder.CreateLoad(fcount, "framecnt");
 
     //loop start
-    llvm::Value * StartVal = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 0);
+    llvm::Value * StartVal = llvm::ConstantInt::get(mIntType, 0);
     llvm::Function *TheFunction = mBuilder.GetInsertBlock()->getParent();
     llvm::BasicBlock *PreheaderBB = mBuilder.GetInsertBlock();
     llvm::BasicBlock *LoopBB = llvm::BasicBlock::Create(mContext, "loop", TheFunction);
@@ -440,24 +459,24 @@ namespace xnor {
     mBuilder.SetInsertPoint(LoopBB);
 
     // Start the PHI node with an entry for Start.
-    llvm::PHINode *Variable = mBuilder.CreatePHI(llvm::Type::getInt32Ty(mContext), 2, "loopvar");
+    llvm::PHINode *Variable = mBuilder.CreatePHI(mIntType, 2, "loopvar");
     Variable->addIncoming(StartVal, PreheaderBB);
 
     mFrameIndex = Variable;
     //add statements
     for (unsigned int i = 0; i < statements.size(); i++) {
-      auto index = llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), i);
+      auto index = llvm::ConstantInt::get(mIntType, i);
       cur = mBuilder.CreateLoad(mOutput);
-      cur = mBuilder.CreateInBoundsGEP(llvm::PointerType::get(llvm::Type::getFloatTy(mContext), 0), cur, index);
+      cur = mBuilder.CreateInBoundsGEP(llvm::PointerType::get(mFloatType, 0), cur, index);
       cur = mBuilder.CreateLoad(cur);
-      cur = mBuilder.CreateInBoundsGEP(llvm::Type::getFloatTy(mContext), cur, mFrameIndex);
+      cur = mBuilder.CreateInBoundsGEP(mFloatType, cur, mFrameIndex);
 
       statements.at(i)->accept(this);
       mBuilder.CreateStore(mValue, cur);
     }
 
     // Emit the step value.
-    llvm::Value *NextVar = mBuilder.CreateAdd(Variable, llvm::ConstantInt::get(llvm::Type::getInt32Ty(mContext), 1), "nextvar");
+    llvm::Value *NextVar = mBuilder.CreateAdd(Variable, llvm::ConstantInt::get(mIntType, 1), "nextvar");
     llvm::Value *EndVal = mFrameCount;
     llvm::Value *EndCond = mBuilder.CreateICmpNE(EndVal, NextVar);
 
@@ -540,15 +559,15 @@ namespace xnor {
   }
 
   llvm::Value * LLVMCodeGenVisitor::wrapLogic(llvm::Value * v) {
-    return mBuilder.CreateUIToFP(v, llvm::Type::getFloatTy(mContext), "cast");
+    return mBuilder.CreateUIToFP(v, mFloatType, "cast");
   }
 
   llvm::Value * LLVMCodeGenVisitor::toInt(llvm::Value * v) {
-    return mBuilder.CreateFPToSI(v, llvm::Type::getInt32Ty(mContext), "cast");
+    return mBuilder.CreateFPToSI(v, mIntType, "cast");
   }
 
   llvm::Value * LLVMCodeGenVisitor::toFloat(llvm::Value * v) {
-    return mBuilder.CreateSIToFP(v, llvm::Type::getFloatTy(mContext), "cast");
+    return mBuilder.CreateSIToFP(v, mFloatType, "cast");
   }
 
   //llvm::Value * LLVMCodeGenVisitor::linterpWithWrap(llvm::Value * fptr, llvm::Value * findex, llvm::Value * ilength) {
