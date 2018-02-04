@@ -62,6 +62,7 @@ extern "C" void xnor_expr_setup(void);
 //functions called from generated code
 extern "C" float xnor_expr_factf(float v);
 extern "C" float * xnor_expr_table_value_ptr(t_symbol * name, float findex);
+extern "C" float xnor_expr_maxf(float a, float b);
 
 static t_class *xnor_expr_class;
 static t_class *xnor_expr_proxy_class;
@@ -397,4 +398,6 @@ float * xnor_expr_table_value_ptr(t_symbol * name, float findex) {
   int index = std::min(std::max(0, static_cast<int>(findex)), size - 1);
   return &(vec[index].w_float);
 }
+
+float xnor_expr_maxf(float a, float b) { return std::max(a, b); }
 

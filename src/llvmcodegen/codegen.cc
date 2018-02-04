@@ -329,6 +329,8 @@ namespace xnor {
       n = "log";
     else if (n == "fact")
       n = "xnor_expr_fact";
+    else if (n == "max")
+      n = "xnor_expr_max";
     n = n + "f"; //we're using the floating point version of these calls
 
     llvm::Function * f = mModule->getFunction(n);
