@@ -172,12 +172,11 @@ namespace xnor {
     mValue = llvm::ConstantFP::get(mFloatType, v->value());
   }
 
-  void LLVMCodeGenVisitor::visit(ast::Value<std::string>* /*v*/){
-    /*
-    t_symbol * sym = gensym(v->value().c_str());
-    auto pt = llvm::PointerType::get(mSymbolPtrType, 0);
-    */
-    throw std::runtime_error("not implemented");
+  void LLVMCodeGenVisitor::visit(ast::Value<std::string>* v){
+    auto sym = getSymbol(v->value());
+    mValue = createFunctionCall("xnor_expr_value_get",
+        llvm::FunctionType::get(mFloatType, {mSymbolPtrType}, false),
+        {sym}, "tmpvalueget");
   }
 
   void LLVMCodeGenVisitor::visit(ast::Quoted* /*v*/){
