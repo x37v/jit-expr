@@ -404,11 +404,8 @@ namespace xnor {
 
   void LLVMCodeGenVisitor::visit(ast::ArrayAccess* v){
     if (v->name().size()) {
-      t_symbol * sym = gensym(v->name().c_str()); //XXX hold onto symbol and free later?
-      if (!sym)
-        throw std::runtime_error("couldn't get symbol " + v->name());
-      mValue = llvm::ConstantInt::get(mDataLayout.getIntPtrType(mContext, 0), reinterpret_cast<uintptr_t>(sym));
-      mValue = mBuilder.CreateBitCast(mValue, mSymbolPtrType);
+      auto sym = getSymbol(v->name());
+      mValue = mBuilder.CreateBitCast(sym, mSymbolPtrType);
     } else {
       v->name_var()->accept(this);
     }
@@ -423,8 +420,14 @@ namespace xnor {
         { name, index }, "tmparrayaccess");
   }
 
-  void LLVMCodeGenVisitor::visit(ast::ValueAssignment* /*v*/){
-    throw std::runtime_error("not implemented");
+  void LLVMCodeGenVisitor::visit(ast::ValueAssignment* v){
+    auto sym = getSymbol(v->value_name());
+    v->value_node()->accept(this);
+
+    auto value = mValue;
+    mValue = createFunctionCall("xnor_expr_value_assign",
+        llvm::FunctionType::get(mFloatType, {mSymbolPtrType, mFloatType}, false),
+        {sym, value}, "tmpvalueassign");
   }
 
   void LLVMCodeGenVisitor::visit(ast::ArrayAssignment* v){
@@ -575,6 +578,13 @@ namespace xnor {
 
   llvm::Value * LLVMCodeGenVisitor::toFloat(llvm::Value * v) {
     return mBuilder.CreateSIToFP(v, mFloatType, "cast");
+  }
+
+  llvm::Value * LLVMCodeGenVisitor::getSymbol(const std::string& name) {
+    t_symbol * sym = gensym(name.c_str()); //XXX hold onto symbol and free later?
+    if (!sym)
+      throw std::runtime_error("couldn't get symbol " + name);
+    return llvm::ConstantInt::get(mDataLayout.getIntPtrType(mContext, 0), reinterpret_cast<uintptr_t>(sym));
   }
 
   //llvm::Value * LLVMCodeGenVisitor::linterpWithWrap(llvm::Value * fptr, llvm::Value * findex, llvm::Value * ilength) {
