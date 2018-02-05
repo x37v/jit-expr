@@ -62,6 +62,9 @@ extern "C" void xnor_expr_setup(void);
 //functions called from generated code
 extern "C" float xnor_expr_factf(float v);
 extern "C" float * xnor_expr_table_value_ptr(t_symbol * name, float findex);
+extern "C" float xnor_expr_table_size(t_symbol * name);
+extern "C" float xnor_expr_table_sum(t_symbol * name, float start, float end);
+extern "C" float xnor_expr_table_sum_all(t_symbol * name);
 extern "C" float xnor_expr_maxf(float a, float b);
 extern "C" float xnor_expr_minf(float a, float b);
 extern "C" float xnor_expr_value_assign(t_symbol * name, float v);
@@ -382,24 +385,70 @@ namespace {
       return 1;
     return i * facti(i - 1);
   }
+
+  //adapted from max_ex_tab x_vexpr_if.c
+  t_word * xnor_get_table(t_symbol *name, int& sizeout) {
+    t_garray * a;
+    sizeout = 0;
+    t_word *vec;
+    if (!name || !(a = (t_garray *)pd_findbyclass(name, garray_class)) || !garray_getfloatwords(a, &sizeout, &vec)) {
+      sizeout = 0; //in case it was altered?
+      //XXX post error
+      return nullptr;
+    }
+    return vec;
+  }
+
+  //if end < 0, end == size
+  float xnor_expr_table_sum_range(t_symbol * name, ssize_t start, ssize_t end) {
+    int s = 0;
+    t_word * vec = xnor_get_table(name, s);
+    if (!vec)
+      return 0.0f;
+
+    ssize_t size = s;
+
+    start = std::min(std::max(start, static_cast<ssize_t>(0)), size);
+    if (end < 0)
+      end = size;
+    else
+      end = std::min(std::max(end, static_cast<ssize_t>(0)), size);
+
+    float sum = 0;
+    for (ssize_t i = start; i < end; i++)
+      sum += vec[i].w_float;
+    return sum;
+  }
 }
 
 float xnor_expr_factf(float v) {
   return static_cast<float>(facti(static_cast<int>(v)));
 }
 
-//adapted from max_ex_tab x_vexpr_if.c
 float * xnor_expr_table_value_ptr(t_symbol * name, float findex) {
-  t_garray * a;
   int size = 0;
-  t_word *vec;
-  if (!name || !(a = (t_garray *)pd_findbyclass(name, garray_class)) || !garray_getfloatwords(a, &size, &vec)) {
-    //XXX post error
+  t_word * vec = xnor_get_table(name, size);
+  if (!vec || size <= 0) {
     return nullptr;
   }
-
   int index = std::min(std::max(0, static_cast<int>(findex)), size - 1);
   return &(vec[index].w_float);
+}
+
+float xnor_expr_table_size(t_symbol * name) {
+  int size = 0;
+  xnor_get_table(name, size);
+  return static_cast<float>(size);
+}
+
+float xnor_expr_table_sum(t_symbol * name, float fstart, float fend) {
+  if (fstart > fend || fend < 0)
+    return 0.0f;
+  return xnor_expr_table_sum_range(name, static_cast<ssize_t>(fstart), static_cast<ssize_t>(fend) + 1);
+}
+
+float xnor_expr_table_sum_all(t_symbol * name) {
+  return xnor_expr_table_sum_range(name, 0, -1);
 }
 
 float xnor_expr_maxf(float a, float b) { return std::max(a, b); }

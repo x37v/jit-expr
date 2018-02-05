@@ -34,7 +34,6 @@ using std::endl;
 namespace ast = xnor::ast;
 
 namespace {
-  const std::vector<std::string> table_functions = {"Sum", "sum", "size"};
   const std::string main_function_name = "expralex";
 }
 
@@ -179,8 +178,12 @@ namespace xnor {
         {sym}, "tmpvalueget");
   }
 
-  void LLVMCodeGenVisitor::visit(ast::Quoted* /*v*/){
-    throw std::runtime_error("not implemented");
+  void LLVMCodeGenVisitor::visit(ast::Quoted* v){
+    if (v->value().size()) {
+      mValue = getSymbol(v->value());
+    } else {
+      v->variable()->accept(this);
+    }
   }
 
   void LLVMCodeGenVisitor::visit(ast::UnaryOp* v){
@@ -317,29 +320,30 @@ namespace xnor {
     }
 
     //table functions
-    auto it = std::find(table_functions.begin(), table_functions.end(), n);
-    if (it != table_functions.end())
-      throw std::runtime_error("table functions not supported yet");
-
-    //all other functions, math taking and returning floats
-
-    //alias
-    if (n == "ln")
-      n = "log";
-    else if (n == "fact")
-      n = "xnor_expr_fact";
-    else if (n == "max")
-      n = "xnor_expr_max";
-    else if (n == "min")
-      n = "xnor_expr_min";
-    n = n + "f"; //we're using the floating point version of these calls
+    if (n == "Sum") {
+      n = "xnor_expr_table_sum";
+    } else if (n == "sum") {
+      n = "xnor_expr_table_sum_all";
+    } else if (n == "size") {
+      n = "xnor_expr_table_size";
+    } else {
+      //alias
+      if (n == "ln")
+        n = "log";
+      else if (n == "fact")
+        n = "xnor_expr_fact";
+      else if (n == "max")
+        n = "xnor_expr_max";
+      else if (n == "min")
+        n = "xnor_expr_min";
+      n = n + "f"; //we're using the floating point version of these calls
+    }
 
     llvm::Function * f = mModule->getFunction(n);
     if (!f) {
       std::vector<llvm::Type *> args;
-      //only table funcs use strings
       for (auto a: v->args())
-        args.push_back(mFloatType);
+        args.push_back(a->output_type() == xnor::ast::Node::OutputType::STRING ? mSymbolPtrType : mFloatType);
 
       llvm::FunctionType *ft = llvm::FunctionType::get(mFloatType, args, false);
       f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, n, mModule.get());
