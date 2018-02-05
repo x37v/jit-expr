@@ -427,8 +427,13 @@ namespace xnor {
     throw std::runtime_error("not implemented");
   }
 
-  void LLVMCodeGenVisitor::visit(ast::ArrayAssignment* /*v*/){
-    throw std::runtime_error("not implemented");
+  void LLVMCodeGenVisitor::visit(ast::ArrayAssignment* v){
+    v->array()->accept(this);
+    auto aptr = mValue;
+    v->value_node()->accept(this);
+    auto value = mValue;
+    mBuilder.CreateStore(value, aptr);
+    mValue = value;
   }
 
   void LLVMCodeGenVisitor::visit(xnor::ast::Deref* v) {
