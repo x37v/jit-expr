@@ -63,6 +63,7 @@ extern "C" void xnor_expr_setup(void);
 extern "C" float xnor_expr_factf(float v);
 extern "C" float * xnor_expr_table_value_ptr(t_symbol * name, float findex);
 extern "C" float xnor_expr_maxf(float a, float b);
+extern "C" float xnor_expr_minf(float a, float b);
 extern "C" float xnor_expr_value_assign(t_symbol * name, float v);
 extern "C" float xnor_expr_value_get(t_symbol * name);
 
@@ -402,6 +403,7 @@ float * xnor_expr_table_value_ptr(t_symbol * name, float findex) {
 }
 
 float xnor_expr_maxf(float a, float b) { return std::max(a, b); }
+float xnor_expr_minf(float a, float b) { return std::min(a, b); }
 
 float xnor_expr_value_assign(t_symbol * name, float v) {
   value_setfloat(name, v);
