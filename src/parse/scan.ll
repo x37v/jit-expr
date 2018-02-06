@@ -63,9 +63,9 @@ eol     [\n\r]+
 [ \t\n]            ;
 eol                ;
 
-\$[fiv][0-9]+      { yylval->build<std::string>() = std::string(yytext); return token::VAR; }
-\$s[0-9]*          { yylval->build<std::string>() = std::string(yytext); return token::VAR_SYMBOL; }
-\$[xy][0-9]*       { yylval->build<std::string>() = std::string(yytext); return token::VAR_INDEXED; }
+\$[fivFIV][0-9]+      { yylval->build<std::string>() = std::string(yytext); return token::VAR; }
+\$[sS][0-9]*          { yylval->build<std::string>() = std::string(yytext); return token::VAR_SYMBOL; }
+\$[xyXY][0-9]*       { yylval->build<std::string>() = std::string(yytext); return token::VAR_INDEXED; }
 \\\$[0-9]+         { yylval->build<std::string>() = std::string(yytext); return token::VAR_DOLLAR; }
 
 -?[0-9]+\.[0-9]*      { yylval->build<float>() = std::stof(yytext); return token::FLOAT; }

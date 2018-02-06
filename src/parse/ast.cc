@@ -7,14 +7,20 @@ namespace a = xnor::ast;
 namespace {
   using ot = a::Node::OutputType;
 
-  const std::regex var_regex("\\$([fisvxy])(\\d*)");
+  const std::regex var_regex("\\$([fisvxyFISVXY])(\\d*)");
   const std::map<std::string, a::Variable::VarType> var_type_map = {
     {"f", a::Variable::VarType::FLOAT},
+    {"F", a::Variable::VarType::FLOAT},
     {"i", a::Variable::VarType::INT},
+    {"I", a::Variable::VarType::INT},
     {"s", a::Variable::VarType::SYMBOL},
+    {"S", a::Variable::VarType::SYMBOL},
     {"v", a::Variable::VarType::VECTOR},
+    {"V", a::Variable::VarType::VECTOR},
     {"x", a::Variable::VarType::INPUT},
+    {"X", a::Variable::VarType::INPUT},
     {"y", a::Variable::VarType::OUTPUT},
+    {"Y", a::Variable::VarType::OUTPUT},
   };
 
   const std::map<std::string, std::vector<a::Node::OutputType> > function_arg_map = {

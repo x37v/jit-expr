@@ -119,6 +119,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
     atom_string(&argv[i], buf, 1024);
     line += " " + std::string(buf);
   }
+  std::cout << line << std::endl;
   
   //parse and setup
   try {
