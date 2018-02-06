@@ -35,6 +35,21 @@ namespace ast = xnor::ast;
 
 namespace {
   const std::string main_function_name = "expralex";
+  const std::map<std::string, std::string> function_alias = {
+    {"Sum", "xnor_expr_table_sum"},
+    {"sum", "xnor_expr_table_sum_all"},
+    {"size", "xnor_expr_table_size"},
+    {"fact", "xnor_expr_fact"},
+    {"max", "xnor_expr_max"},
+    {"min", "xnor_expr_min"},
+    {"random", "xnor_expr_random"},
+    {"imodf", "xnor_expr_imodf"},
+    {"modf", "xnor_expr_modf"},
+    {"random", "xnor_expr_random"},
+    {"int", "truncf"},
+    {"ln", "logf"},
+    {"abs", "fabsf"},
+  };
 }
 
 namespace xnor {
@@ -324,25 +339,16 @@ namespace xnor {
       phi->addIncoming(elsev, elsebb);
       mValue = phi;
       return;
+    } else if (n == "float") { //this doesn't do anything, all math is float
+      v->args().at(0)->accept(this);
+      return;
     }
 
     //table functions
-    if (n == "Sum") {
-      n = "xnor_expr_table_sum";
-    } else if (n == "sum") {
-      n = "xnor_expr_table_sum_all";
-    } else if (n == "size") {
-      n = "xnor_expr_table_size";
+    auto it = function_alias.find(n);
+    if (it != function_alias.end()) {
+      n = it->second;
     } else {
-      //alias
-      if (n == "ln")
-        n = "log";
-      else if (n == "fact")
-        n = "xnor_expr_fact";
-      else if (n == "max")
-        n = "xnor_expr_max";
-      else if (n == "min")
-        n = "xnor_expr_min";
       n = n + "f"; //we're using the floating point version of these calls
     }
 

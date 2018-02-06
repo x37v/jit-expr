@@ -6,6 +6,7 @@
 #include <vector>
 #include <memory>
 #include <algorithm>
+#include <random>
 
 struct _xnor_expr_proxy;
 struct _xnor_expr;
@@ -61,13 +62,17 @@ extern "C" void xnor_expr_free(struct _xnor_expr * x);
 extern "C" void xnor_expr_setup(void);
 
 //functions called from generated code
-extern "C" float xnor_expr_factf(float v);
+extern "C" float xnor_expr_fact(float v);
 extern "C" float * xnor_expr_table_value_ptr(t_symbol * name, float findex);
 extern "C" float xnor_expr_table_size(t_symbol * name);
 extern "C" float xnor_expr_table_sum(t_symbol * name, float start, float end);
 extern "C" float xnor_expr_table_sum_all(t_symbol * name);
-extern "C" float xnor_expr_maxf(float a, float b);
-extern "C" float xnor_expr_minf(float a, float b);
+extern "C" float xnor_expr_max(float a, float b);
+extern "C" float xnor_expr_min(float a, float b);
+extern "C" float xnor_expr_random(float a, float b);
+extern "C" float xnor_expr_imodf(float v);
+extern "C" float xnor_expr_modf(float v);
+
 extern "C" float xnor_expr_value_assign(t_symbol * name, float v);
 extern "C" float xnor_expr_value_get(t_symbol * name);
 
@@ -217,7 +222,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
           x->cpp->saved_inputs[v->input_index()].resize(buffer_size * 2, 0); //input buffers need access to last input as well
           break;
         case xnor::ast::Variable::VarType::SYMBOL: {
-          t_symbol *sptr;
+          t_symbol *sptr = nullptr;
           if (i != 0)
             x->cpp->ins.push_back(symbolinlet_new(&x->x_obj, &sptr));
           x->cpp->symbol_inputs[v->input_index()] = sptr;
@@ -299,9 +304,8 @@ static t_int *xnor_expr_tilde_perform(t_int *w) {
         case xnor::ast::Variable::VarType::INT:
           x->cpp->inarg.at(i).flt = x->cpp->infloats.at(i);
           break;
-        case xnor::ast::Variable::VarType::INPUT:
-          //XXX DO COPY
-          x->cpp->inarg.at(i).vec = (t_sample*)w[vector_index++];
+        case xnor::ast::Variable::VarType::SYMBOL:
+          x->cpp->inarg.at(i).sym = x->cpp->symbol_inputs.at(i);
           break;
         case xnor::ast::Variable::VarType::VECTOR:
           x->cpp->inarg.at(i).vec = (t_sample*)w[vector_index++];
@@ -314,9 +318,6 @@ static t_int *xnor_expr_tilde_perform(t_int *w) {
             memcpy(buf, in, n * sizeof(float)); //copy the new data in
             x->cpp->inarg.at(i).vec = buf;
           }
-          break;
-        case xnor::ast::Variable::VarType::SYMBOL:
-          x->cpp->inarg.at(i).sym = x->cpp->symbol_inputs[i];
           break;
         default:
           //XXX
@@ -453,7 +454,7 @@ namespace {
   }
 }
 
-float xnor_expr_factf(float v) {
+float xnor_expr_fact(float v) {
   return static_cast<float>(facti(static_cast<int>(v)));
 }
 
@@ -486,8 +487,27 @@ float xnor_expr_table_sum_all(t_symbol * name) {
   return xnor_expr_table_sum_range(name, 0, -1);
 }
 
-float xnor_expr_maxf(float a, float b) { return std::max(a, b); }
-float xnor_expr_minf(float a, float b) { return std::min(a, b); }
+float xnor_expr_max(float a, float b) { return std::max(a, b); }
+float xnor_expr_min(float a, float b) { return std::min(a, b); }
+float xnor_expr_random(float fstart, float fend) {
+  int start = static_cast<int>(fstart);
+  int end = static_cast<int>(fend - 1);
+  if (start >= end)
+    return 0;
+
+  //https://stackoverflow.com/questions/21237905/how-do-i-generate-thread-safe-uniform-random-numbers
+  static thread_local std::mt19937 generator;
+  std::uniform_int_distribution<int> distribution(start, end);
+  return static_cast<float>(distribution(generator));
+}
+
+float xnor_expr_imodf(float v) {
+  return truncf(v);
+}
+
+float xnor_expr_modf(float v) {
+  return v - truncf(v);
+}
 
 float xnor_expr_value_assign(t_symbol * name, float v) {
   value_setfloat(name, v);
