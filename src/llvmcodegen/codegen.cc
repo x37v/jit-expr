@@ -220,8 +220,10 @@ namespace xnor {
         //logical not is the same as x == 0
         mValue = wrapLogic(mBuilder.CreateFCmpOEQ(right, llvm::ConstantFP::get(mFloatType, 0.0f), "eqtmp"));
         return;
-      case ast::UnaryOp::Op::NEGATE:
-        mValue = mBuilder.CreateNeg(right, "negtmp");
+      case ast::UnaryOp::Op::NEGATE: {
+        auto zero = llvm::ConstantFP::get(mFloatType, 0.0f);
+        mValue = mBuilder.CreateFSub(zero, right, "negtmp");
+      }
         return;
     }
     throw std::runtime_error("unimplemented");
