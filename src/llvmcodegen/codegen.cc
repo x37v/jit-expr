@@ -158,6 +158,13 @@ namespace xnor {
           mValue = mBuilder.CreateLoad(cur, "inputy" + std::to_string(v->input_index()));
         }
         break;
+      case ast::Variable::VarType::SYMBOL:
+        {
+          //returns a symbols pointer
+          cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(mSymbolPtrType, 0));
+          mValue = mBuilder.CreateLoad(cur, "inputs" + std::to_string(v->input_index()));
+        }
+        break;
       default:
         throw std::runtime_error("type not supported yet");
     }
