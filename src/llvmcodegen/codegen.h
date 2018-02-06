@@ -59,9 +59,11 @@ namespace xnor {
       virtual void visit(xnor::ast::UnaryOp* v);
       virtual void visit(xnor::ast::BinaryOp* v);
       virtual void visit(xnor::ast::FunctionCall* v);
+      virtual void visit(xnor::ast::SampleAccess* v);
       virtual void visit(xnor::ast::ArrayAccess* v);
       virtual void visit(xnor::ast::ValueAssignment* v);
       virtual void visit(xnor::ast::ArrayAssignment* v);
+      virtual void visit(xnor::ast::Deref* v);
 
       function_t function(std::vector<xnor::ast::NodePtr> statements, bool print = false);
     private:
@@ -79,8 +81,11 @@ namespace xnor {
       llvm::Value * mFrameIndex;
       llvm::Value * mFrameCount;
       llvm::BasicBlock * mBlock;
+
+      llvm::Type * mFloatType;
+      llvm::Type * mIntType;
       llvm::Type * mInputType;
-      llvm::Type * mSymbolType;
+      llvm::Type * mSymbolPtrType;
 
       const llvm::DataLayout mDataLayout;
       ObjLayerT mObjectLayer;
@@ -94,5 +99,14 @@ namespace xnor {
       llvm::Value * wrapLogic(llvm::Value * v);
       llvm::Value * toInt(llvm::Value * v);
       llvm::Value * toFloat(llvm::Value * v);
+      llvm::Value * getSymbol(const std::string& name);
+
+      //returns float
+      //llvm::Value * linterpWithWrap(llvm::Value * fptr, llvm::Value * findex, llvm::Value * ilength);
+      
+      llvm::Value * createFunctionCall(
+          const std::string& func_name,
+          llvm::FunctionType *ft,
+          std::vector<llvm::Value *> args, std::string callname = "tmpfcall");
   };
 }

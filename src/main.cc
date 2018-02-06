@@ -1,6 +1,5 @@
 #include "parse/driver.hh"
-#include "llvmcodegen/codegen.h"
-#include <llvm/Support/TargetSelect.h>
+#include "print.h"
 #include <string>
 
 #include <m_pd.h>
@@ -17,8 +16,6 @@ int main(int argc, char * argv[]) {
   if (argc != 2)
     throw std::runtime_error("must provide a file as an argument");
   
-  xnor::LLVMCodeGenVisitor::init();
-
   std::ifstream infile(argv[1]);
 
   parse::Driver driver;
@@ -28,7 +25,12 @@ int main(int argc, char * argv[]) {
     try { 
       cout << "parsing: " << line << endl;
       auto t = driver.parse_string(line);
+      for (auto n : t) {
+        xnor::AstPrintVisitor v;
+        n->accept(&v);
+      }
 
+      /*
       std::array<float, 4> value {{ 0, 0, 0, 0 }};
       std::array<float *, 4> out {{
         &value.front(),
@@ -46,6 +48,7 @@ int main(int argc, char * argv[]) {
       f(&out.front(), in, 2);
       cout << "output " << value[0] << endl;
       cout << endl;
+      */
     } catch (std::runtime_error& e) {
       cerr << "fail: " << e.what() << endl;
       return -1;

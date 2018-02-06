@@ -129,6 +129,13 @@ namespace ast {
     }
   }
 
+  SampleAccess::SampleAccess(VariablePtr var, NodePtr accessor) :
+    mSource(var), mAccessor(accessor)
+  {
+    if (var->type() != a::Variable::VarType::INPUT && var->type() != a::Variable::VarType::OUTPUT)
+      throw std::runtime_error("only input and output variables can be accessed at the sample level");
+  }
+
   ArrayAccess::ArrayAccess(const std::string& name, NodePtr accessor) :
     mArrayName(name), mAccessor(accessor)
   {
@@ -146,5 +153,7 @@ namespace ast {
   ArrayAssignment::ArrayAssignment(ArrayAccessPtr array, NodePtr node) : mArray(array), mValueNode(node)
   {
   }
+
+  Deref::Deref(ArrayAccessPtr array) : mValue(array) {}
 }
 }

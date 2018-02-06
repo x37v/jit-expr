@@ -112,14 +112,20 @@ namespace xnor {
       print_child(c);
   }
 
+  void AstPrintVisitor::visit(xnor::ast::SampleAccess* v) {
+    print("SampleAccess: ");
+    print_child(v->source());
+    print_child(v->index_node());
+  }
+
   void AstPrintVisitor::visit(xnor::ast::ArrayAccess* v){
     if (v->name().size()) {
-      print("ArrayAccess: " + v->name() + " value: ");
+      print("ArrayAccess: " + v->name());
     } else {
       print("ArrayAccess name: ");
       print_child(v->name_var());
-      print("value: ");
     }
+    print("index: ");
     print_child(v->index_node());
   }
 
@@ -131,6 +137,11 @@ namespace xnor {
   void AstPrintVisitor::visit(xnor::ast::ArrayAssignment* v){
     print("ArrayAssignment :");
     print_child(v->array());
+    print_child(v->value_node());
+  }
+
+  void AstPrintVisitor::visit(xnor::ast::Deref* v) {
+    print("Deref: ");
     print_child(v->value_node());
   }
   

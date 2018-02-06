@@ -19,8 +19,6 @@ add_definitions(${LLVM_DEFINITIONS})
 add_executable(
   ../../parser
   parse/ast.h
-  llvmcodegen/codegen.cc
-  llvmcodegen/codegen.h
   main.cc
   print.cc
 )

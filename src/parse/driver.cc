@@ -3,6 +3,7 @@
 #include "scanner.hh"
 #include <sstream>
 #include <map>
+#include <algorithm>
 
 namespace parse
 {
@@ -66,7 +67,9 @@ namespace parse
 
     parse::TreeVector Driver::trees() const { return mTrees; }
     xnor::ast::VariableVector Driver::inputs() const {
-      auto i = mInputs;
+      xnor::ast::VariableVector i;
+      //filter out outputs
+      std::copy_if(mInputs.begin(), mInputs.end(), std::back_inserter(i), [](xnor::ast::VariablePtr v) { return v->type() != xnor::ast::Variable::VarType::OUTPUT; });
       std::sort(i.begin(), i.end(), [](xnor::ast::VariablePtr a, xnor::ast::VariablePtr b) { return a->input_index() < b->input_index(); });
       return i;
     }
@@ -84,8 +87,11 @@ namespace parse
       //make sure we have consecutive inputs
       std::map<unsigned int, xnor::ast::Variable::VarType> inputs;
       for (auto i: mInputs) {
-        if (i->type() == xnor::ast::Variable::VarType::OUTPUT)
-          continue; //ignore output vars
+        if (i->type() == xnor::ast::Variable::VarType::OUTPUT) {
+          if (i->input_index() >= mTrees.size())
+            throw std::runtime_error("output var index is greater than number of outputs");
+          continue;
+        }
 
         unsigned int idx = i->input_index();
         auto it = inputs.find(idx);
