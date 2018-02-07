@@ -134,8 +134,13 @@ namespace xnor {
     //XXX is there a better index?
     auto index = llvm::ConstantInt::get(mIntType, v->input_index());
 
-    llvm::Value * cur = mBuilder.CreateLoad(mInput);
-    cur = mBuilder.CreateInBoundsGEP(mInputType, cur, index);
+    llvm::Value * cur = nullptr;
+
+    if (v->type() != ast::Variable::VarType::OUTPUT) {
+      cur = mBuilder.CreateLoad(mInput);
+      cur = mBuilder.CreateInBoundsGEP(mInputType, cur, index);
+    }
+
     switch(v->type()) {
       case ast::Variable::VarType::FLOAT:
         cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(mFloatType, 0));
