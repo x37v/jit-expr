@@ -522,12 +522,13 @@ float xnor_expr_modf(float v) {
 }
 
 float xnor_expr_value_assign(t_symbol * name, float v) {
-  value_setfloat(name, v);
+  if (name)
+    value_setfloat(name, v);
   return v;
 }
 
 float xnor_expr_value_get(t_symbol * name) {
   float v = 0;
-  return value_getfloat(name, &v) == 0 ? v : 0;
+  return (name && value_getfloat(name, &v) == 0) ? v : 0;
 }
 
