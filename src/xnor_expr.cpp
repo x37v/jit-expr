@@ -123,114 +123,119 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
   
   //parse and setup
   try {
-    auto statements = x->cpp->driver.parse_string(line);
-    x->cpp->func = x->cpp->cv.function(statements, print_code);
+    //make sure there is more than just a space
+    if (line.find_first_not_of(' ') == std::string::npos) {
+      x->cpp->func = nullptr;
+    } else {
+      auto statements = x->cpp->driver.parse_string(line);
+      x->cpp->func = x->cpp->cv.function(statements, print_code);
 
-    auto inputs = x->cpp->driver.inputs();
+      auto inputs = x->cpp->driver.inputs();
 
-    //we have a minimum of 1 input, we might not use all these floats [in signal domain] but, whatever
-    x->cpp->infloats.resize(std::max((size_t)1, inputs.size()), 0);
-    x->cpp->inarg.resize(std::max((size_t)1, inputs.size()));
-    x->cpp->input_types.resize(std::max((size_t)1, inputs.size()), xnor::ast::Variable::VarType::FLOAT);
+      //we have a minimum of 1 input, we might not use all these floats [in signal domain] but, whatever
+      x->cpp->infloats.resize(std::max((size_t)1, inputs.size()), 0);
+      x->cpp->inarg.resize(std::max((size_t)1, inputs.size()));
+      x->cpp->input_types.resize(std::max((size_t)1, inputs.size()), xnor::ast::Variable::VarType::FLOAT);
 
-    x->cpp->signal_inputs = 0;
-    x->cpp->outarg.resize(statements.size());
+      x->cpp->signal_inputs = 0;
+      x->cpp->outarg.resize(statements.size());
 
-    switch (x->cpp->expr_type) {
-      case XnorExpr::CONTROL: 
-        {
-          if (inputs.size() >= 1 &&
-              inputs.at(0)->type() != xnor::ast::Variable::VarType::FLOAT &&
-              inputs.at(0)->type() != xnor::ast::Variable::VarType::INT &&
-              inputs.at(0)->type() != xnor::ast::Variable::VarType::SYMBOL) {
-            error("the first inlet of xnor/expr must be a float, int or symbol");
-            xnor_expr_free(x);
-            return NULL;
-          }
+      switch (x->cpp->expr_type) {
+        case XnorExpr::CONTROL: 
+          {
+            if (inputs.size() >= 1 &&
+                inputs.at(0)->type() != xnor::ast::Variable::VarType::FLOAT &&
+                inputs.at(0)->type() != xnor::ast::Variable::VarType::INT &&
+                inputs.at(0)->type() != xnor::ast::Variable::VarType::SYMBOL) {
+              error("the first inlet of xnor/expr must be a float, int or symbol");
+              xnor_expr_free(x);
+              return NULL;
+            }
 
-          //there will always be at least one output
-          x->cpp->outfloat.resize(statements.size());
+            //there will always be at least one output
+            x->cpp->outfloat.resize(statements.size());
 
-          for (size_t i = 0; i < x->cpp->outarg.size(); i++) {
-            x->cpp->outarg[i] = &x->cpp->outfloat[i];
-            x->cpp->outs.push_back(outlet_new(&x->x_obj, &s_float));
-          }
-        }
-        break;
-      case XnorExpr::VECTOR: 
-        {
-          if (inputs.size() >= 1 &&
-              inputs.at(0)->type() != xnor::ast::Variable::VarType::VECTOR) {
-            error("the first inlet of xnor/expr~ must be a vector");
-            xnor_expr_free(x);
-            return NULL;
-          }
-
-          for (size_t i = 0; i < statements.size(); i++)
-            x->cpp->outs.push_back(outlet_new(&x->x_obj, &s_signal));
-        }
-        break;
-      case XnorExpr::SAMPLE: 
-        {
-          if (inputs.size() >= 1 &&
-              inputs.at(0)->type() != xnor::ast::Variable::VarType::INPUT) {
-            error("the first inlet of xnor/fexpr~ must be a input sample variable");
-            xnor_expr_free(x);
-            return NULL;
-          }
-
-          for (size_t i = 0; i < statements.size(); i++) {
-            x->cpp->outs.push_back(outlet_new(&x->x_obj, &s_signal));
-            x->cpp->saved_outputs[i].resize(buffer_size, 0); //XXX saving a copy of the buffer, we may not actually need it though
-          }
-        }
-        break;
-    }
-
-    for (size_t i = 0; i < inputs.size(); i++) {
-      auto v = inputs.at(i);
-      x->cpp->input_types[i] = v->type();
-      switch (v->type()) {
-        case xnor::ast::Variable::VarType::FLOAT:
-        case xnor::ast::Variable::VarType::INT:
-          if (i != 0) {
-            t_xnor_expr_proxy *p = (t_xnor_expr_proxy *)pd_new(xnor_expr_proxy_class);
-            p->index = v->input_index();
-            p->parent = x;
-            x->cpp->proxies.push_back(p);
-            x->cpp->ins.push_back(inlet_new(&x->x_obj, &p->p_pd, &s_float, &s_float));
+            for (size_t i = 0; i < x->cpp->outarg.size(); i++) {
+              x->cpp->outarg[i] = &x->cpp->outfloat[i];
+              x->cpp->outs.push_back(outlet_new(&x->x_obj, &s_float));
+            }
           }
           break;
-        case xnor::ast::Variable::VarType::VECTOR:
-          if (x->cpp->expr_type != XnorExpr::VECTOR) {
-            error("cannot create vector inlet for xnor/expr or xnor/fexpr~");
-            xnor_expr_free(x);
-            return NULL;
+        case XnorExpr::VECTOR: 
+          {
+            if (inputs.size() >= 1 &&
+                inputs.at(0)->type() != xnor::ast::Variable::VarType::VECTOR) {
+              error("the first inlet of xnor/expr~ must be a vector");
+              xnor_expr_free(x);
+              return NULL;
+            }
+
+            for (size_t i = 0; i < statements.size(); i++)
+              x->cpp->outs.push_back(outlet_new(&x->x_obj, &s_signal));
           }
-          if (i != 0)
-            x->cpp->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal));
-          x->cpp->signal_inputs += 1;
           break;
-        case xnor::ast::Variable::VarType::INPUT:
-          if (x->cpp->expr_type != XnorExpr::SAMPLE) {
-            error("input sample inlet only works for xnor/fexpr~");
-            xnor_expr_free(x);
-            return NULL;
+        case XnorExpr::SAMPLE: 
+          {
+            if (inputs.size() >= 1 &&
+                inputs.at(0)->type() != xnor::ast::Variable::VarType::INPUT) {
+              error("the first inlet of xnor/fexpr~ must be a input sample variable");
+              xnor_expr_free(x);
+              return NULL;
+            }
+
+            for (size_t i = 0; i < statements.size(); i++) {
+              x->cpp->outs.push_back(outlet_new(&x->x_obj, &s_signal));
+              x->cpp->saved_outputs[i].resize(buffer_size, 0); //XXX saving a copy of the buffer, we may not actually need it though
+            }
           }
-          if (i != 0)
-            x->cpp->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal));
-          x->cpp->signal_inputs += 1;
-          x->cpp->saved_inputs[v->input_index()].resize(buffer_size * 2, 0); //input buffers need access to last input as well
           break;
-        case xnor::ast::Variable::VarType::SYMBOL: {
-          t_symbol *sptr = nullptr;
-          if (i != 0)
-            x->cpp->ins.push_back(symbolinlet_new(&x->x_obj, &sptr));
-          x->cpp->symbol_inputs[v->input_index()] = sptr;
+      }
+
+      for (size_t i = 0; i < inputs.size(); i++) {
+        auto v = inputs.at(i);
+        x->cpp->input_types[i] = v->type();
+        switch (v->type()) {
+          case xnor::ast::Variable::VarType::FLOAT:
+          case xnor::ast::Variable::VarType::INT:
+            if (i != 0) {
+              t_xnor_expr_proxy *p = (t_xnor_expr_proxy *)pd_new(xnor_expr_proxy_class);
+              p->index = v->input_index();
+              p->parent = x;
+              x->cpp->proxies.push_back(p);
+              x->cpp->ins.push_back(inlet_new(&x->x_obj, &p->p_pd, &s_float, &s_float));
+            }
+            break;
+          case xnor::ast::Variable::VarType::VECTOR:
+            if (x->cpp->expr_type != XnorExpr::VECTOR) {
+              error("cannot create vector inlet for xnor/expr or xnor/fexpr~");
+              xnor_expr_free(x);
+              return NULL;
+            }
+            if (i != 0)
+              x->cpp->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal));
+            x->cpp->signal_inputs += 1;
+            break;
+          case xnor::ast::Variable::VarType::INPUT:
+            if (x->cpp->expr_type != XnorExpr::SAMPLE) {
+              error("input sample inlet only works for xnor/fexpr~");
+              xnor_expr_free(x);
+              return NULL;
+            }
+            if (i != 0)
+              x->cpp->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal));
+            x->cpp->signal_inputs += 1;
+            x->cpp->saved_inputs[v->input_index()].resize(buffer_size * 2, 0); //input buffers need access to last input as well
+            break;
+          case xnor::ast::Variable::VarType::SYMBOL: {
+            t_symbol *sptr = nullptr;
+            if (i != 0)
+              x->cpp->ins.push_back(symbolinlet_new(&x->x_obj, &sptr));
+            x->cpp->symbol_inputs[v->input_index()] = sptr;
+          }
+            break;
+          default:
+            throw std::runtime_error("input type not handled " + std::to_string(v->input_index()));
         }
-          break;
-        default:
-          throw std::runtime_error("input type not handled " + std::to_string(v->input_index()));
       }
     }
   } catch (std::runtime_error& e) {
@@ -249,6 +254,9 @@ void xnor_expr_free(t_xnor_expr * x) {
 }
 
 void xnor_expr_bang(t_xnor_expr * x) {
+  if (x->cpp->func == nullptr)
+    return;
+
   //assign input values
   for (size_t i = 0; i < x->cpp->inarg.size(); i++) {
     auto t = x->cpp->input_types.at(i);
@@ -349,6 +357,9 @@ static t_int *xnor_expr_tilde_perform(t_int *w) {
 
 static void xnor_expr_tilde_dsp(t_xnor_expr *x, t_signal **sp)
 {
+  if (x->cpp->func == nullptr)
+    return;
+
   int input_signals = x->cpp->signal_inputs;
   int output_signals = x->cpp->outarg.size();
 
