@@ -73,6 +73,10 @@ extern "C" float xnor_expr_random(float a, float b);
 extern "C" float xnor_expr_imodf(float v);
 extern "C" float xnor_expr_modf(float v);
 
+extern "C" float xnor_expr_isnan(float v);
+extern "C" float xnor_expr_isinf(float v);
+extern "C" float xnor_expr_finite(float v);
+
 extern "C" float xnor_expr_value_assign(t_symbol * name, float v);
 extern "C" float xnor_expr_value_get(t_symbol * name);
 extern "C" float xnor_expr_deref(float * v);
@@ -519,6 +523,10 @@ float xnor_expr_imodf(float v) {
 float xnor_expr_modf(float v) {
   return v - truncf(v);
 }
+
+float xnor_expr_isnan(float v) { return isnanf(v) ? 1 : 0; }
+float xnor_expr_isinf(float v) { return isinff(v) ? 1 : 0; }
+float xnor_expr_finite(float v) { return finitef(v) ? 1 : 0; }
 
 float xnor_expr_value_assign(t_symbol * name, float v) {
   if (name)
