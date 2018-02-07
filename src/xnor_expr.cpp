@@ -35,7 +35,7 @@ namespace {
     std::vector<float> outfloat;
     std::vector<float *> outarg;
     std::vector<float> infloats;
-    std::map<unsigned int, t_symbol *> symbol_inputs;
+    std::vector<t_symbol *> symbol_inputs;
     std::map<unsigned int, std::vector<float>> saved_inputs;
     std::map<unsigned int, std::vector<float>> saved_outputs;
 
@@ -75,6 +75,7 @@ extern "C" float xnor_expr_modf(float v);
 
 extern "C" float xnor_expr_value_assign(t_symbol * name, float v);
 extern "C" float xnor_expr_value_get(t_symbol * name);
+extern "C" float xnor_expr_deref(float * v);
 
 static t_class *xnor_expr_class;
 static t_class *xnor_expr_proxy_class;
@@ -134,6 +135,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
 
       //we have a minimum of 1 input, we might not use all these floats [in signal domain] but, whatever
       x->cpp->infloats.resize(std::max((size_t)1, inputs.size()), 0);
+      x->cpp->symbol_inputs.resize(std::max((size_t)1, inputs.size()), nullptr);
       x->cpp->inarg.resize(std::max((size_t)1, inputs.size()));
       x->cpp->input_types.resize(std::max((size_t)1, inputs.size()), xnor::ast::Variable::VarType::FLOAT);
 
@@ -226,12 +228,9 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
             x->cpp->signal_inputs += 1;
             x->cpp->saved_inputs[v->input_index()].resize(buffer_size * 2, 0); //input buffers need access to last input as well
             break;
-          case xnor::ast::Variable::VarType::SYMBOL: {
-            t_symbol *sptr = nullptr;
+          case xnor::ast::Variable::VarType::SYMBOL:
             if (i != 0)
-              x->cpp->ins.push_back(symbolinlet_new(&x->x_obj, &sptr));
-            x->cpp->symbol_inputs[v->input_index()] = sptr;
-          }
+              x->cpp->ins.push_back(symbolinlet_new(&x->x_obj, &x->cpp->symbol_inputs.at(i)));
             break;
           default:
             throw std::runtime_error("input type not handled " + std::to_string(v->input_index()));
@@ -530,5 +529,9 @@ float xnor_expr_value_assign(t_symbol * name, float v) {
 float xnor_expr_value_get(t_symbol * name) {
   float v = 0;
   return (name && value_getfloat(name, &v) == 0) ? v : 0;
+}
+
+float xnor_expr_deref(float * v) {
+  return v != 0 ? *v : 0;
 }
 

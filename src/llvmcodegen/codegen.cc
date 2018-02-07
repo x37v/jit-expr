@@ -181,7 +181,7 @@ namespace xnor {
       case ast::Variable::VarType::SYMBOL:
         {
           //returns a symbols pointer
-          cur = mBuilder.CreateBitCast(cur, llvm::PointerType::get(mSymbolPtrType, 0));
+          mValue = mBuilder.CreateBitCast(cur, llvm::PointerType::get(mSymbolPtrType, 0));
           mValue = mBuilder.CreateLoad(cur, "inputs" + std::to_string(v->input_index()));
         }
         break;
@@ -466,7 +466,11 @@ namespace xnor {
 
   void LLVMCodeGenVisitor::visit(xnor::ast::Deref* v) {
     v->value_node()->accept(this); //returns a pointer to a float
-    mValue = mBuilder.CreateLoad(mValue, "deref");
+
+    //XXX gen code for this, its real simple
+    mValue = createFunctionCall("xnor_expr_deref",
+        llvm::FunctionType::get(mFloatType, {llvm::PointerType::get(mFloatType, 0)}, false),
+        {mValue}, "tmpderef");
   }
 
   LLVMCodeGenVisitor::function_t LLVMCodeGenVisitor::function(std::vector<ast::NodePtr> statements, bool print) {
