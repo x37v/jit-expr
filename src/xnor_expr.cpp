@@ -546,7 +546,7 @@ float xnor_expr_deref(float * v) {
 
 float xnor_expr_array_read(float * array, float index, int array_length) {
   int i = static_cast<int>(index);
-  float off = static_cast<float>(i) - index;
+  float off = index - static_cast<float>(i);
   float v1 = array[i % array_length];
   float v2 = array[(i + 1) % array_length];
   return v2 * off  + v1 * (1.0 - off);
