@@ -81,6 +81,8 @@ extern "C" float xnor_expr_value_assign(t_symbol * name, float v);
 extern "C" float xnor_expr_value_get(t_symbol * name);
 extern "C" float xnor_expr_deref(float * v);
 
+extern "C" float xnor_expr_array_read(float * array, float index, int array_length);
+
 static t_class *xnor_expr_class;
 static t_class *xnor_expr_proxy_class;
 static t_class *xnor_expr_tilde_class;
@@ -124,7 +126,6 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
     atom_string(&argv[i], buf, 1024);
     line += " " + std::string(buf);
   }
-  std::cout << line << std::endl;
   
   //parse and setup
   try {
@@ -541,5 +542,13 @@ float xnor_expr_value_get(t_symbol * name) {
 
 float xnor_expr_deref(float * v) {
   return v != 0 ? *v : 0;
+}
+
+float xnor_expr_array_read(float * array, float index, int array_length) {
+  int i = static_cast<int>(index);
+  float off = static_cast<float>(i) - index;
+  float v1 = array[i % array_length];
+  float v2 = array[(i + 1) % array_length];
+  return v2 * off  + v1 * (1.0 - off);
 }
 

@@ -415,19 +415,24 @@ namespace xnor {
     //index < 0 : frame_count + index : index
     lt = mBuilder.CreateFCmpOLT(index, zero, "ltmp");
 
-    llvm::Value * offset;
+    llvm::Value * arrayLength;
     //input buffers are actually 2x as long because you have to be able to previous values as well
     if (v->source()->type() == ast::Variable::VarType::INPUT)
-      offset = toFloat(mBuilder.CreateShl(mFrameCount, llvm::ConstantInt::get(mIntType, 1)));
+      arrayLength = toFloat(mBuilder.CreateShl(mFrameCount, llvm::ConstantInt::get(mIntType, 1)));
     else
-      offset = toFloat(mFrameCount);
-    offset = mBuilder.CreateSelect(lt, offset, zero);
+      arrayLength = toFloat(mFrameCount);
+    auto offset = mBuilder.CreateSelect(lt, arrayLength, zero);
     index = mBuilder.CreateFAdd(index, offset);
 
-    //XXX TMP truncate, do interpolation later
+#if 0
     index = toInt(index);
     auto p = mBuilder.CreateInBoundsGEP(mFloatType, var, index);
     mValue = mBuilder.CreateLoad(p);
+#else
+    mValue = createFunctionCall("xnor_expr_array_read", 
+        llvm::FunctionType::get(mFloatType, {llvm::PointerType::get(mFloatType, 0), mFloatType, mIntType}, false),
+        { var, index, toInt(arrayLength) }, "tmparrayinterp");
+#endif
   }
 
   void LLVMCodeGenVisitor::visit(ast::ArrayAccess* v){
