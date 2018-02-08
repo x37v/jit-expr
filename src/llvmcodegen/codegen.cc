@@ -412,8 +412,6 @@ namespace xnor {
     //offset with the current sample index
     index = mBuilder.CreateFAdd(index, toFloat(mFrameIndex), "offset");
 
-    //index < 0 : frame_count + index : index
-    lt = mBuilder.CreateFCmpOLT(index, zero, "ltmp");
 
     llvm::Value * arrayLength;
     //input buffers are actually 2x as long because you have to be able to previous values as well
@@ -421,6 +419,11 @@ namespace xnor {
       arrayLength = toFloat(mBuilder.CreateShl(mFrameCount, llvm::ConstantInt::get(mIntType, 1)));
     else
       arrayLength = toFloat(mFrameCount);
+
+    //index < 0 : frame_count + index : index
+    lt = mBuilder.CreateFCmpOLT(index, zero, "ltmp");
+
+    //actually just add zero or the array length
     auto offset = mBuilder.CreateSelect(lt, arrayLength, zero);
     index = mBuilder.CreateFAdd(index, offset);
 
