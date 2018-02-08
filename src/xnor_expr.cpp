@@ -36,8 +36,8 @@ namespace {
     std::vector<float *> outarg;
     std::vector<float> infloats;
     std::vector<t_symbol *> symbol_inputs;
-    std::map<unsigned int, std::vector<float>> saved_inputs;
-    std::map<unsigned int, std::vector<float>> saved_outputs;
+    std::map<unsigned int, std::vector<t_sample>> saved_inputs;
+    std::map<unsigned int, std::vector<t_sample>> saved_outputs;
 
     std::vector<xnor::LLVMCodeGenVisitor::input_arg_t> inarg;
     std::vector<xnor::ast::Variable::VarType> input_types;
@@ -325,10 +325,10 @@ static t_int *xnor_expr_tilde_perform(t_int *w) {
           break;
         case xnor::ast::Variable::VarType::INPUT:
           {
-            float * in = (t_sample*)w[vector_index++];
-            float * buf = &x->cpp->saved_inputs.at(i).front();
-            memcpy(buf + n, buf, n * sizeof(float)); //copy the old data forward
-            memcpy(buf, in, n * sizeof(float)); //copy the new data in
+            t_sample * in = (t_sample*)w[vector_index++];
+            t_sample * buf = &x->cpp->saved_inputs.at(i).front();
+            memcpy(buf + n, buf, n * sizeof(t_sample)); //copy the old data forward
+            memcpy(buf, in, n * sizeof(t_sample)); //copy the new data in
             x->cpp->inarg.at(i).vec = buf;
           }
           break;
@@ -348,7 +348,7 @@ static t_int *xnor_expr_tilde_perform(t_int *w) {
     //copy out the saved buffers
     for (unsigned int i = 0; i < x->cpp->outarg.size(); i++) {
       auto f = (float *)w[vector_index++];
-      memcpy(f, &x->cpp->saved_outputs.at(i).front(), sizeof(float) * n);
+      memcpy(f, &x->cpp->saved_outputs.at(i).front(), sizeof(t_sample) * n);
     }
   } else {
     for (unsigned int i = 0; i < x->cpp->outarg.size(); i++) {
