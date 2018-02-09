@@ -1,6 +1,10 @@
 #include "ast.h"
 #include <iostream>
 #include <regex>
+#include <iostream>
+
+using std::cout;
+using std::endl;
 
 namespace a = xnor::ast;
 
@@ -24,52 +28,52 @@ namespace {
   };
 
   const std::map<std::string, std::vector<a::Node::OutputType> > function_arg_map = {
-    {"Sum", {ot::STRING, ot::NUMERIC, ot::NUMERIC}},
-    {"abs", {ot::NUMERIC}},
-    {"acos", {ot::NUMERIC}},
-    {"acosh", {ot::NUMERIC}},
-    {"asin", {ot::NUMERIC}},
-    {"asinh", {ot::NUMERIC}},
-    {"atan2", {ot::NUMERIC, ot::NUMERIC}},
-    {"atanh", {ot::NUMERIC}},
-    {"cbrt", {ot::NUMERIC}},
-    {"ceil", {ot::NUMERIC}},
-    {"copysign", {ot::NUMERIC, ot::NUMERIC}},
-    {"cos", {ot::NUMERIC}},
-    {"erf", {ot::NUMERIC}},
-    {"erfc", {ot::NUMERIC}},
-    {"exp", {ot::NUMERIC}},
-    {"expm1", {ot::NUMERIC}},
-    {"fact", {ot::NUMERIC}},
-    {"finite", {ot::NUMERIC}},
-    {"float", {ot::NUMERIC}},
-    {"floor", {ot::NUMERIC}},
-    {"fmod", {ot::NUMERIC, ot::NUMERIC}},
-    {"if", {ot::NUMERIC, ot::NUMERIC, ot::NUMERIC}},
-    {"imodf", {ot::NUMERIC}},
-    {"int", {ot::NUMERIC}},
-    {"isinf", {ot::NUMERIC}},
-    {"isnan", {ot::NUMERIC}},
-    {"ldexp", {ot::NUMERIC, ot::NUMERIC}},
-    {"ln", {ot::NUMERIC}},
-    {"log", {ot::NUMERIC}},
-    {"log10", {ot::NUMERIC}},
-    {"log1p", {ot::NUMERIC}},
-    {"max", {ot::NUMERIC, ot::NUMERIC}},
-    {"min", {ot::NUMERIC, ot::NUMERIC}},
-    {"modf", {ot::NUMERIC}},
-    {"nearbyint", {ot::NUMERIC}},
-    {"pow", {ot::NUMERIC, ot::NUMERIC}},
-    {"random", {ot::NUMERIC, ot::NUMERIC}},
-    {"remainder", {ot::NUMERIC, ot::NUMERIC}},
-    {"rint", {ot::NUMERIC}},
-    {"round", {ot::NUMERIC}},
-    {"sin", {ot::NUMERIC}},
+    {"Sum", {ot::STRING, ot::FLOAT, ot::FLOAT}},
+    {"abs", {ot::FLOAT}},
+    {"acos", {ot::FLOAT}},
+    {"acosh", {ot::FLOAT}},
+    {"asin", {ot::FLOAT}},
+    {"asinh", {ot::FLOAT}},
+    {"atan2", {ot::FLOAT, ot::FLOAT}},
+    {"atanh", {ot::FLOAT}},
+    {"cbrt", {ot::FLOAT}},
+    {"ceil", {ot::FLOAT}},
+    {"copysign", {ot::FLOAT, ot::FLOAT}},
+    {"cos", {ot::FLOAT}},
+    {"erf", {ot::FLOAT}},
+    {"erfc", {ot::FLOAT}},
+    {"exp", {ot::FLOAT}},
+    {"expm1", {ot::FLOAT}},
+    {"fact", {ot::FLOAT}},
+    {"finite", {ot::FLOAT}},
+    {"float", {ot::FLOAT}},
+    {"floor", {ot::FLOAT}},
+    {"fmod", {ot::FLOAT, ot::FLOAT}},
+    {"if", {ot::FLOAT, ot::FLOAT, ot::FLOAT}},
+    {"imodf", {ot::FLOAT}},
+    {"int", {ot::FLOAT}},
+    {"isinf", {ot::FLOAT}},
+    {"isnan", {ot::FLOAT}},
+    {"ldexp", {ot::FLOAT, ot::FLOAT}},
+    {"ln", {ot::FLOAT}},
+    {"log", {ot::FLOAT}},
+    {"log10", {ot::FLOAT}},
+    {"log1p", {ot::FLOAT}},
+    {"max", {ot::FLOAT, ot::FLOAT}},
+    {"min", {ot::FLOAT, ot::FLOAT}},
+    {"modf", {ot::FLOAT}},
+    {"nearbyint", {ot::FLOAT}},
+    {"pow", {ot::FLOAT, ot::FLOAT}},
+    {"random", {ot::FLOAT, ot::FLOAT}},
+    {"remainder", {ot::FLOAT, ot::FLOAT}},
+    {"rint", {ot::FLOAT}},
+    {"round", {ot::FLOAT}},
+    {"sin", {ot::FLOAT}},
     {"size", {ot::STRING}},
-    {"sqrt", {ot::NUMERIC}},
+    {"sqrt", {ot::FLOAT}},
     {"sum", {ot::STRING}},
-    {"tan", {ot::NUMERIC}},
-    {"trunc", {ot::NUMERIC}},
+    {"tan", {ot::FLOAT}},
+    {"trunc", {ot::FLOAT}},
   };
 }
 
@@ -79,7 +83,7 @@ namespace ast {
   }
 
   //default is numeric output
-  Node::OutputType Node::output_type() const { return OutputType::NUMERIC; }
+  Node::OutputType Node::output_type() const { return OutputType::FLOAT; }
 
   Variable::Variable(const std::string& v) {
     std::cmatch m;
@@ -97,6 +101,11 @@ namespace ast {
   }
 
   Variable::~Variable() {
+  }
+
+  
+  Node::OutputType Variable::output_type() const {
+    return mType  == VarType::INT ? OutputType::INT : OutputType::FLOAT;
   }
 
 
@@ -118,7 +127,16 @@ namespace ast {
   UnaryOp::UnaryOp(Op op, NodePtr node) : mOp(op), mNode(node) {
   }
 
+  Node::OutputType UnaryOp::output_type() const { return mNode->output_type(); }
+
+
   BinaryOp::BinaryOp(NodePtr left, Op op, NodePtr right) : mLeft(left), mOp(op), mRight(right) {
+  }
+
+  Node::OutputType BinaryOp::output_type() const {
+    if (mRight->output_type() == OutputType::INT && mLeft->output_type() == OutputType::INT)
+      return OutputType::INT;
+    return OutputType::FLOAT;
   }
 
   FunctionCall::FunctionCall(const std::string& name, const std::vector<NodePtr>& args) : mName(name), mArgs(args) {
@@ -130,9 +148,22 @@ namespace ast {
       throw std::runtime_error("function " + name + " expects " + std::to_string(arg_types.size()) + " arguments, got: " + std::to_string(args.size()));
     }
     for (unsigned int i = 0; i < args.size(); i++) {
-      if (args.at(i)->output_type() != arg_types.at(i))
-        throw std::runtime_error("function " + name + " arg " + std::to_string(i) + " type mismatch");
+      if ((args.at(i)->output_type() == ot::STRING && arg_types.at(i) != ot::STRING) || (args.at(i)->output_type() != ot::STRING && arg_types.at(i) == ot::STRING)) {
+        throw std::runtime_error("function " + name + " arg " + std::to_string(i) + " type mismatch" + (args.at(i)->output_type() == ot::STRING ? "IS STRING" : "NOT"));
+      }
     }
+  }
+
+  Node::OutputType FunctionCall::output_type() const {
+    if (mName == "int")
+      return OutputType::INT;
+    else if (mName == "float")
+      return OutputType::FLOAT;
+    for (auto a: mArgs) {
+      if (a->output_type() == OutputType::FLOAT)
+        return a->output_type();
+    }
+    return OutputType::INT;
   }
 
   SampleAccess::SampleAccess(VariablePtr var, NodePtr accessor) :
@@ -156,10 +187,22 @@ namespace ast {
   {
   }
 
+  Node::OutputType ValueAssignment::output_type() const {
+    return mValueNode->output_type();
+  }
+
   ArrayAssignment::ArrayAssignment(ArrayAccessPtr array, NodePtr node) : mArray(array), mValueNode(node)
   {
   }
 
+  Node::OutputType ArrayAssignment::output_type() const {
+    return mValueNode->output_type();
+  }
+
   Deref::Deref(ArrayAccessPtr array) : mValue(array) {}
+
+  Node::OutputType Deref::output_type() const {
+    return mValue->output_type();
+  }
 }
 }

@@ -100,6 +100,7 @@ namespace xnor {
       llvm::Value * toInt(llvm::Value * v);
       llvm::Value * toFloat(llvm::Value * v);
       llvm::Value * getSymbol(const std::string& name);
+      void wrapIntIfNeeded(xnor::ast::Node * n);
 
       //returns float
       //llvm::Value * linterpWithWrap(llvm::Value * fptr, llvm::Value * findex, llvm::Value * ilength);

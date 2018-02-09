@@ -135,7 +135,11 @@ var : VAR  {
     }
     ;
 
-constant : INT { $$ = std::make_shared<xnor::ast::Value<int>>($1); }
+constant : INT {
+          auto v = std::make_shared<xnor::ast::Value<int>>($1);
+          v->output_type(xnor::ast::Node::OutputType::INT);
+          $$ = v;
+          }
          | FLOAT { $$ = std::make_shared<xnor::ast::Value<float>>($1); }
          | STRING { $$ = std::make_shared<xnor::ast::Value<std::string>>($1); }
          | VAR_DOLLAR { $$ = std::make_shared<xnor::ast::Value<std::string>>($1); }

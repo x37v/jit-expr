@@ -52,7 +52,8 @@ namespace xnor {
       public:
         virtual ~Node();
         enum class OutputType {
-          NUMERIC,
+          FLOAT,
+          INT,
           STRING
         };
         virtual OutputType output_type() const;
@@ -81,6 +82,7 @@ namespace xnor {
         };
         Variable(const std::string& n);
         virtual ~Variable();
+        virtual OutputType output_type() const override;
 
         unsigned int input_index() const;
         VarType type() const;
@@ -94,8 +96,11 @@ namespace xnor {
         public:
           Value(const T& v) : mValue(v) { }
           T value() const { return mValue; }
+          void output_type(Node::OutputType v) { mOutputType = v; }
+          virtual Node::OutputType output_type() const override { return mOutputType; }
         private:
           T mValue;
+          Node::OutputType mOutputType = Node::OutputType::FLOAT;
       };
 
     class Quoted : public VNode<Quoted> {
@@ -119,6 +124,7 @@ namespace xnor {
           NEGATE
         };
         UnaryOp(Op op, NodePtr node);
+        virtual OutputType output_type() const override;
         Op op() const { return mOp; }
         NodePtr node() const { return mNode; }
       private:
@@ -148,6 +154,7 @@ namespace xnor {
           BIT_XOR
         };
         BinaryOp(NodePtr left, Op op, NodePtr right);
+        virtual OutputType output_type() const override;
 
         Op op() const { return mOp; }
         NodePtr left() const { return mLeft; }
@@ -161,6 +168,7 @@ namespace xnor {
     class FunctionCall : public VNode<FunctionCall> {
       public:
         FunctionCall(const std::string& name, const std::vector<NodePtr>& args);
+        virtual OutputType output_type() const override;
         std::string name() const { return mName; }
         const std::vector<NodePtr>& args() const { return mArgs; }
       private:
@@ -196,6 +204,7 @@ namespace xnor {
     class ValueAssignment : public VNode<ValueAssignment> {
       public:
         ValueAssignment(const std::string& name, NodePtr node);
+        virtual OutputType output_type() const override;
 
         std::string value_name() const { return mValueName; }
         NodePtr value_node() const { return mValueNode; }
@@ -207,6 +216,7 @@ namespace xnor {
     class ArrayAssignment : public VNode<ArrayAssignment> {
       public:
         ArrayAssignment(ArrayAccessPtr array, NodePtr node);
+        virtual OutputType output_type() const override;
 
         ArrayAccessPtr array() const { return mArray; }
         NodePtr value_node() const { return mValueNode; }
@@ -219,6 +229,7 @@ namespace xnor {
       public:
         Deref(ArrayAccessPtr v);
         NodePtr value_node() const { return mValue; }
+        virtual OutputType output_type() const override;
       private:
         ArrayAccessPtr mValue;
     };
