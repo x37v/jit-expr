@@ -1,12 +1,13 @@
 #include <m_pd.h>
 #include <string>
-#include "llvmcodegen/codegen.h"
-#include "parser.hh"
+#include <sstream>
 #include <stdexcept>
 #include <vector>
 #include <memory>
 #include <algorithm>
 #include <random>
+#include "llvmcodegen/codegen.h"
+#include "parser.hh"
 
 struct _xnor_expr_proxy;
 struct _xnor_expr;
@@ -411,7 +412,7 @@ void xnor_fexpr_clear_usage() {
 }
 
 // taken directly from x_vexpr_if.c and modified
-void xnor_fexpr_tilde_set(t_xnor_expr *x, t_symbol *s, int argc, t_atom *argv) {
+void xnor_fexpr_tilde_set(t_xnor_expr *x, t_symbol * /*s*/, int argc, t_atom *argv) {
   t_symbol *sx;
   int vecno, vsize, nargs;
 
@@ -507,10 +508,9 @@ void xnor_fexpr_tilde_set(t_xnor_expr *x, t_symbol *s, int argc, t_atom *argv) {
 }
 
 // taken directly from x_vexpr_if.c and modified
-void xnor_fexpr_tilde_clear(t_xnor_expr *x, t_symbol *s, int argc, t_atom *argv) {
+void xnor_fexpr_tilde_clear(t_xnor_expr *x, t_symbol * /*s */, int argc, t_atom *argv) {
   t_symbol *sx;
   int vecno;
-  int nargs;
 
   /*
    *  if no argument clear all input and output buffers
@@ -591,7 +591,12 @@ void xnor_expr_print(t_xnor_expr *x) {
       post("xnor/fexpr~: ");
       break;
   }
-  poststring(x->cpp->code_printout.c_str());
+  std::stringstream ss(x->cpp->code_printout.c_str());
+  std::string out;
+  while (std::getline(ss, out)) {
+    poststring(out.c_str());
+    poststring("\n");
+  }
 }
 
 void xnor_expr_setup(void) {
