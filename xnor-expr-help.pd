@@ -667,7 +667,7 @@ examples are only presented with [xnor/expr]., f 52;
 #X text 28 71 These are organized in different groups. Click on the
 subpatches below to check each group:, f 52;
 #X restore 803 432 pd All_functions \; and operators;
-#N canvas 157 32 919 558 [xnor/expr] 0;
+#N canvas 2 72 1362 694 [xnor/expr] 0;
 #X obj 49 115 xnor/expr 1;
 #X floatatom 47 248 0 0 0 0 - - -;
 #X floatatom 49 145 0 0 0 0 - - -;
@@ -692,7 +692,7 @@ subpatches below to check each group:, f 52;
 #X msg 693 434 8;
 #X obj 693 404 loadbang;
 #X text 17 27 Examples of [xnor/expr] object:;
-#X text 248 107 bang evaluates the expression, f 17;
+#X text 277 111 bang evaluates the expression, f 17;
 #X obj 47 278 xnor/expr ($f1 + 2) + $i2;
 #X floatatom 184 249 0 0 0 0 - - -;
 #X text 437 23 NOTE About integers:;
@@ -714,6 +714,9 @@ integer from the second inlet (float input values are truncated to
 integers), f 26;
 #X text 475 365 But there's no issue if you send an integer value to
 an inlet defined as a float.;
+#X msg 146 372 print;
+#X msg 207 89 print;
+#X text 279 145 print outputs the llvm assembly;
 #X connect 0 0 2 0;
 #X connect 1 0 23 0;
 #X connect 3 0 0 0;
@@ -734,6 +737,8 @@ an inlet defined as a float.;
 #X connect 27 1 26 0;
 #X connect 29 0 9 0;
 #X connect 29 1 30 0;
+#X connect 35 0 29 0;
+#X connect 36 0 4 0;
 #X restore 557 268 pd [xnor/expr] Examples;
 #N canvas 2 72 1362 694 [xnor/expr~] 0;
 #X floatatom 80 361 0 0 0 0 - - -;
@@ -766,7 +771,7 @@ an inlet defined as a float.;
 #X restore 617 520 graph;
 #X obj 80 388 osc~ 440;
 #X obj 283 332 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
--1 -1 6000 1;
+-1 -1 0 1;
 #X floatatom 280 352 5 0 0 0 - - -, f 5;
 #X text 331 352 amplitude;
 #X obj 280 399 line~;
@@ -781,7 +786,7 @@ an inlet defined as a float.;
 #X text 320 29 audio off;
 #X obj 478 290 xnor/expr~ max(min($v1 \, $f2) \, -$f2);
 #X obj 685 145 vsl 20 100 0 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 4800 1;
+-1 -1 0 1;
 #X text 460 187 Move the slider to change the limiter threshold (from
 0-1)., f 29;
 #X text 64 29 make sure to turn on the audio for the [xnor/expr~] examples
@@ -839,8 +844,8 @@ so on)., f 60;
 #X obj 60 508 loadbang;
 #X msg 181 535 set 4000;
 #X obj 168 501 sig~ 0.001;
-#X obj 168 603 xnor/fexpr~ $x1[0] + $y1[-1];
-#X text 298 570 clears output buffer;
+#X obj 168 615 xnor/fexpr~ $x1[0] + $y1[-1];
+#X text 290 560 clears output buffer;
 #X obj 168 641 snapshot~;
 #X obj 32 593 metro 100;
 #X obj 32 571 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
@@ -987,7 +992,7 @@ input \, and $y#[-1] the last sample output (which is the minimum 'n'
 value \, for $y#).;
 #X text 79 24 make sure to turn on the audio for the [xnor/fexpr~]
 examples ====>, f 23;
-#X text 548 299 * [xnor/fexpr~] can be CPU expensive! By default \,
+#X text 540 311 * [xnor/fexpr~] can be CPU expensive! By default \,
 [xnor/fexpr~] is on when it is loaded \, but you can save CPU and control
 when it is on or off with the 'start' and 'stop' messages., f 54;
 #N canvas 695 185 491 366 Fractional 0;
@@ -1032,7 +1037,10 @@ that \, a float sent to a '$v#' inlet is promoted to a signal.;
 #X text 25 174 - [xnor/fexpr~] does not understand '$v#' variables
 from [xnor/expr~] \, it has its special input and output variables
 defined as:;
-#X msg 195 570 clear y1;
+#X msg 187 560 clear y1;
+#X msg 204 587 print;
+#X text 261 589 prints the generated llvm assembly;
+#X text 506 290 - print: prints the generated llvm assembly;
 #X connect 8 0 13 0;
 #X connect 9 0 13 0;
 #X connect 10 0 9 0;
@@ -1058,6 +1066,7 @@ defined as:;
 #X connect 56 0 34 0;
 #X connect 57 0 32 0;
 #X connect 60 0 13 0;
+#X connect 61 0 13 0;
 #X restore 541 324 pd [xnor/fexpr~] Examples;
 #X obj 804 238 print xnor/expr;
 #X obj 714 458 +;
