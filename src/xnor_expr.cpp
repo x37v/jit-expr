@@ -505,26 +505,26 @@ void xnor_fexpr_tilde_clear(t_xnor_expr *x, t_symbol *s, int argc, t_atom *argv)
 {
   t_symbol *sx;
   int vecno;
-  int i, nargs;
+  int nargs;
 
-#if 0
   /*
-   *  if no arguement clear all input and output buffers
+   *  if no argument clear all input and output buffers
    */
-  if (!argc) {
-    for (i = 0; i < x->exp_nexpr; i++)
-      memset(x->exp_p_res[i], 0, x->exp_vsize*sizeof(t_float));
-    for (i = 0; i < MAX_VARS; i++)
-      if (x->exp_var[i].ex_type == ET_XI)
-        memset(x->exp_p_var[i], 0,
-            x->exp_vsize*sizeof(t_float));
+  if (argc <= 0) {
+    for (auto& it: x->cpp->saved_inputs) {
+      memset(&it.second.front(), 0, it.second.size() * sizeof(t_sample));
+    }
+    for (auto& it: x->cpp->saved_outputs) {
+      memset(&it.second.front(), 0, it.second.size() * sizeof(t_sample));
+    }
     return;
   }
   if (argc > 1) {
-    post("fexpr~ usage: 'clear' or 'clear {xy}[#]'");
+    post("xnor/fexpr~ usage: 'clear' or 'clear {xy}[#]'");
     return;
   }
 
+#if 0
   sx = atom_getsymbolarg(0, argc, argv);
   switch(sx->s_name[0]) {
     case 'x':
