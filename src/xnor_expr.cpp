@@ -401,11 +401,16 @@ static void xnor_expr_tilde_dsp(t_xnor_expr *x, t_signal **sp)
 }
 
 void xnor_fexpr_set_usage() {
+  post("xnor/fexpr~: set val ...");
+  post("xnor/fexpr~: set {xy}[#] val ...");
+}
+
+void xnor_fexpr_clear_usage() {
+  post("xnor/fexpr~ usage: 'clear' or 'clear {xy}[#]'");
 }
 
 // taken directly from x_vexpr_if.c and modified
-void xnor_fexpr_tilde_set(t_xnor_expr *x, t_symbol *s, int argc, t_atom *argv)
-{
+void xnor_fexpr_tilde_set(t_xnor_expr *x, t_symbol *s, int argc, t_atom *argv) {
   t_symbol *sx;
   int vecno, vsize, nargs;
 
@@ -418,7 +423,7 @@ void xnor_fexpr_tilde_set(t_xnor_expr *x, t_symbol *s, int argc, t_atom *argv)
           vecno = 0;
         else {
           vecno = atoi(sx->s_name + 1);
-          if (!vecno) {
+          if (vecno <= 0) {
             post("xnor/fexpr~ set: bad set x vector number");
             xnor_fexpr_set_usage();
             return;
@@ -451,9 +456,9 @@ void xnor_fexpr_tilde_set(t_xnor_expr *x, t_symbol *s, int argc, t_atom *argv)
           vecno = 0;
         else {
           vecno = atoi(sx->s_name + 1);
-          if (!vecno) {
+          if (vecno <= 0) {
             post("xnor/fexpr~ set: bad set y vector number");
-            //xnor_fexpr_set_usage();
+            xnor_fexpr_set_usage();
             return;
           }
           vecno--;
@@ -501,8 +506,7 @@ void xnor_fexpr_tilde_set(t_xnor_expr *x, t_symbol *s, int argc, t_atom *argv)
 }
 
 // taken directly from x_vexpr_if.c and modified
-void xnor_fexpr_tilde_clear(t_xnor_expr *x, t_symbol *s, int argc, t_atom *argv)
-{
+void xnor_fexpr_tilde_clear(t_xnor_expr *x, t_symbol *s, int argc, t_atom *argv) {
   t_symbol *sx;
   int vecno;
   int nargs;
@@ -520,11 +524,10 @@ void xnor_fexpr_tilde_clear(t_xnor_expr *x, t_symbol *s, int argc, t_atom *argv)
     return;
   }
   if (argc > 1) {
-    post("xnor/fexpr~ usage: 'clear' or 'clear {xy}[#]'");
+    xnor_fexpr_clear_usage();
     return;
   }
 
-#if 0
   sx = atom_getsymbolarg(0, argc, argv);
   switch(sx->s_name[0]) {
     case 'x':
@@ -532,46 +535,45 @@ void xnor_fexpr_tilde_clear(t_xnor_expr *x, t_symbol *s, int argc, t_atom *argv)
         vecno = 0;
       else {
         vecno = atoi(sx->s_name + 1);
-        if (!vecno) {
-          post("fexpr~.clear: bad clear x vector number");
-          return;
-        }
-        if (vecno >= MAX_VARS) {
-          post("fexpr~.clear: no more than %d inlets",
-              MAX_VARS);
+        if (vecno <= 0) {
+          post("xnor/fexpr~ clear: bad clear x vector number");
           return;
         }
         vecno--;
       }
-      if (x->exp_var[vecno].ex_type != ET_XI) {
-        post("fexpr~-clear: no signal at inlet %d", vecno + 1);
-        return;
+      {
+        auto it = x->cpp->saved_inputs.find(vecno);
+        if (it == x->cpp->saved_inputs.end()) {
+          post("xnor/fexpr~ clear: no signal at inlet %d", vecno + 1);
+          return;
+        }
+        memset(&it->second.front(), 0, it->second.size() * sizeof(t_sample));
       }
-      memset(x->exp_p_var[vecno], 0, x->exp_vsize*sizeof(t_float));
       return;
     case 'y':
       if (!sx->s_name[1])
         vecno = 0;
       else {
         vecno = atoi(sx->s_name + 1);
-        if (!vecno) {
-          post("fexpr~.clear: bad clear y vector number");
+        if (vecno <= 0) {
+          post("xnor/fexpr~ clear: bad clear y vector number");
           return;
         }
         vecno--;
       }
-      if (vecno >= x->exp_nexpr) {
-        post("fexpr~.clear: only %d outlets", x->exp_nexpr);
-        return;
+      {
+        auto it = x->cpp->saved_outputs.find(vecno);
+        if (it == x->cpp->saved_outputs.end()) {
+          post("xnor/fexpr~ clear: no signal at outlet %d", vecno + 1);
+          return;
+        }
+        memset(&it->second.front(), 0, it->second.size() * sizeof(t_sample));
       }
-      memset(x->exp_p_res[vecno], 0, x->exp_vsize*sizeof(t_float));
-      return;
       return;
     default:
-      post("fexpr~ usage: 'clear' or 'clear {xy}[#]'");
+      xnor_fexpr_clear_usage();
       return;
   }
-#endif
 }
 
 void xnor_expr_start(t_xnor_expr *x) { x->cpp->compute = true; }
@@ -589,6 +591,7 @@ void xnor_expr_setup(void) {
 
   class_addlist(xnor_expr_class, xnor_expr_list);
   class_addbang(xnor_expr_class, xnor_expr_bang);
+  class_sethelpsymbol(xnor_expr_class, gensym("xnor-expr"));
 
 	xnor_expr_proxy_class = class_new(gensym("xnor_expr_proxy"),
       0, 0,
@@ -606,6 +609,7 @@ void xnor_expr_setup(void) {
 	class_addmethod(xnor_expr_tilde_class, nullfn, gensym("signal"), A_NULL);
 	CLASS_MAINSIGNALIN(xnor_expr_tilde_class, t_xnor_expr, exp_f);
 	class_addmethod(xnor_expr_tilde_class, (t_method)xnor_expr_tilde_dsp, gensym("dsp"), A_NULL);
+  class_sethelpsymbol(xnor_expr_tilde_class, gensym("xnor-expr"));
 
   xnor_fexpr_tilde_class = class_new(gensym("xnor/fexpr~"),
       (t_newmethod)xnor_expr_new,
@@ -620,6 +624,7 @@ void xnor_expr_setup(void) {
   class_addmethod(xnor_fexpr_tilde_class, (t_method)xnor_fexpr_tilde_clear, gensym("clear"), A_GIMME, 0);
   class_addmethod(xnor_fexpr_tilde_class, (t_method)xnor_expr_start, gensym("start"), A_NULL);
   class_addmethod(xnor_fexpr_tilde_class, (t_method)xnor_expr_stop, gensym("stop"), A_NULL);
+  class_sethelpsymbol(xnor_fexpr_tilde_class, gensym("xnor-expr"));
 }
 
 //utility functions

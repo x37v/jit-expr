@@ -1,7 +1,7 @@
 #N canvas 2 72 1362 694 12;
-#X obj 203 46 xnor/expr;
-#X obj 209 73 xnor/expr~;
-#X obj 316 66 xnor/fexpr~;
+#X obj 195 71 xnor/expr;
+#X obj 266 71 xnor/expr~;
+#X obj 347 70 xnor/fexpr~;
 #X floatatom 760 121 5 0 0 0 - - -, f 5;
 #X floatatom 760 209 5 0 0 0 - - -, f 5;
 #X floatatom 804 208 5 0 0 0 - - -, f 5;
@@ -23,7 +23,6 @@ size;
 #X text 45 335 - $s#: a symbol (used to define arrays), f 59;
 #X obj 760 147 xnor/expr $f1 + 1 \; $f1 - 1 \; $f1 * 2;
 #X floatatom 848 208 5 0 0 0 - - -, f 5;
-#X text 385 48 Version 0.55;
 #N canvas 273 26 812 549 Arrays 0;
 #N canvas 0 50 450 300 (subpatch) 0;
 #X array array1 10 float 0;
@@ -132,7 +131,6 @@ see Pd window for error., f 40;
 #X connect 15 0 14 0;
 #X connect 16 0 12 0;
 #X restore 803 406 pd Dealing_with_"\$0";
-#X text 21 48 By Shahrokh Yadegari;
 #X text 21 197 - [xnor/fexpr~]: used for evaluation of signal expressions
 on sample level data (i.e. \, filter design) - very cpu intensive!
 , f 62;
@@ -154,7 +152,7 @@ from right to left (or bottom to up) order:;
 #X text 533 408 see also:;
 #X obj 582 510 block~;
 #X obj 641 510 value;
-#N canvas 2 72 1362 694 All_functions 1;
+#N canvas 2 72 1362 694 All_functions 0;
 #N canvas 497 97 374 326 Arithmetic-operators 0;
 #X obj 57 90 xnor/expr $f1 + 4;
 #X floatatom 57 63 5 0 0 0 - - -, f 5;
@@ -520,7 +518,7 @@ sum and size., f 45;
 #X connect 48 0 46 0;
 #X connect 49 0 48 1;
 #X restore 147 392 pd Trigonometric-functions;
-#N canvas 2 72 1362 694 Other-functions 1;
+#N canvas 2 72 1362 694 Other-functions 0;
 #X floatatom 93 24 5 0 0 0 - - -, f 5;
 #X floatatom 93 97 5 0 0 0 - - -, f 5;
 #X text 202 52 convert to int;
@@ -737,7 +735,7 @@ an inlet defined as a float.;
 #X connect 29 0 9 0;
 #X connect 29 1 30 0;
 #X restore 557 268 pd [xnor/expr] Examples;
-#N canvas 301 61 867 691 [xnor/expr~] 0;
+#N canvas 2 72 1362 694 [xnor/expr~] 0;
 #X floatatom 80 361 0 0 0 0 - - -;
 #X obj 80 468 dac~;
 #X text 125 361 frequency;
@@ -751,15 +749,15 @@ an inlet defined as a float.;
 #X obj 253 627 tabsend~ a3;
 #N canvas 0 50 450 300 (subpatch) 0;
 #X array a2 64 float 1;
-#A 0 0.185293 0.247993 0.308949 0.36679 0.420237 0.468075 0.509197
-0.542652 0.567606 0.583434 0.589671 0.586023 0.572438 0.549013 0.516069
-0.474118 0.423808 0.366018 0.301731 0.232071 0.158273 0.0816412 0.00354935
--0.0746081 -0.151431 -0.225548 -0.295636 -0.360461 -0.418895 -0.469911
--0.512672 -0.54647 -0.570782 -0.585296 -0.589841 -0.584503 -0.569539
--0.545381 -0.512683 -0.472221 -0.424959 -0.371988 -0.314489 -0.253767
--0.191166 -0.128077 -0.0659013 -0.00601193 0.0502563 0.101646 0.146993
-0.185262 0.215549 0.237114 0.249398 0.252013 0.244783 0.227713 0.20101
-0.165078 0.120494 0.0680216 0.00857323 -0.0567935;
+#A 0 0.426241 0.471417 0.509466 0.5395 0.560763 0.572675 0.574871 0.567133
+0.549476 0.522103 0.485382 0.439915 0.386436 0.325852 0.259226 0.187714
+0.112595 0.0352011 -0.0430835 -0.120859 -0.196732 -0.269351 -0.337427
+-0.39975 -0.455253 -0.502973 -0.542119 -0.572078 -0.592377 -0.602793
+-0.60326 -0.593903 -0.575082 -0.547297 -0.511266 -0.467854 -0.418052
+-0.363017 -0.303973 -0.242242 -0.179198 -0.116226 -0.0547288 0.0039332
+0.0584543 0.107614 0.150295 0.185514 0.212438 0.23039 0.238884 0.237616
+0.226482 0.205578 0.175178 0.135769 0.0880036 0.0327047 -0.0291521
+-0.0964589 -0.168 -0.242475 -0.318515 -0.394739;
 #X coords 0 1 63 -1 200 140 1;
 #X restore 395 520 graph;
 #N canvas 0 50 450 300 (subpatch) 0;
@@ -768,7 +766,7 @@ an inlet defined as a float.;
 #X restore 617 520 graph;
 #X obj 80 388 osc~ 440;
 #X obj 283 332 hsl 128 15 0 127 0 0 empty empty empty -2 -8 0 10 -262144
--1 -1 0 1;
+-1 -1 6000 1;
 #X floatatom 280 352 5 0 0 0 - - -, f 5;
 #X text 331 352 amplitude;
 #X obj 280 399 line~;
@@ -783,7 +781,7 @@ an inlet defined as a float.;
 #X text 320 29 audio off;
 #X obj 478 290 xnor/expr~ max(min($v1 \, $f2) \, -$f2);
 #X obj 685 145 vsl 20 100 0 1 0 0 empty empty empty 0 -9 0 10 -262144
--1 -1 0 1;
+-1 -1 4800 1;
 #X text 460 187 Move the slider to change the limiter threshold (from
 0-1)., f 29;
 #X text 64 29 make sure to turn on the audio for the [xnor/expr~] examples
@@ -825,7 +823,7 @@ inlet is promoted to a signal., f 54;
 #X connect 33 0 16 1;
 #X connect 37 0 14 0;
 #X restore 549 296 pd [xnor/expr~] Examples;
-#N canvas 140 26 977 725 [xnor/fexpr~] 0;
+#N canvas 2 72 1362 694 [xnor/fexpr~] 0;
 #X msg 339 45 \; pd dsp 0;
 #X msg 246 45 \; pd dsp 1;
 #X text 244 23 audio on;
@@ -842,8 +840,7 @@ so on)., f 60;
 #X msg 181 535 set 4000;
 #X obj 168 501 sig~ 0.001;
 #X obj 168 603 xnor/fexpr~ $x1[0] + $y1[-1];
-#X msg 195 569 clear y1;
-#X text 262 569 clears output buffer;
+#X text 298 570 clears output buffer;
 #X obj 168 641 snapshot~;
 #X obj 32 593 metro 100;
 #X obj 32 571 tgl 15 0 empty empty empty 17 7 0 10 -262144 -1 -1 1
@@ -893,14 +890,13 @@ f 60;
 #X text 506 272 - start: starts the computation of [xnor/fexpr~] *
 , f 60;
 #X text 835 615 more examples:;
-#N canvas 286 64 900 597 Difference 0;
+#N canvas 2 72 1362 694 Difference 0;
 #X obj 194 193 v pr;
 #X obj 341 193 v r;
 #X obj 249 195 v b;
 #X floatatom 194 164 5 0 0 0 - - -, f 5;
 #X floatatom 341 166 5 0 0 0 - - -, f 5;
 #X msg 194 139 10;
-#X msg 172 251 set 1.2 2.3 4.4;
 #X floatatom 249 165 7 0 0 0 - - -, f 7;
 #X floatatom 399 166 5 0 0 0 - - -, f 5;
 #X obj 399 195 v dt;
@@ -957,32 +953,33 @@ to solve differential equations such as the lorenz equations., f 49
 #X text 470 183 hear a click and audio stops \, the system went unstable
 and you need to bang on the top again to reload the default values.
 , f 46;
+#X msg 172 251 set 1.2 2.3 4.4;
 #X connect 3 0 0 0;
 #X connect 4 0 1 0;
 #X connect 5 0 3 0;
-#X connect 6 0 34 0;
-#X connect 7 0 2 0;
-#X connect 8 0 9 0;
-#X connect 10 0 4 0;
-#X connect 11 0 8 0;
-#X connect 13 0 5 0;
-#X connect 13 0 10 0;
-#X connect 13 0 11 0;
-#X connect 13 0 6 0;
-#X connect 13 0 39 0;
-#X connect 13 0 20 0;
-#X connect 14 0 8 0;
-#X connect 15 0 14 0;
-#X connect 16 0 42 0;
-#X connect 20 0 7 0;
-#X connect 22 0 12 0;
-#X connect 22 0 12 1;
-#X connect 34 0 22 0;
-#X connect 34 0 35 0;
-#X connect 34 1 36 0;
-#X connect 34 2 37 0;
-#X connect 39 0 34 0;
-#X connect 42 0 34 0;
+#X connect 6 0 2 0;
+#X connect 7 0 8 0;
+#X connect 9 0 4 0;
+#X connect 10 0 7 0;
+#X connect 12 0 5 0;
+#X connect 12 0 9 0;
+#X connect 12 0 10 0;
+#X connect 12 0 38 0;
+#X connect 12 0 19 0;
+#X connect 12 0 44 0;
+#X connect 13 0 7 0;
+#X connect 14 0 13 0;
+#X connect 15 0 41 0;
+#X connect 19 0 6 0;
+#X connect 21 0 11 0;
+#X connect 21 0 11 1;
+#X connect 33 0 21 0;
+#X connect 33 0 34 0;
+#X connect 33 1 35 0;
+#X connect 33 2 36 0;
+#X connect 38 0 33 0;
+#X connect 41 0 33 0;
+#X connect 44 0 33 0;
 #X restore 708 669 pd Difference equations (Lorenz);
 #X text 25 262 'n' goes from 0 to -vector size (defined by the [block~]
 or [switch~] objects). As such \, $x#[0] specifies the current sample
@@ -1035,31 +1032,32 @@ that \, a float sent to a '$v#' inlet is promoted to a signal.;
 #X text 25 174 - [xnor/fexpr~] does not understand '$v#' variables
 from [xnor/expr~] \, it has its special input and output variables
 defined as:;
+#X msg 195 570 clear y1;
 #X connect 8 0 13 0;
 #X connect 9 0 13 0;
 #X connect 10 0 9 0;
-#X connect 10 0 18 0;
+#X connect 10 0 17 0;
 #X connect 11 0 13 0;
 #X connect 12 0 13 0;
-#X connect 13 0 16 0;
-#X connect 14 0 13 0;
-#X connect 16 0 19 0;
+#X connect 13 0 15 0;
+#X connect 15 0 18 0;
+#X connect 16 0 15 0;
 #X connect 17 0 16 0;
-#X connect 18 0 17 0;
-#X connect 26 0 33 1;
-#X connect 27 0 33 0;
-#X connect 28 0 33 0;
-#X connect 29 0 28 0;
-#X connect 30 0 26 0;
+#X connect 25 0 32 1;
+#X connect 26 0 32 0;
+#X connect 27 0 32 0;
+#X connect 28 0 27 0;
+#X connect 29 0 25 0;
+#X connect 31 0 30 0;
+#X connect 31 0 30 1;
 #X connect 32 0 31 0;
-#X connect 32 0 31 1;
-#X connect 33 0 32 0;
-#X connect 34 0 35 0;
-#X connect 35 0 58 0;
-#X connect 37 0 26 0;
-#X connect 38 0 26 0;
-#X connect 57 0 35 0;
-#X connect 58 0 33 0;
+#X connect 33 0 34 0;
+#X connect 34 0 57 0;
+#X connect 36 0 25 0;
+#X connect 37 0 25 0;
+#X connect 56 0 34 0;
+#X connect 57 0 32 0;
+#X connect 60 0 13 0;
 #X restore 541 324 pd [xnor/fexpr~] Examples;
 #X obj 804 238 print xnor/expr;
 #X obj 714 458 +;
@@ -1070,7 +1068,6 @@ defined as:;
 #X text 580 483 audio operators:;
 #X text 561 206 (click on the subpatches to open them), f 13;
 #X obj 694 510 random;
-#X text 796 517 updated for Pd 0.48-1;
 #N canvas 175 30 885 622 [value] 0;
 #X floatatom 596 202 5 0 0 0 - - -, f 5;
 #X obj 596 137 until;
@@ -1156,13 +1153,14 @@ a variable and call it in the below expression \, check it:, f 68
 #X connect 35 0 32 0;
 #X restore 803 378 pd [value];
 #X text 20 16 Expression evaluation family of objects:, f 62;
-#X obj 226 13 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
--1;
+#X text 363 16 Version 0.1;
+#X text 21 48 Originally By Shahrokh Yadegari \, cloned by Alex Norman
+;
+#X text 796 517 helpfile modified from original expr help;
 #X connect 3 0 16 0;
-#X connect 4 0 37 0;
-#X connect 5 0 37 0;
+#X connect 4 0 35 0;
+#X connect 5 0 35 0;
 #X connect 16 0 4 0;
 #X connect 16 1 5 0;
 #X connect 16 2 17 0;
-#X connect 17 0 37 0;
-#X connect 49 0 0 0;
+#X connect 17 0 35 0;
