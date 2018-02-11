@@ -31,21 +31,21 @@
 namespace ast = xnor::ast;
 
 namespace {
-  const std::string main_function_name = "expralex";
+  const std::string main_function_name = "jitexpr";
   const std::map<std::string, std::string> function_alias = {
-    {"Sum", "xnor_expr_table_sum"},
-    {"sum", "xnor_expr_table_sum_all"},
-    {"size", "xnor_expr_table_size"},
-    {"fact", "xnor_expr_fact"},
-    {"max", "xnor_expr_max"},
-    {"min", "xnor_expr_min"},
-    {"random", "xnor_expr_random"},
-    {"imodf", "xnor_expr_imodf"},
-    {"modf", "xnor_expr_modf"},
-    {"random", "xnor_expr_random"},
-    {"isnan", "xnor_expr_isnan"},
-    {"isinf", "xnor_expr_isinf"},
-    {"finite", "xnor_expr_finite"},
+    {"Sum", "jit_expr_table_sum"},
+    {"sum", "jit_expr_table_sum_all"},
+    {"size", "jit_expr_table_size"},
+    {"fact", "jit_expr_fact"},
+    {"max", "jit_expr_max"},
+    {"min", "jit_expr_min"},
+    {"random", "jit_expr_random"},
+    {"imodf", "jit_expr_imodf"},
+    {"modf", "jit_expr_modf"},
+    {"random", "jit_expr_random"},
+    {"isnan", "jit_expr_isnan"},
+    {"isinf", "jit_expr_isinf"},
+    {"finite", "jit_expr_finite"},
     {"ln", "logf"},
     {"abs", "fabsf"},
   };
@@ -69,7 +69,7 @@ namespace xnor {
   {
     llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr); //XXX do we want this?
 
-    mModule = llvm::make_unique<llvm::Module>("xnor/expr", mContext);
+    mModule = llvm::make_unique<llvm::Module>("jit/expr", mContext);
     mModule->setDataLayout(mDataLayout);
 
     mSymbolPtrType = llvm::PointerType::get(llvm::StructType::create(mContext, "t_symbol_ptr"), 0); //opaque
@@ -201,7 +201,7 @@ namespace xnor {
 
   void LLVMCodeGenVisitor::visit(ast::Value<std::string>* v){
     auto sym = getSymbol(v->value());
-    mValue = createFunctionCall("xnor_expr_value_get",
+    mValue = createFunctionCall("jit_expr_value_get",
         llvm::FunctionType::get(mFloatType, {mSymbolPtrType}, false),
         {sym}, "tmpvalueget");
     wrapIntIfNeeded(v);
@@ -374,7 +374,7 @@ namespace xnor {
     if (!f) {
       std::vector<llvm::Type *> args;
       for (auto a: v->args())
-        args.push_back(a->output_type() == xnor::ast::Node::OutputType::STRING ? mSymbolPtrType : mFloatType);
+        args.push_back(a->output_type() == ast::Node::OutputType::STRING ? mSymbolPtrType : mFloatType);
 
       llvm::FunctionType *ft = llvm::FunctionType::get(mFloatType, args, false);
       f = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, n, mModule.get());
@@ -441,7 +441,7 @@ namespace xnor {
     auto p = mBuilder.CreateInBoundsGEP(mFloatType, var, index);
     mValue = mBuilder.CreateLoad(p);
 #else
-    mValue = createFunctionCall("xnor_expr_array_read", 
+    mValue = createFunctionCall("jit_expr_array_read", 
         llvm::FunctionType::get(mFloatType, {llvm::PointerType::get(mFloatType, 0), mFloatType, mIntType}, false),
         { var, index, toInt(arrayLength) }, "tmparrayinterp");
 #endif
@@ -461,7 +461,7 @@ namespace xnor {
     v->index_node()->accept(this);
     auto index = mValue;
 
-    mValue = createFunctionCall("xnor_expr_table_value_ptr", 
+    mValue = createFunctionCall("jit_expr_table_value_ptr", 
         llvm::FunctionType::get(llvm::PointerType::get(mFloatType, 0), {mSymbolPtrType, mFloatType}, false),
         { name, index }, "tmparrayaccess");
   }
@@ -471,7 +471,7 @@ namespace xnor {
     v->value_node()->accept(this);
 
     auto value = mValue;
-    mValue = createFunctionCall("xnor_expr_value_assign",
+    mValue = createFunctionCall("jit_expr_value_assign",
         llvm::FunctionType::get(mFloatType, {mSymbolPtrType, mFloatType}, false),
         {sym, value}, "tmpvalueassign");
     wrapIntIfNeeded(v);
@@ -487,11 +487,11 @@ namespace xnor {
     wrapIntIfNeeded(v);
   }
 
-  void LLVMCodeGenVisitor::visit(xnor::ast::Deref* v) {
+  void LLVMCodeGenVisitor::visit(ast::Deref* v) {
     v->value_node()->accept(this); //returns a pointer to a float
 
     //XXX gen code for this, its real simple
-    mValue = createFunctionCall("xnor_expr_deref",
+    mValue = createFunctionCall("jit_expr_deref",
         llvm::FunctionType::get(mFloatType, {llvm::PointerType::get(mFloatType, 0)}, false),
         {mValue}, "tmpderef");
     wrapIntIfNeeded(v);
@@ -645,8 +645,8 @@ namespace xnor {
     return llvm::ConstantInt::get(mDataLayout.getIntPtrType(mContext, 0), reinterpret_cast<uintptr_t>(sym));
   }
 
-  void LLVMCodeGenVisitor::wrapIntIfNeeded(xnor::ast::Node * n) {
-    if (n->output_type() == xnor::ast::Node::OutputType::INT)
+  void LLVMCodeGenVisitor::wrapIntIfNeeded(ast::Node * n) {
+    if (n->output_type() == ast::Node::OutputType::INT)
       mValue = toFloat(toInt(mValue));
   }
 

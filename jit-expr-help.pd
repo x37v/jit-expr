@@ -1,11 +1,11 @@
-#N canvas 2 72 1362 694 12;
-#X obj 195 71 xnor/expr;
-#X obj 266 71 xnor/expr~;
-#X obj 347 70 xnor/fexpr~;
+#N canvas 2 52 1362 714 12;
+#X obj 195 71 jit/expr;
+#X obj 266 71 jit/expr~;
+#X obj 347 70 jit/fexpr~;
 #X floatatom 760 121 5 0 0 0 - - -, f 5;
 #X floatatom 760 209 5 0 0 0 - - -, f 5;
 #X floatatom 804 208 5 0 0 0 - - -, f 5;
-#X text 21 78 Online documentation: http://yadegari.org/xnor/expr/xnor/expr.html
+#X text 21 78 Online documentation: http://yadegari.org/jit/expr/jit/expr.html
 , f 62;
 #X text 45 457 - $x#[n]: an input audio sample from inlet # indexed
 by 'n';
@@ -15,13 +15,13 @@ by 'n', f 61;
 size;
 #X text 79 520 and 'n' for $y# has to satisfy: -1 => n >= -vector size
 ;
-#X text 21 113 - [xnor/expr]: used for evaluation of control data expressions
+#X text 21 113 - [jit/expr]: used for evaluation of control data expressions
 , f 62;
 #X text 45 399 - $v#: an audio signal vector/block, f 59;
 #X text 45 297 - $i#: an integer, f 59;
 #X text 45 316 - $f#: a float, f 59;
 #X text 45 335 - $s#: a symbol (used to define arrays), f 59;
-#X obj 760 147 xnor/expr $f1 + 1 \; $f1 - 1 \; $f1 * 2;
+#X obj 760 147 jit/expr $f1 + 1 \; $f1 - 1 \; $f1 * 2;
 #X floatatom 848 208 5 0 0 0 - - -, f 5;
 #N canvas 273 26 812 549 Arrays 0;
 #N canvas 0 50 450 300 (subpatch) 0;
@@ -30,12 +30,12 @@ size;
 #X restore 537 143 graph;
 #X floatatom 187 341 0 0 9 0 - - -;
 #X floatatom 187 398 0 0 0 0 - - -;
-#X obj 187 370 xnor/expr $s2[$f1];
+#X obj 187 370 jit/expr $s2[$f1];
 #X msg 275 342 symbol array1;
 #X obj 532 39 loadbang;
 #X floatatom 137 135 5 0 9 0 - - -, f 5;
 #X floatatom 137 211 5 0 0 0 - - -, f 5;
-#X obj 137 172 xnor/expr array1[$f1];
+#X obj 137 172 jit/expr array1[$f1];
 #X msg 532 71 \; array1 0 1 4 2 8 5 6 1 4 2 8;
 #X text 30 87 For instance:;
 #X obj 275 313 loadbang;
@@ -44,10 +44,10 @@ size;
 #X floatatom 585 430 0 0 100 0 - - -;
 #X obj 585 311 vsl 20 100 0 10 0 0 empty empty empty 0 -9 0 10 -262144
 -1 -1 0 1;
-#X obj 585 461 xnor/expr array1[1] = $f1;
-#X text 27 23 The xnor/expr family of objects can read values from
-array (without interpolation) and also write to them. The syntax is
-arrayname[index].;
+#X obj 585 461 jit/expr array1[1] = $f1;
+#X text 27 23 The jit/expr family of objects can read values from array
+(without interpolation) and also write to them. The syntax is arrayname[index].
+;
 #X text 263 165 input is the index to read from the array, f 21;
 #X text 206 461 You can set values to an array index with "="* as in:
 ;
@@ -65,7 +65,7 @@ arrayname[index].;
 #X text 556 182 Basic examples:;
 #X text 748 322 Further details:;
 #N canvas 2 72 1362 694 Dealing_with_"\$0" 0;
-#X obj 623 138 xnor/expr $s2[$f1];
+#X obj 623 138 jit/expr $s2[$f1];
 #X obj 711 107 symbol \$0-x;
 #X floatatom 623 112 5 0 99 0 - - -, f 5;
 #X floatatom 623 166 5 0 0 0 - - -, f 5;
@@ -90,12 +90,12 @@ arrayname[index].;
 #X restore 224 216 graph;
 #X text 22 139 Also \, the '-' character is used as the subtraction
 operator \, so '\$0-x' is interpreted as "Id number" minus 'x'.;
-#X obj 82 406 xnor/expr \$0-x[$f1];
+#X obj 82 406 jit/expr \$0-x[$f1];
 #X floatatom 82 372 5 0 99 0 - - -, f 5;
 #X floatatom 82 442 5 0 0 0 - - -, f 5;
 #X obj 767 406 value x\$0;
 #X obj 809 374 value y_\$0;
-#X obj 590 354 xnor/expr x\$0 \; y_\$0;
+#X obj 590 354 jit/expr x\$0 \; y_\$0;
 #X msg 767 376 1.3;
 #X msg 809 344 4.7;
 #X obj 767 304 loadbang;
@@ -131,19 +131,19 @@ see Pd window for error., f 40;
 #X connect 15 0 14 0;
 #X connect 16 0 12 0;
 #X restore 803 406 pd Dealing_with_"\$0";
-#X text 21 197 - [xnor/fexpr~]: used for evaluation of signal expressions
+#X text 21 197 - [jit/fexpr~]: used for evaluation of signal expressions
 on sample level data (i.e. \, filter design) - very cpu intensive!
 , f 62;
-#X text 21 244 Input variables types for [xnor/expr] \, [xnor/expr~]
-and [xnor/fexpr~] are: integers \, floats and symbols \, specified
-as follows where the '#' stands for the inlet number:, f 62;
-#X text 21 362 The [xnor/expr~] object has an exclusive input variable
+#X text 21 244 Input variables types for [jit/expr] \, [jit/expr~]
+and [jit/fexpr~] are: integers \, floats and symbols \, specified as
+follows where the '#' stands for the inlet number:, f 62;
+#X text 21 362 The [jit/expr~] object has an exclusive input variable
 type for signal vectors \, defined as:, f 62;
-#X text 21 428 The [xnor/fexpr~] object has exclusive variable types
+#X text 21 428 The [jit/fexpr~] object has exclusive variable types
 \, defined as:, f 62;
-#X text 21 140 - [xnor/expr~]: used for evaluation of audio signal
-expression - on a vector by vector basis (vector/block size is defined
-by the [block~] or [switch~] objects)., f 62;
+#X text 21 140 - [jit/expr~]: used for evaluation of audio signal expression
+- on a vector by vector basis (vector/block size is defined by the
+[block~] or [switch~] objects)., f 62;
 #X text 514 14 These objects have several built in operators and functions.
 The syntax is quite similar to how expressions are written in C. A
 semicolon can be used to define and separate different expressions.
@@ -154,18 +154,18 @@ from right to left (or bottom to up) order:;
 #X obj 641 510 value;
 #N canvas 2 72 1362 694 All_functions 0;
 #N canvas 497 97 374 326 Arithmetic-operators 0;
-#X obj 57 90 xnor/expr $f1 + 4;
+#X obj 57 90 jit/expr $f1 + 4;
 #X floatatom 57 63 5 0 0 0 - - -, f 5;
 #X floatatom 57 118 5 0 0 0 - - -, f 5;
 #X floatatom 208 63 5 0 0 0 - - -, f 5;
 #X floatatom 208 118 5 0 0 0 - - -, f 5;
-#X obj 208 90 xnor/expr $f1 * 4;
+#X obj 208 90 jit/expr $f1 * 4;
 #X floatatom 57 197 5 0 0 0 - - -, f 5;
 #X floatatom 57 252 5 0 0 0 - - -, f 5;
 #X floatatom 208 197 5 0 0 0 - - -, f 5;
 #X floatatom 208 252 5 0 0 0 - - -, f 5;
-#X obj 57 224 xnor/expr $f1 - 1;
-#X obj 208 224 xnor/expr $f1 / 10;
+#X obj 57 224 jit/expr $f1 - 1;
+#X obj 208 224 jit/expr $f1 / 10;
 #X text 57 34 Add;
 #X text 206 34 Multiply;
 #X text 206 174 Divide;
@@ -181,27 +181,27 @@ from right to left (or bottom to up) order:;
 #X restore 147 131 pd Arithmetic-operators;
 #N canvas 513 126 621 391 Bitwise-operators 0;
 #X floatatom 47 218 5 0 0 0 - - -, f 5;
-#X obj 47 188 xnor/expr ~ $f1;
+#X obj 47 188 jit/expr ~ $f1;
 #X floatatom 44 103 5 0 0 0 - - -, f 5;
-#X obj 44 73 xnor/expr $f1 & 3;
+#X obj 44 73 jit/expr $f1 & 3;
 #X floatatom 44 43 5 0 0 0 - - -, f 5;
 #X text 104 41 Bitwise And;
 #X floatatom 347 98 5 0 0 0 - - -, f 5;
 #X floatatom 347 38 5 0 0 0 - - -, f 5;
-#X obj 347 68 xnor/expr $f1 << 1;
+#X obj 347 68 jit/expr $f1 << 1;
 #X floatatom 349 207 5 0 0 0 - - -, f 5;
 #X floatatom 349 147 5 0 0 0 - - -, f 5;
 #X text 404 147 Bitshift Right;
 #X text 413 36 Bitshift Left;
-#X obj 349 177 xnor/expr $f1 >> 2;
+#X obj 349 177 jit/expr $f1 >> 2;
 #X floatatom 353 320 5 0 0 0 - - -, f 5;
 #X floatatom 353 260 5 0 0 0 - - -, f 5;
-#X obj 353 290 xnor/expr $f1 ^ 1;
+#X obj 353 290 jit/expr $f1 ^ 1;
 #X text 409 260 Bitwise Exclusive Or;
 #X floatatom 52 324 5 0 0 0 - - -, f 5;
 #X floatatom 52 264 5 0 0 0 - - -, f 5;
 #X text 114 256 Bitwise Or;
-#X obj 52 294 xnor/expr $f1 | 3;
+#X obj 52 294 jit/expr $f1 | 3;
 #X floatatom 47 158 5 0 0 0 - - -, f 5;
 #X text 97 155 Bitwise Not;
 #X text 141 187 (one's complement);
@@ -227,9 +227,9 @@ from right to left (or bottom to up) order:;
 #X floatatom 55 249 5 0 0 0 - - -, f 5;
 #X floatatom 351 58 5 0 0 0 - - -, f 5;
 #X floatatom 351 113 5 0 0 0 - - -, f 5;
-#X obj 48 82 xnor/expr $f1 > 4;
-#X obj 199 81 xnor/expr $f1 < 4;
-#X obj 55 221 xnor/expr $f1 >= 1;
+#X obj 48 82 jit/expr $f1 > 4;
+#X obj 199 81 jit/expr $f1 < 4;
+#X obj 55 221 jit/expr $f1 >= 1;
 #X text 207 26 Less than;
 #X text 48 26 Greater than;
 #X text 50 148 Greater than;
@@ -238,21 +238,21 @@ from right to left (or bottom to up) order:;
 #X floatatom 203 250 5 0 0 0 - - -, f 5;
 #X text 206 167 or equal;
 #X text 202 149 Less than;
-#X obj 203 222 xnor/expr $f1 <= 10;
+#X obj 203 222 jit/expr $f1 <= 10;
 #X text 356 25 Equal;
-#X obj 351 85 xnor/expr $f1 == 2;
+#X obj 351 85 jit/expr $f1 == 2;
 #X floatatom 497 58 5 0 0 0 - - -, f 5;
 #X floatatom 497 113 5 0 0 0 - - -, f 5;
 #X text 502 25 Not Equal;
-#X obj 497 85 xnor/expr $f1 != 2;
+#X obj 497 85 jit/expr $f1 != 2;
 #X floatatom 360 191 5 0 0 0 - - -, f 5;
 #X floatatom 360 246 5 0 0 0 - - -, f 5;
 #X text 365 158 Logical And;
-#X obj 360 218 xnor/expr $f1 && 1;
+#X obj 360 218 jit/expr $f1 && 1;
 #X floatatom 498 191 5 0 0 0 - - -, f 5;
 #X floatatom 498 246 5 0 0 0 - - -, f 5;
 #X text 503 158 Logical Or;
-#X obj 498 218 xnor/expr $f1 || 0;
+#X obj 498 218 jit/expr $f1 || 0;
 #X connect 0 0 8 0;
 #X connect 2 0 9 0;
 #X connect 4 0 10 0;
@@ -276,13 +276,13 @@ from right to left (or bottom to up) order:;
 #X floatatom 87 218 5 0 0 0 - - -, f 5;
 #X floatatom 87 277 5 0 0 0 - - -, f 5;
 #X text 142 213 if(condition \, true \, false);
-#X obj 87 246 xnor/expr if($f1 > 0 \, $f1 * 10 \, $f1 - 1);
+#X obj 87 246 jit/expr if($f1 > 0 \, $f1 * 10 \, $f1 - 1);
 #X floatatom 59 346 5 0 0 0 - - -, f 5;
 #X floatatom 59 405 5 0 0 0 - - -, f 5;
-#X obj 59 374 xnor/expr if($f1 > 10 \, 10 \, if($f1 < -10 \, -10 \,
+#X obj 59 374 jit/expr if($f1 > 10 \, 10 \, if($f1 < -10 \, -10 \,
 $f1));
 #X text 118 404 <= clips at -10 and 10;
-#X obj 82 81 xnor/expr if($f1 >= 0 \, 1 \, -1);
+#X obj 82 81 jit/expr if($f1 >= 0 \, 1 \, -1);
 #X text 53 21 Syntax: if(condition \, true \, false);
 #X text 143 325 You can also nest an if function as a true/false expression:
 , f 32;
@@ -296,14 +296,14 @@ $f1));
 #X restore 147 226 pd If-function;
 #N canvas 444 91 491 376 Random-function 0;
 #X floatatom 107 206 5 0 0 0 - - -, f 5;
-#X obj 107 175 xnor/expr random(10 \, 20);
+#X obj 107 175 jit/expr random(10 \, 20);
 #X obj 107 147 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
 -1 -1;
 #X text 133 142 random values from 10 to 19;
 #X floatatom 108 306 5 0 0 0 - - -, f 5;
 #X obj 108 247 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
 -1 -1;
-#X obj 108 275 xnor/expr random(-100 \, 101);
+#X obj 108 275 jit/expr random(-100 \, 101);
 #X text 134 242 random values from -100 to 100;
 #X text 36 32 The random function generates random numbers within a
 given range \, specified by the two arguments. The range is from the
@@ -342,8 +342,8 @@ first argument to the second argument minus one., f 51;
 #X restore 344 94 graph;
 #X text 96 276 Note that the syntax requires that the table name is
 inside quotes., f 51;
-#X obj 295 347 xnor/expr size("$s1") \;;
-#X obj 63 102 xnor/expr Sum("table" \, 3 \, 9) \; sum("table") \; size("table")
+#X obj 295 347 jit/expr size("$s1") \;;
+#X obj 63 102 jit/expr Sum("table" \, 3 \, 9) \; sum("table") \; size("table")
 ;
 #X msg 295 317 symbol table;
 #X floatatom 295 380 5 0 0 0 - - -, f 5;
@@ -372,14 +372,14 @@ sum and size., f 45;
 #X floatatom 340 414 5 0 0 0 - - -, f 5;
 #X floatatom 340 484 0 0 0 0 - - -;
 #X floatatom 74 513 5 0 0 0 - - -, f 5;
-#X obj 74 88 xnor/expr pow($f1 \, 2);
+#X obj 74 88 jit/expr pow($f1 \, 2);
 #X text 42 88 pow;
 #X text 33 178 sqrt;
 #X text 41 364 exp;
 #X floatatom 338 276 5 0 0 0 - - -, f 5;
 #X floatatom 338 224 5 0 0 0 - - -, f 5;
-#X obj 338 56 xnor/expr ln($f1) \; log($f1);
-#X obj 74 484 xnor/expr fact($f1);
+#X obj 338 56 jit/expr ln($f1) \; log($f1);
+#X obj 74 484 jit/expr fact($f1);
 #X msg 74 451 3;
 #X floatatom 435 482 0 0 0 0 - - -;
 #X text 304 442 erf;
@@ -387,28 +387,28 @@ sum and size., f 45;
 #X floatatom 166 408 0 0 0 0 - - -;
 #X floatatom 339 187 5 0 0 0 - - -, f 5;
 #X floatatom 339 135 5 0 0 0 - - -, f 5;
-#X obj 339 160 xnor/expr log1p($f1);
-#X obj 338 249 xnor/expr log10($f1);
+#X obj 339 160 jit/expr log1p($f1);
+#X obj 338 249 jit/expr log10($f1);
 #X floatatom 341 375 5 0 0 0 - - -, f 5;
 #X floatatom 341 323 5 0 0 0 - - -, f 5;
-#X obj 341 348 xnor/expr ldexp($f1 \, 3);
+#X obj 341 348 jit/expr ldexp($f1 \, 3);
 #X text 310 57 ln;
 #X text 302 70 log;
 #X text 284 250 log10;
 #X text 287 159 log1p;
 #X text 290 348 ldexp;
 #X text 36 482 fact;
-#X obj 71 365 xnor/expr exp($f1) \; expm1($f1);
+#X obj 71 365 jit/expr exp($f1) \; expm1($f1);
 #X text 24 382 expm1;
 #X floatatom 73 239 5 0 0 0 - - -, f 5;
 #X floatatom 73 296 5 0 0 0 - - -, f 5;
 #X text 33 268 cbrt;
-#X obj 74 179 xnor/expr sqrt($f1);
-#X obj 73 267 xnor/expr cbrt($f1);
+#X obj 74 179 jit/expr sqrt($f1);
+#X obj 73 267 jit/expr cbrt($f1);
 #X text 183 382 exp - 1;
 #X text 267 507 error function;
 #X text 434 505 complementary error function, f 14;
-#X obj 340 442 xnor/expr erf($f1) \; erfc($f1);
+#X obj 340 442 jit/expr erf($f1) \; erfc($f1);
 #X text 76 33 Raise to the power of;
 #X text 141 148 Square root;
 #X text 150 239 Cube root;
@@ -451,26 +451,26 @@ sum and size., f 45;
 #X floatatom 73 182 5 0 0 0 - - -, f 5;
 #X floatatom 72 213 5 0 0 0 - - -, f 5;
 #X floatatom 72 270 5 0 0 0 - - -, f 5;
-#X obj 73 62 xnor/expr sin($f1);
+#X obj 73 62 jit/expr sin($f1);
 #X text 38 62 sin;
 #X text 35 152 cos;
-#X obj 73 153 xnor/expr cos($f1);
+#X obj 73 153 jit/expr cos($f1);
 #X text 35 242 tan;
-#X obj 72 241 xnor/expr tan($f1);
+#X obj 72 241 jit/expr tan($f1);
 #X floatatom 273 34 5 0 0 0 - - -, f 5;
 #X floatatom 273 93 5 0 0 0 - - -, f 5;
 #X floatatom 273 125 5 0 0 0 - - -, f 5;
 #X floatatom 273 182 5 0 0 0 - - -, f 5;
 #X text 231 62 asin;
 #X text 228 152 acos;
-#X obj 273 62 xnor/expr asin($f1);
-#X obj 273 153 xnor/expr acos($f1);
+#X obj 273 62 jit/expr asin($f1);
+#X obj 273 153 jit/expr acos($f1);
 #X text 122 32 sine;
 #X text 124 125 cosine;
 #X text 123 213 tangent;
 #X floatatom 274 209 5 0 0 0 - - -, f 5;
 #X floatatom 274 266 5 0 0 0 - - -, f 5;
-#X obj 274 237 xnor/expr tan($f1);
+#X obj 274 237 jit/expr tan($f1);
 #X text 230 238 atan;
 #X text 340 32 arc sine;
 #X text 335 125 arc cosine;
@@ -485,15 +485,15 @@ sum and size., f 45;
 #X text 451 151 acosh;
 #X text 453 237 atanh;
 #X text 630 46 inverse hyperbolic sine, f 10;
-#X obj 506 61 xnor/expr asinh($f1);
-#X obj 506 152 xnor/expr acosh($f1);
-#X obj 507 236 xnor/expr atanh($f1);
+#X obj 506 61 jit/expr asinh($f1);
+#X obj 506 152 jit/expr acosh($f1);
+#X obj 507 236 jit/expr atanh($f1);
 #X text 631 137 inverse hyperbolic cosine, f 10;
 #X text 632 225 inverse hyperbolic tangent, f 10;
 #X floatatom 243 319 5 0 0 0 - - -, f 5;
 #X floatatom 243 376 5 0 0 0 - - -, f 5;
 #X text 192 348 atan2;
-#X obj 243 347 xnor/expr atan2($f1 \, $f2);
+#X obj 243 347 jit/expr atan2($f1 \, $f2);
 #X floatatom 380 319 5 0 0 0 - - -, f 5;
 #X text 405 347 arc tangent of 2 variables;
 #X connect 0 0 6 0;
@@ -538,18 +538,18 @@ sum and size., f 45;
 #X floatatom 537 103 5 0 0 0 - - -, f 5;
 #X text 386 75 min;
 #X text 386 58 max;
-#X obj 421 58 xnor/expr max($f1 \, 0) \; min($f1 \, 0);
+#X obj 421 58 jit/expr max($f1 \, 0) \; min($f1 \, 0);
 #X text 473 28 maximum / minimum;
-#X obj 420 173 xnor/expr copysign($f1 \, $f2);
+#X obj 420 173 jit/expr copysign($f1 \, $f2);
 #X floatatom 578 150 5 0 0 0 - - -, f 5;
 #X floatatom 420 148 5 0 0 0 - - -, f 5;
 #X text 353 174 copysign;
 #X floatatom 420 202 5 0 0 0 - - -, f 5;
 #X text 466 201 copy sign of a number;
-#X obj 89 318 xnor/expr float($i1) / 10 \; float(5) / 10 \;;
+#X obj 89 318 jit/expr float($i1) / 10 \; float(5) / 10 \;;
 #X floatatom 732 162 5 0 0 0 - - -, f 5;
 #X floatatom 841 161 5 0 0 0 - - -, f 5;
-#X obj 732 117 xnor/expr isinf($f1) \; finite($f1);
+#X obj 732 117 jit/expr isinf($f1) \; finite($f1);
 #X text 683 116 isinf;
 #X text 675 134 finite;
 #X text 860 115 "is infinite" and "is finite", f 15;
@@ -559,21 +559,21 @@ sum and size., f 45;
 #X msg 732 25 1;
 #X floatatom 740 345 5 0 0 0 - - -, f 5;
 #X floatatom 740 283 5 0 0 0 - - -, f 5;
-#X obj 740 313 xnor/expr isnan($f1);
+#X obj 740 313 jit/expr isnan($f1);
 #X text 688 314 isnan;
 #X text 924 288 "is Nan" (not a number), f 8;
 #X text 372 296 modf;
 #X floatatom 413 253 5 0 0 0 - - -, f 5;
 #X floatatom 413 322 5 0 0 0 - - -, f 5;
 #X text 365 280 imodf;
-#X obj 93 52 xnor/expr int($f1) \; trunc($f1);
+#X obj 93 52 jit/expr int($f1) \; trunc($f1);
 #X floatatom 188 97 5 0 0 0 - - -, f 5;
 #X text 48 64 trunc;
 #X text 202 67 truncate a float;
 #X floatatom 139 235 5 0 0 0 - - -, f 5;
 #X text 38 193 round;
 #X floatatom 190 235 5 0 0 0 - - -, f 5;
-#X obj 88 176 xnor/expr rint($f1) \; round($f1) \; nearbyint($f1);
+#X obj 88 176 jit/expr rint($f1) \; round($f1) \; nearbyint($f1);
 #X text 471 400 float remainder functions, f 15;
 #X floatatom 410 424 5 0 0 0 - - -, f 5;
 #X floatatom 410 495 5 0 0 0 - - -, f 5;
@@ -584,13 +584,13 @@ sum and size., f 45;
 #X text 143 417 ceil / floor;
 #X text 47 447 ceil;
 #X text 39 465 floor;
-#X obj 91 447 xnor/expr ceil($f1) \; floor($f1);
-#X obj 413 279 xnor/expr imodf($f1) \; modf($f1);
+#X obj 91 447 jit/expr ceil($f1) \; floor($f1);
+#X obj 413 279 jit/expr imodf($f1) \; modf($f1);
 #X text 397 343 get signed integer, f 10;
 #X text 507 345 get signed fractional, f 11;
 #X floatatom 522 322 5 0 0 0 - - -, f 5;
 #X floatatom 771 398 5 0 0 0 - - -, f 5;
-#X obj 771 435 xnor/expr abs($f1);
+#X obj 771 435 jit/expr abs($f1);
 #X text 739 435 abs;
 #X floatatom 771 472 5 0 0 0 - - -, f 5;
 #X text 819 397 absolute value;
@@ -598,10 +598,9 @@ sum and size., f 45;
 #X text 329 466 remainder;
 #X obj 740 223 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
 -1 -1;
-#X obj 410 449 xnor/expr fmod($f1 \, 4.1) \; remainder($f1 \, 4.1)
-;
+#X obj 410 449 jit/expr fmod($f1 \, 4.1) \; remainder($f1 \, 4.1);
 #X msg 410 400 7;
-#X obj 740 249 xnor/expr log(-1.);
+#X obj 740 249 jit/expr log(-1.);
 #X connect 0 0 47 0;
 #X connect 3 0 54 0;
 #X connect 12 0 27 0;
@@ -648,8 +647,7 @@ store the result of any operation into a variable or table index.;
 -1;
 #X floatatom 62 211 5 0 0 0 - - -, f 5;
 #X floatatom 276 204 5 0 0 0 - - -, f 5;
-#X obj 62 158 xnor/expr array2[inc - 1] = 1 / inc \; inc = inc + 1
-;
+#X obj 62 158 jit/expr array2[inc - 1] = 1 / inc \; inc = inc + 1;
 #N canvas 0 22 450 278 (subpatch) 0;
 #X array array2 16 float 2;
 #X coords 0 1.1 16 -0.1 200 140 1 0 0;
@@ -662,47 +660,47 @@ store the result of any operation into a variable or table index.;
 #X connect 7 0 6 0;
 #X restore 147 291 pd Store-function;
 #X text 28 14 Here are all the operators and functions available for
-[xnor/expr] \, [xnor/expr~] and [xnor/fexpr~] \, even though the given
-examples are only presented with [xnor/expr]., f 52;
+[jit/expr] \, [jit/expr~] and [jit/fexpr~] \, even though the given
+examples are only presented with [jit/expr]., f 52;
 #X text 28 71 These are organized in different groups. Click on the
 subpatches below to check each group:, f 52;
 #X restore 803 432 pd All_functions \; and operators;
-#N canvas 2 72 1362 694 [xnor/expr] 0;
-#X obj 49 115 xnor/expr 1;
+#N canvas 2 52 1362 714 [jit/expr] 0;
+#X obj 49 115 jit/expr 1;
 #X floatatom 47 248 0 0 0 0 - - -;
 #X floatatom 49 145 0 0 0 0 - - -;
 #X msg 49 87 bang;
-#X obj 150 115 xnor/expr 2 + 3;
+#X obj 150 115 jit/expr 2 + 3;
 #X msg 150 88 bang;
 #X floatatom 150 143 0 0 0 0 - - -;
 #X floatatom 47 309 0 0 0 0 - - -;
 #X floatatom 69 402 0 0 0 0 - - -;
 #X floatatom 69 478 0 0 0 0 - - -;
 #X floatatom 700 156 0 0 0 0 - - -;
-#X obj 700 128 xnor/expr 8 / 3;
+#X obj 700 128 jit/expr 8 / 3;
 #X floatatom 625 324 0 0 0 0 - - -;
 #X obj 700 102 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
 -1 -1;
 #X obj 625 256 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
 -1 -1;
 #X floatatom 566 505 0 0 0 0 - - -;
-#X obj 566 477 xnor/expr $f1 / 3;
+#X obj 566 477 jit/expr $f1 / 3;
 #X floatatom 693 503 0 0 0 0 - - -;
-#X obj 693 475 xnor/expr $i1 / 3;
+#X obj 693 475 jit/expr $i1 / 3;
 #X msg 693 434 8;
 #X obj 693 404 loadbang;
-#X text 17 27 Examples of [xnor/expr] object:;
+#X text 17 27 Examples of [jit/expr] object:;
 #X text 277 111 bang evaluates the expression, f 17;
-#X obj 47 278 xnor/expr ($f1 + 2) + $i2;
+#X obj 47 278 jit/expr ($f1 + 2) + $i2;
 #X floatatom 184 249 0 0 0 0 - - -;
 #X text 437 23 NOTE About integers:;
 #X floatatom 748 324 0 0 0 0 - - -;
-#X obj 625 280 xnor/expr float(8) / 3 \; 8./3;
+#X obj 625 280 jit/expr float(8) / 3 \; 8./3;
 #X text 121 400 use of trigonometric functions;
-#X obj 69 430 xnor/expr cos(2 * 3.14159 * $f1 / 360) \; sin(2 * 3.14159
+#X obj 69 430 jit/expr cos(2 * 3.14159 * $f1 / 360) \; sin(2 * 3.14159
 * $f1 / 360);
 #X floatatom 304 478 0 0 0 0 - - -;
-#X text 465 53 Integer numbers in the [xnor/expr] object are interpreted
+#X text 465 53 Integer numbers in the [jit/expr] object are interpreted
 as integers \, not floats. Hence \, the result of the division below
 is also an integer.;
 #X text 466 193 You can use the "float" function to convert an integer
@@ -739,8 +737,8 @@ an inlet defined as a float.;
 #X connect 29 1 30 0;
 #X connect 35 0 29 0;
 #X connect 36 0 4 0;
-#X restore 557 268 pd [xnor/expr] Examples;
-#N canvas 2 72 1362 694 [xnor/expr~] 0;
+#X restore 557 268 pd [jit/expr] Examples;
+#N canvas 2 72 1362 694 [jit/expr~] 0;
 #X floatatom 80 361 0 0 0 0 - - -;
 #X obj 80 468 dac~;
 #X text 125 361 frequency;
@@ -775,27 +773,26 @@ an inlet defined as a float.;
 #X floatatom 280 352 5 0 0 0 - - -, f 5;
 #X text 331 352 amplitude;
 #X obj 280 399 line~;
-#X obj 80 429 xnor/expr~ $v1 * pow($v2 / 127 \, 4);
-#X obj 88 581 xnor/expr~ $v1 * $v2 \; if ($v2 > 0 \, 0 \, $v1*$v2)
-;
+#X obj 80 429 jit/expr~ $v1 * pow($v2 / 127 \, 4);
+#X obj 88 581 jit/expr~ $v1 * $v2 \; if ($v2 > 0 \, 0 \, $v1*$v2);
 #X obj 88 548 osc~ 440;
 #X obj 478 252 osc~ 440;
 #X msg 322 52 \; pd dsp 0;
 #X msg 229 52 \; pd dsp 1;
 #X text 227 30 audio on;
 #X text 320 29 audio off;
-#X obj 478 290 xnor/expr~ max(min($v1 \, $f2) \, -$f2);
+#X obj 478 290 jit/expr~ max(min($v1 \, $f2) \, -$f2);
 #X obj 685 145 vsl 20 100 0 1 0 0 empty empty empty 0 -9 0 10 -262144
 -1 -1 0 1;
 #X text 460 187 Move the slider to change the limiter threshold (from
 0-1)., f 29;
-#X text 64 29 make sure to turn on the audio for the [xnor/expr~] examples
+#X text 64 29 make sure to turn on the audio for the [jit/expr~] examples
 ====>, f 23;
 #X obj 130 297 print~;
 #X msg 148 268 bang;
 #X floatatom 232 207 0 0 0 0 - - -;
 #X floatatom 130 182 0 0 0 0 - - -;
-#X obj 130 237 xnor/expr~ $v1 + $f2;
+#X obj 130 237 jit/expr~ $v1 + $f2;
 #X obj 130 209 sig~ 1;
 #X obj 253 548 osc~ 550;
 #X text 458 163 A simple limiter/clip example:;
@@ -803,7 +800,7 @@ an inlet defined as a float.;
 #X text 468 37 NOTE: The vector/block size can be set with the [block~]
 or [switch~] objects \, and is 64 samples by default., f 43;
 #X msg 280 375 \$1 20;
-#X text 22 111 NOTE: The first inlet of [xnor/expr~] needs to be of
+#X text 22 111 NOTE: The first inlet of [jit/expr~] needs to be of
 type '$v1' (cannot be '$f1' \, '$i1' or '$s1'). A float sent to a '$v#'
 inlet is promoted to a signal., f 54;
 #X connect 0 0 10 0;
@@ -827,8 +824,8 @@ inlet is promoted to a signal., f 54;
 #X connect 32 0 31 0;
 #X connect 33 0 16 1;
 #X connect 37 0 14 0;
-#X restore 549 296 pd [xnor/expr~] Examples;
-#N canvas 2 72 1362 694 [xnor/fexpr~] 0;
+#X restore 549 296 pd [jit/expr~] Examples;
+#N canvas 2 72 1362 694 [jit/fexpr~] 0;
 #X msg 339 45 \; pd dsp 0;
 #X msg 246 45 \; pd dsp 1;
 #X text 244 23 audio on;
@@ -844,7 +841,7 @@ so on)., f 60;
 #X obj 60 508 loadbang;
 #X msg 181 535 set 4000;
 #X obj 168 501 sig~ 0.001;
-#X obj 168 615 xnor/fexpr~ $x1[0] + $y1[-1];
+#X obj 168 615 jit/fexpr~ $x1[0] + $y1[-1];
 #X text 290 560 clears output buffer;
 #X obj 168 641 snapshot~;
 #X obj 32 593 metro 100;
@@ -869,7 +866,7 @@ the #th output (e.g. "set y3 1 2" sets $y3[-1] = 1 and $y3[-2] = 2).
 #X msg 728 511 0;
 #X obj 598 670 dac~;
 #X obj 623 624 *~ 0.1;
-#X obj 623 585 xnor/fexpr~ $x1 + $x1[$f2];
+#X obj 623 585 jit/fexpr~ $x1 + $x1[$f2];
 #X msg 623 457 1102.5;
 #X floatatom 623 515 0 0 0 0 - - -;
 #X text 502 382 Simple FIR filter:, f 61;
@@ -884,16 +881,16 @@ the #th output (e.g. "set y3 1 2" sets $y3[-1] = 1 and $y3[-2] = 2).
 60;
 #X text 14 93 NOTES:;
 #X text 14 460 Simple accumulator example:;
-#X text 482 13 [xnor/fexpr~] responds to the following methods:, f
+#X text 482 13 [jit/fexpr~] responds to the following methods:, f
 63;
 #X text 62 234 - $y#[n]: output sample of outlet # indexed by 'n';
 #X text 62 215 - $x#[n]: input sample of inlet # indexed by 'n', f
 50;
 #X text 24 346 - There are shorthands as follows:;
-#X text 506 252 - stop: stops the computation of [xnor/fexpr~] *,
+#X text 506 252 - stop: stops the computation of [jit/fexpr~] *, f
+60;
+#X text 506 272 - start: starts the computation of [jit/fexpr~] *,
 f 60;
-#X text 506 272 - start: starts the computation of [xnor/fexpr~] *
-, f 60;
 #X text 835 615 more examples:;
 #N canvas 2 72 1362 694 Difference 0;
 #X obj 194 193 v pr;
@@ -925,7 +922,7 @@ f 60;
 #X array Z 64 float 0;
 #X coords 0 40 63 0 200 140 2 0 0;
 #X restore 655 420 graph;
-#X obj 249 136 xnor/expr 8./3;
+#X obj 249 136 jit/expr 8./3;
 #X text 577 289 $y1 -> $y1[-1] $y2 -> $y2[-1] $y3 -> $y3[-1], f 15
 ;
 #X obj 94 359 *~ 0.01;
@@ -941,7 +938,7 @@ Y \, and Z:, f 30;
 #X text 670 67 dX/dt = pr * (Y - X);
 #X text 670 87 dY/dt = X(r - Z) - Y;
 #X text 670 107 dZ/dt = X*Y - bZ, f 20;
-#X obj 172 285 xnor/fexpr~ $y1 + pr*($y2 - $y1) * dt \; $y2 + ($y1*(r
+#X obj 172 285 jit/fexpr~ $y1 + pr*($y2 - $y1) * dt \; $y2 + ($y1*(r
 - $y3) - $y2) * dt \; $y3 + ($y1*$y2 - b*$y3) * dt;
 #X obj 172 359 tabsend~ X;
 #X obj 286 359 tabsend~ Y;
@@ -950,9 +947,8 @@ Y \, and Z:, f 30;
 $y3[-1];
 #X msg 23 220 start \; pd dsp 1;
 #X text 108 51 bang to start =>, f 8;
-#X text 228 24 This is an example of how [xnor/fexpr~] can be used
-to solve differential equations such as the lorenz equations., f 49
-;
+#X text 228 24 This is an example of how [jit/fexpr~] can be used to
+solve differential equations such as the lorenz equations., f 49;
 #X msg 101 218 stop;
 #X text 446 165 <= experiment with these parameter values. If you;
 #X text 470 183 hear a click and audio stops \, the system went unstable
@@ -990,10 +986,10 @@ and you need to bang on the top again to reload the default values.
 or [switch~] objects). As such \, $x#[0] specifies the current sample
 input \, and $y#[-1] the last sample output (which is the minimum 'n'
 value \, for $y#).;
-#X text 79 24 make sure to turn on the audio for the [xnor/fexpr~]
-examples ====>, f 23;
-#X text 540 311 * [xnor/fexpr~] can be CPU expensive! By default \,
-[xnor/fexpr~] is on when it is loaded \, but you can save CPU and control
+#X text 79 24 make sure to turn on the audio for the [jit/fexpr~] examples
+====>, f 23;
+#X text 540 311 * [jit/fexpr~] can be CPU expensive! By default \,
+[jit/fexpr~] is on when it is loaded \, but you can save CPU and control
 when it is on or off with the 'start' and 'stop' messages., f 54;
 #N canvas 695 185 491 366 Fractional 0;
 #X msg 120 179 start;
@@ -1006,11 +1002,11 @@ when it is on or off with the 'start' and 'stop' messages., f 54;
 #X floatatom 295 162 0 -10 0 0 - - -;
 #X obj 295 222 line~;
 #X msg 295 192 \$1 100;
-#X obj 151 253 xnor/fexpr~ $x1 + $x1[$X2];
+#X obj 151 253 jit/fexpr~ $x1 + $x1[$X2];
 #X obj 151 211 osc~ 2205;
 #X text 194 116 fractional sample index offset, f 17;
 #X text 25 16 When fractional index offset is used for either input
-or output samples \, [xnor/fexpr~] determines the value by linear interpolation.
+or output samples \, [jit/fexpr~] determines the value by linear interpolation.
 , f 63;
 #X text 25 57 In the following example \, you can continuously change
 the sample input index from 0 to -10 (which filters the frequency of
@@ -1031,12 +1027,12 @@ the sample input index from 0 to -10 (which filters the frequency of
 offset filters audio at frequency of 1102.5 Hz, f 50;
 #X msg 640 484 2205;
 #X obj 623 546 osc~ 2205;
-#X text 25 121 - The first inlet of [xnor/fexpr~] only accepts signals
+#X text 25 121 - The first inlet of [jit/fexpr~] only accepts signals
 and needs to be '$x1' (cannot be '$f1' \, '$i1' or '$s1'). Other than
 that \, a float sent to a '$v#' inlet is promoted to a signal.;
-#X text 25 174 - [xnor/fexpr~] does not understand '$v#' variables
-from [xnor/expr~] \, it has its special input and output variables
-defined as:;
+#X text 25 174 - [jit/fexpr~] does not understand '$v#' variables from
+[jit/expr~] \, it has its special input and output variables defined
+as:;
 #X msg 187 560 clear y1;
 #X msg 204 587 print;
 #X text 261 589 prints the generated llvm assembly;
@@ -1067,8 +1063,8 @@ defined as:;
 #X connect 57 0 32 0;
 #X connect 60 0 13 0;
 #X connect 61 0 13 0;
-#X restore 541 324 pd [xnor/fexpr~] Examples;
-#X obj 804 238 print xnor/expr;
+#X restore 541 324 pd [jit/fexpr~] Examples;
+#X obj 804 238 print jit/expr;
 #X obj 714 458 +;
 #X obj 714 483 +~;
 #X obj 714 433 >;
@@ -1082,28 +1078,28 @@ defined as:;
 #X obj 596 137 until;
 #X msg 719 138 0;
 #X obj 719 168 v i;
-#X obj 596 169 xnor/expr i = i + 1;
+#X obj 596 169 jit/expr i = i + 1;
 #X msg 596 72 10;
 #X obj 596 229 print;
 #X obj 261 63 loadbang;
 #X obj 221 176 value a;
 #X obj 261 149 value b;
 #X obj 304 123 value c;
-#X obj 91 337 xnor/expr (a + b) / c;
+#X obj 91 337 jit/expr (a + b) / c;
 #X obj 91 310 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
 -1;
 #X floatatom 91 371 0 0 0 0 - - -;
 #X obj 596 103 trigger float bang;
-#X text 22 15 The xnor/expr family of objects can access variables
-set into [value] objects.;
-#X obj 697 302 xnor/expr i * 2 \; i = i + 1;
+#X text 22 15 The jit/expr family of objects can access variables set
+into [value] objects.;
+#X obj 697 302 jit/expr i * 2 \; i = i + 1;
 #X floatatom 697 348 5 0 0 0 - - -, f 5;
 #X floatatom 771 349 5 0 0 0 - - -, f 5;
 #X obj 697 267 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
 -1 -1;
 #X text 33 233 All you have to do is just use the variable name into
 the expression:, f 27;
-#X obj 90 422 xnor/expr~ (a + b) / c;
+#X obj 90 422 jit/expr~ (a + b) / c;
 #X obj 90 453 print~;
 #X obj 62 421 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
 -1;
@@ -1113,13 +1109,13 @@ the expression:, f 27;
 #X obj 91 533 print~;
 #X obj 63 501 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
 -1;
-#X obj 91 502 xnor/fexpr~ (a + b) / c;
+#X obj 91 502 jit/fexpr~ (a + b) / c;
 #X text 325 305 Expressions are output from right to left order in
-[xnor/expr] \, since they're evaluated from bottom to top. This means
+[jit/expr] \, since they're evaluated from bottom to top. This means
 you need to update a variable and call it in the above expression \,
 check it =============>, f 51;
 #X obj 729 478 v last;
-#X obj 603 509 xnor/fexpr~ last = $x1[-1] \; $x1[0] - last;
+#X obj 603 509 jit/fexpr~ last = $x1[-1] \; $x1[0] - last;
 #X obj 754 564 print~;
 #X obj 788 529 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144
 -1 -1;
@@ -1127,14 +1123,13 @@ check it =============>, f 51;
 #X text 100 98 loading values into [value] objects =======>, f 16
 ;
 #X text 471 14 It is also possible to assign values to variables inside
-the xnor/expr family of objects with "=" ("store function")., f 54
+the jit/expr family of objects with "=" ("store function")., f 54
 ;
-#X text 325 401 You cannot assign variables values in [xnor/expr~]
-because it deals with signal vectors and not single values. On the
-other hand \, [xnor/fexpr~] can assign values to variables \, but they're
-evaluated in from top to bottom instead. This means you need to update
-a variable and call it in the below expression \, check it:, f 68
-;
+#X text 325 401 You cannot assign variables values in [jit/expr~] because
+it deals with signal vectors and not single values. On the other hand
+\, [jit/fexpr~] can assign values to variables \, but they're evaluated
+in from top to bottom instead. This means you need to update a variable
+and call it in the below expression \, check it:, f 68;
 #X connect 0 0 6 0;
 #X connect 1 0 4 0;
 #X connect 2 0 3 0;
@@ -1161,11 +1156,12 @@ a variable and call it in the below expression \, check it:, f 68
 #X connect 34 0 33 0;
 #X connect 35 0 32 0;
 #X restore 803 378 pd [value];
-#X text 20 16 Expression evaluation family of objects:, f 62;
 #X text 363 16 Version 0.1;
 #X text 21 48 Originally By Shahrokh Yadegari \, cloned by Alex Norman
 ;
 #X text 796 517 helpfile modified from original expr help;
+#X text 20 16 Expression evaluation family of objects:, f 62;
+#X text 18 33 Just in time [JIT] compiled;
 #X connect 3 0 16 0;
 #X connect 4 0 35 0;
 #X connect 5 0 35 0;

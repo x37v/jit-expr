@@ -7,7 +7,7 @@ CXX = clang++
 LLVM_COMPONENTS = support core irreader mcjit linker native
 
 # library name
-lib.name = xnor_expr
+lib.name = jit_expr
 common.sources = src/llvmcodegen/codegen.cc
 
 #convert -I to -isystem so we don't get so many warnings.
@@ -18,7 +18,7 @@ ldflags = `llvm-config-5.0 --ldflags` `llvm-config-5.0 --libs ${LLVM_COMPONENTS}
 ldlibs += build/src/parse/libparse.a
 
 # input source file (class name == source file basename)
-class.sources = src/xnor_expr.cpp
+class.sources = src/jit_expr.cpp
 
 # all extra files to be included in binary distribution of the library
 datafiles = README.md
