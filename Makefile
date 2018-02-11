@@ -50,6 +50,3 @@ pd:
 	@make -C build
 	@make -f Makefile.pd alldebug
 
-test_pd: pd
-	pd -path . -lib xnor_expr test.pd
-
