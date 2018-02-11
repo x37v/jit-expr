@@ -1,3 +1,5 @@
+//Copyright (c) 2017 Rémi Berson, modified for jit-expr 2018 by Alex Norman
+
 #ifndef DRIVER_HH_
 #define DRIVER_HH_
 

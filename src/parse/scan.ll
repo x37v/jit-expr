@@ -1,4 +1,5 @@
 %{                                                            /* -*- C++ -*- */
+/* Copyright (c) 2017 Rémi Berson, modified for jit-expr 2018 by Alex Norman */
 
 #include "parser.hh"
 #include "scanner.hh"

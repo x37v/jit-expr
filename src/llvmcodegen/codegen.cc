@@ -1,3 +1,6 @@
+//Copyright (c) Alex Norman, 2018, see LICENSE.xnor
+//based on the Kaleidoscope example from the llvm tutorial https://llvm.org/docs/tutorial/
+
 #include "codegen.h"
 
 #include <vector>

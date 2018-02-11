@@ -1,3 +1,5 @@
+//Copyright (c) Alex Norman, 2018, see LICENSE.xnor
+
 #pragma once
 
 #include "ast.h"

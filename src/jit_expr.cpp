@@ -1,3 +1,7 @@
+//Copyright (c) Alex Norman, 2018.
+//see LICENSE.xnor
+
+
 #include <m_pd.h>
 #include <string>
 #include <sstream>
@@ -309,10 +313,8 @@ static void jit_expr_list(t_jit_expr *x, t_symbol * /*s*/, int argc, const t_ato
 }
 
 void jit_expr_proxy_float(t_jit_expr_proxy *p, t_floatarg f) {
-  //post("%d got float %f", p->index, f);
   p->parent->cpp->infloats.at(p->index) = f;
 }
-
 
 static t_int *jit_expr_tilde_perform(t_int *w) {
   t_jit_expr *x = (t_jit_expr *)(w[1]);
@@ -376,8 +378,7 @@ static t_int *jit_expr_tilde_perform(t_int *w) {
   return w + vector_index;
 }
 
-static void jit_expr_tilde_dsp(t_jit_expr *x, t_signal **sp)
-{
+static void jit_expr_tilde_dsp(t_jit_expr *x, t_signal **sp) {
   if (x->cpp->func == nullptr)
     return;
 
@@ -400,181 +401,6 @@ static void jit_expr_tilde_dsp(t_jit_expr *x, t_signal **sp)
     vec[i + voffset] = (t_int*)sp[i + input_signals]->s_vec;
   dsp_addv(jit_expr_tilde_perform, vecsize, (t_int*)vec);
   freebytes(vec, sizeof(t_int) * vecsize);
-}
-
-void jit_fexpr_set_usage() {
-  post("jit/fexpr~: set val ...");
-  post("jit/fexpr~: set {xy}[#] val ...");
-}
-
-void jit_fexpr_clear_usage() {
-  post("jit/fexpr~ usage: 'clear' or 'clear {xy}[#]'");
-}
-
-// taken directly from x_vexpr_if.c and modified
-void jit_fexpr_tilde_set(t_jit_expr *x, t_symbol * /*s*/, int argc, t_atom *argv) {
-  t_symbol *sx;
-  int vecno, vsize, nargs;
-
-  if (!argc)
-    return;
-  sx = atom_getsymbolarg(0, argc, argv);
-  switch(sx->s_name[0]) {
-    case 'x': {
-        if (!sx->s_name[1])
-          vecno = 0;
-        else {
-          vecno = atoi(sx->s_name + 1);
-          if (vecno <= 0) {
-            post("jit/fexpr~ set: bad set x vector number");
-            jit_fexpr_set_usage();
-            return;
-          }
-          vecno--;
-        }
-        auto it = x->cpp->saved_inputs.find(vecno);
-        if (it == x->cpp->saved_inputs.end()) {
-          post("jit/fexpr~ set: no signal at inlet %d", vecno + 1);
-          return;
-        }
-        nargs = argc - 1;
-        if (nargs <= 0) {
-          post("jit/fexpr~ set: no argument to set");
-          return;
-        }
-        vsize = it->second.size();
-        if (nargs > vsize) {
-          post("jit/fexpr~ set: %d set values larger than vector size(%d)", nargs, vsize);
-          post("jit/fexpr~ set: only the first %d values will be set", vsize);
-          nargs = vsize;
-        }
-        for (int i = 0; i < nargs; i++) {
-          it->second.at(vsize - i - 1) = atom_getfloatarg(i + 1, argc, argv);
-        }
-      }
-      return;
-    case 'y': {
-        if (!sx->s_name[1])
-          vecno = 0;
-        else {
-          vecno = atoi(sx->s_name + 1);
-          if (vecno <= 0) {
-            post("jit/fexpr~ set: bad set y vector number");
-            jit_fexpr_set_usage();
-            return;
-          }
-          vecno--;
-        }
-        auto it = x->cpp->saved_outputs.find(vecno);
-        if (it == x->cpp->saved_outputs.end()) {
-          post("jit/fexpr~ set: outlet out of range");
-          return;
-        }
-        nargs = argc - 1;
-        if (nargs <= 0) {
-          post("jit/fexpr~ set: no argument to set");
-          return;
-        }
-        vsize = it->second.size();
-        if (nargs > vsize) {
-          post("jit/fexpr~ set: %d set values larger than vector size(%d)", nargs, vsize);
-          post("jit/fexpr~ set: only the first %d values will be set", vsize);
-          nargs = vsize;
-        }
-        for (int i = 0; i < nargs; i++) {
-          it->second.at(vsize - i - 1) = atom_getfloatarg(i + 1, argc, argv);
-        }
-      }
-      return;
-    case 0: {
-        int nouts = x->cpp->saved_outputs.size();
-        if (argc > nouts) {
-          post("jit/fexpr~ set: only %d outlets available", nouts);
-          post("jit/fexpr~ set: the extra set values are ignored");
-        }
-        for (int i = 0; i < nouts && i < argc; i++) {
-          auto it = x->cpp->saved_outputs.find(i);
-          if (it == x->cpp->saved_outputs.end())
-            continue;
-          it->second.at(it->second.size() - 1) = atom_getfloatarg(i, argc, argv);
-        }
-      }
-      return;
-    default:
-      jit_fexpr_set_usage();
-      return;
-  }
-  return;
-}
-
-// taken directly from x_vexpr_if.c and modified
-void jit_fexpr_tilde_clear(t_jit_expr *x, t_symbol * /*s */, int argc, t_atom *argv) {
-  t_symbol *sx;
-  int vecno;
-
-  /*
-   *  if no argument clear all input and output buffers
-   */
-  if (argc <= 0) {
-    for (auto& it: x->cpp->saved_inputs) {
-      memset(&it.second.front(), 0, it.second.size() * sizeof(t_sample));
-    }
-    for (auto& it: x->cpp->saved_outputs) {
-      memset(&it.second.front(), 0, it.second.size() * sizeof(t_sample));
-    }
-    return;
-  }
-  if (argc > 1) {
-    jit_fexpr_clear_usage();
-    return;
-  }
-
-  sx = atom_getsymbolarg(0, argc, argv);
-  switch(sx->s_name[0]) {
-    case 'x':
-      if (!sx->s_name[1])
-        vecno = 0;
-      else {
-        vecno = atoi(sx->s_name + 1);
-        if (vecno <= 0) {
-          post("jit/fexpr~ clear: bad clear x vector number");
-          return;
-        }
-        vecno--;
-      }
-      {
-        auto it = x->cpp->saved_inputs.find(vecno);
-        if (it == x->cpp->saved_inputs.end()) {
-          post("jit/fexpr~ clear: no signal at inlet %d", vecno + 1);
-          return;
-        }
-        memset(&it->second.front(), 0, it->second.size() * sizeof(t_sample));
-      }
-      return;
-    case 'y':
-      if (!sx->s_name[1])
-        vecno = 0;
-      else {
-        vecno = atoi(sx->s_name + 1);
-        if (vecno <= 0) {
-          post("jit/fexpr~ clear: bad clear y vector number");
-          return;
-        }
-        vecno--;
-      }
-      {
-        auto it = x->cpp->saved_outputs.find(vecno);
-        if (it == x->cpp->saved_outputs.end()) {
-          post("jit/fexpr~ clear: no signal at outlet %d", vecno + 1);
-          return;
-        }
-        memset(&it->second.front(), 0, it->second.size() * sizeof(t_sample));
-      }
-      return;
-    default:
-      jit_fexpr_clear_usage();
-      return;
-  }
 }
 
 void jit_expr_start(t_jit_expr *x) { x->cpp->compute = true; }
@@ -776,3 +602,188 @@ float jit_expr_array_read(float * array, float index, int array_length) {
   return v2 * off  + v1 * (1.0 - off);
 }
 
+
+/* 
+ * below based on :
+ * "expr" was written by Shahrokh Yadegari c. 1989.
+ * "expr~" and "fexpr~" conversion by Shahrokh Yadegari c. 1999,2000
+ *
+ * Copyright (c) IRCAM.
+ * For information on usage and redistribution, and for a DISCLAIMER OF ALL
+ * WARRANTIES, see the file, "LICENSE.pd," in this distribution.
+ */
+
+void jit_fexpr_set_usage() {
+  post("jit/fexpr~: set val ...");
+  post("jit/fexpr~: set {xy}[#] val ...");
+}
+
+void jit_fexpr_clear_usage() {
+  post("jit/fexpr~ usage: 'clear' or 'clear {xy}[#]'");
+}
+
+// taken directly from x_vexpr_if.c and modified
+void jit_fexpr_tilde_set(t_jit_expr *x, t_symbol * /*s*/, int argc, t_atom *argv) {
+  t_symbol *sx;
+  int vecno, vsize, nargs;
+
+  if (!argc)
+    return;
+  sx = atom_getsymbolarg(0, argc, argv);
+  switch(sx->s_name[0]) {
+    case 'x': {
+        if (!sx->s_name[1])
+          vecno = 0;
+        else {
+          vecno = atoi(sx->s_name + 1);
+          if (vecno <= 0) {
+            post("jit/fexpr~ set: bad set x vector number");
+            jit_fexpr_set_usage();
+            return;
+          }
+          vecno--;
+        }
+        auto it = x->cpp->saved_inputs.find(vecno);
+        if (it == x->cpp->saved_inputs.end()) {
+          post("jit/fexpr~ set: no signal at inlet %d", vecno + 1);
+          return;
+        }
+        nargs = argc - 1;
+        if (nargs <= 0) {
+          post("jit/fexpr~ set: no argument to set");
+          return;
+        }
+        vsize = it->second.size();
+        if (nargs > vsize) {
+          post("jit/fexpr~ set: %d set values larger than vector size(%d)", nargs, vsize);
+          post("jit/fexpr~ set: only the first %d values will be set", vsize);
+          nargs = vsize;
+        }
+        for (int i = 0; i < nargs; i++) {
+          it->second.at(vsize - i - 1) = atom_getfloatarg(i + 1, argc, argv);
+        }
+      }
+      return;
+    case 'y': {
+        if (!sx->s_name[1])
+          vecno = 0;
+        else {
+          vecno = atoi(sx->s_name + 1);
+          if (vecno <= 0) {
+            post("jit/fexpr~ set: bad set y vector number");
+            jit_fexpr_set_usage();
+            return;
+          }
+          vecno--;
+        }
+        auto it = x->cpp->saved_outputs.find(vecno);
+        if (it == x->cpp->saved_outputs.end()) {
+          post("jit/fexpr~ set: outlet out of range");
+          return;
+        }
+        nargs = argc - 1;
+        if (nargs <= 0) {
+          post("jit/fexpr~ set: no argument to set");
+          return;
+        }
+        vsize = it->second.size();
+        if (nargs > vsize) {
+          post("jit/fexpr~ set: %d set values larger than vector size(%d)", nargs, vsize);
+          post("jit/fexpr~ set: only the first %d values will be set", vsize);
+          nargs = vsize;
+        }
+        for (int i = 0; i < nargs; i++) {
+          it->second.at(vsize - i - 1) = atom_getfloatarg(i + 1, argc, argv);
+        }
+      }
+      return;
+    case 0: {
+        int nouts = x->cpp->saved_outputs.size();
+        if (argc > nouts) {
+          post("jit/fexpr~ set: only %d outlets available", nouts);
+          post("jit/fexpr~ set: the extra set values are ignored");
+        }
+        for (int i = 0; i < nouts && i < argc; i++) {
+          auto it = x->cpp->saved_outputs.find(i);
+          if (it == x->cpp->saved_outputs.end())
+            continue;
+          it->second.at(it->second.size() - 1) = atom_getfloatarg(i, argc, argv);
+        }
+      }
+      return;
+    default:
+      jit_fexpr_set_usage();
+      return;
+  }
+  return;
+}
+
+// taken directly from x_vexpr_if.c and modified
+void jit_fexpr_tilde_clear(t_jit_expr *x, t_symbol * /*s */, int argc, t_atom *argv) {
+  t_symbol *sx;
+  int vecno;
+
+  /*
+   *  if no argument clear all input and output buffers
+   */
+  if (argc <= 0) {
+    for (auto& it: x->cpp->saved_inputs) {
+      memset(&it.second.front(), 0, it.second.size() * sizeof(t_sample));
+    }
+    for (auto& it: x->cpp->saved_outputs) {
+      memset(&it.second.front(), 0, it.second.size() * sizeof(t_sample));
+    }
+    return;
+  }
+  if (argc > 1) {
+    jit_fexpr_clear_usage();
+    return;
+  }
+
+  sx = atom_getsymbolarg(0, argc, argv);
+  switch(sx->s_name[0]) {
+    case 'x':
+      if (!sx->s_name[1])
+        vecno = 0;
+      else {
+        vecno = atoi(sx->s_name + 1);
+        if (vecno <= 0) {
+          post("jit/fexpr~ clear: bad clear x vector number");
+          return;
+        }
+        vecno--;
+      }
+      {
+        auto it = x->cpp->saved_inputs.find(vecno);
+        if (it == x->cpp->saved_inputs.end()) {
+          post("jit/fexpr~ clear: no signal at inlet %d", vecno + 1);
+          return;
+        }
+        memset(&it->second.front(), 0, it->second.size() * sizeof(t_sample));
+      }
+      return;
+    case 'y':
+      if (!sx->s_name[1])
+        vecno = 0;
+      else {
+        vecno = atoi(sx->s_name + 1);
+        if (vecno <= 0) {
+          post("jit/fexpr~ clear: bad clear y vector number");
+          return;
+        }
+        vecno--;
+      }
+      {
+        auto it = x->cpp->saved_outputs.find(vecno);
+        if (it == x->cpp->saved_outputs.end()) {
+          post("jit/fexpr~ clear: no signal at outlet %d", vecno + 1);
+          return;
+        }
+        memset(&it->second.front(), 0, it->second.size() * sizeof(t_sample));
+      }
+      return;
+    default:
+      jit_fexpr_clear_usage();
+      return;
+  }
+}

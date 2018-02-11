@@ -1,3 +1,4 @@
+//Copyright (c) 2017 Rémi Berson, modified for jit-expr 2018 by Alex Norman
 
 #ifndef SCANPIT_HH_
 # define SCANPIT_HH_

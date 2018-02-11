@@ -1,3 +1,5 @@
+//Copyright (c) 2017 Rémi Berson, modified for jit-expr 2018 by Alex Norman
+
 #include "driver.hh"
 #include "parser.hh"
 #include "scanner.hh"
