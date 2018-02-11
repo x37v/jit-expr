@@ -1,8 +1,7 @@
 JIT expr/expr~/fexpr~
 ===
 
-The goal of this project is to provide a just-in-time (JIT) version of the
-[expr/expr~/fexpr~](http://yadegari.org/expr/expr.html) [pure data](http://puredata.info/) objects.
+Just-in-time (JIT) clones of the [expr/expr~/fexpr~](http://yadegari.org/expr/expr.html) [pure data](http://puredata.info/) objects.
 
 Requirements
 ---
