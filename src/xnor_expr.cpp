@@ -12,7 +12,6 @@ struct _xnor_expr_proxy;
 struct _xnor_expr;
 
 namespace {
-  const bool print_code = true; //XXX for debugging
   const int buffer_size = 64;
 
   enum class XnorExpr {
@@ -44,6 +43,7 @@ namespace {
     int signal_inputs = 0; //could just calc from input_types
 
     bool compute = true;
+    std::string code_printout;
 
     //constructor
     cpp_expr(XnorExpr t) : expr_type(t) { };
@@ -63,6 +63,7 @@ extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
 extern "C" void xnor_expr_free(struct _xnor_expr * x);
 extern "C" void xnor_expr_start(struct _xnor_expr * x);
 extern "C" void xnor_expr_stop(struct _xnor_expr * x);
+extern "C" void xnor_expr_print(struct _xnor_expr * x);
 extern "C" void xnor_expr_setup(void);
 extern "C" void xnor_fexpr_tilde_set(struct _xnor_expr *x, t_symbol *s, int argc, t_atom *argv);
 extern "C" void xnor_fexpr_tilde_clear(struct _xnor_expr *x, t_symbol *s, int argc, t_atom *argv);
@@ -140,7 +141,7 @@ void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv)
       x->cpp->func = nullptr;
     } else {
       auto statements = x->cpp->driver.parse_string(line);
-      x->cpp->func = x->cpp->cv.function(statements, print_code);
+      x->cpp->func = x->cpp->cv.function(statements, x->cpp->code_printout);
 
       auto inputs = x->cpp->driver.inputs();
 
@@ -578,6 +579,20 @@ void xnor_fexpr_tilde_clear(t_xnor_expr *x, t_symbol *s, int argc, t_atom *argv)
 
 void xnor_expr_start(t_xnor_expr *x) { x->cpp->compute = true; }
 void xnor_expr_stop(t_xnor_expr *x) { x->cpp->compute = false; }
+void xnor_expr_print(t_xnor_expr *x) {
+  switch (x->cpp->expr_type) {
+    case XnorExpr::CONTROL: 
+      post("xnor/expr: ");
+      break;
+    case XnorExpr::VECTOR: 
+      post("xnor/expr~: ");
+      break;
+    case XnorExpr::SAMPLE: 
+      post("xnor/fexpr~: ");
+      break;
+  }
+  poststring(x->cpp->code_printout.c_str());
+}
 
 void xnor_expr_setup(void) {
   xnor::LLVMCodeGenVisitor::init();
@@ -591,6 +606,7 @@ void xnor_expr_setup(void) {
 
   class_addlist(xnor_expr_class, xnor_expr_list);
   class_addbang(xnor_expr_class, xnor_expr_bang);
+  class_addmethod(xnor_expr_class, (t_method)xnor_expr_print, gensym("print"), A_NULL);
   class_sethelpsymbol(xnor_expr_class, gensym("xnor-expr"));
 
 	xnor_expr_proxy_class = class_new(gensym("xnor_expr_proxy"),
@@ -609,6 +625,7 @@ void xnor_expr_setup(void) {
 	class_addmethod(xnor_expr_tilde_class, nullfn, gensym("signal"), A_NULL);
 	CLASS_MAINSIGNALIN(xnor_expr_tilde_class, t_xnor_expr, exp_f);
 	class_addmethod(xnor_expr_tilde_class, (t_method)xnor_expr_tilde_dsp, gensym("dsp"), A_NULL);
+  class_addmethod(xnor_expr_tilde_class, (t_method)xnor_expr_print, gensym("print"), A_NULL);
   class_sethelpsymbol(xnor_expr_tilde_class, gensym("xnor-expr"));
 
   xnor_fexpr_tilde_class = class_new(gensym("xnor/fexpr~"),
@@ -624,6 +641,7 @@ void xnor_expr_setup(void) {
   class_addmethod(xnor_fexpr_tilde_class, (t_method)xnor_fexpr_tilde_clear, gensym("clear"), A_GIMME, 0);
   class_addmethod(xnor_fexpr_tilde_class, (t_method)xnor_expr_start, gensym("start"), A_NULL);
   class_addmethod(xnor_fexpr_tilde_class, (t_method)xnor_expr_stop, gensym("stop"), A_NULL);
+  class_addmethod(xnor_fexpr_tilde_class, (t_method)xnor_expr_print, gensym("print"), A_NULL);
   class_sethelpsymbol(xnor_fexpr_tilde_class, gensym("xnor-expr"));
 }
 

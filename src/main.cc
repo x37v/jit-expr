@@ -44,7 +44,8 @@ int main(int argc, char * argv[]) {
       in[0].flt = 53.2;
 
       xnor::LLVMCodeGenVisitor cv;
-      auto f = cv.function(t, true);
+      std::string s;
+      auto f = cv.function(t, s);
       f(&out.front(), in, 2);
       cout << "output " << value[0] << endl;
       cout << endl;

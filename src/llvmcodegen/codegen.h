@@ -65,7 +65,7 @@ namespace xnor {
       virtual void visit(xnor::ast::ArrayAssignment* v);
       virtual void visit(xnor::ast::Deref* v);
 
-      function_t function(std::vector<xnor::ast::NodePtr> statements, bool print = false);
+      function_t function(std::vector<xnor::ast::NodePtr> statements, std::string& print_out);
     private:
       llvm::LLVMContext mContext;
       llvm::IRBuilder<> mBuilder;

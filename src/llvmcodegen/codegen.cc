@@ -497,7 +497,7 @@ namespace xnor {
     wrapIntIfNeeded(v);
   }
 
-  LLVMCodeGenVisitor::function_t LLVMCodeGenVisitor::function(std::vector<ast::NodePtr> statements, bool print) {
+  LLVMCodeGenVisitor::function_t LLVMCodeGenVisitor::function(std::vector<ast::NodePtr> statements, std::string& print_out) {
     llvm::Value * cur = nullptr;
 
     auto outargt = llvm::PointerType::get(llvm::PointerType::get(mFloatType, 0), 0);
@@ -559,8 +559,13 @@ namespace xnor {
     mBuilder.CreateRet(nullptr);
     llvm::verifyFunction(*mMainFunction);
     mFunctionPassManager->run(*mMainFunction);
-    if (print)
-      mModule->print(llvm::errs(), nullptr);
+
+    {
+      std::string s;
+      llvm::raw_string_ostream ss(s);
+      mModule->print(ss, nullptr);
+      print_out = ss.str();
+    }
 
     auto Resolver = llvm::orc::createLambdaResolver(
         [&](const std::string &Name) {
