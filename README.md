@@ -4,6 +4,16 @@ JIT expr/expr~/fexpr~
 The goal of this project is to provide a just-in-time (JIT) version of the
 [expr/expr~/fexpr~](http://yadegari.org/expr/expr.html) [pure data](http://puredata.info/) objects.
 
+Requirements
+---
+
+* [bison](https://www.gnu.org/software/bison/)
+* [flex](https://github.com/westes/flex)
+* [llvm](http://llvm.org/)
+* [pure-data](https://puredata.info/) headers
+* [pd-lib-builder](https://github.com/pure-data/pd-lib-builder)
+	* it is already set up as a submodule, remember `git submodule init && git submodule update`
+
 Build
 ---
 
