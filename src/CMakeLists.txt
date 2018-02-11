@@ -17,7 +17,7 @@ add_definitions(${LLVM_DEFINITIONS})
 
 # Add the binary and sources
 add_executable(
-  ../../parser
+  parser
   parse/ast.h
   main.cc
   print.cc
@@ -26,4 +26,4 @@ add_executable(
 llvm_map_components_to_libnames(llvm_libs support core irreader mcjit linker
 native)
 
-target_link_libraries(../../parser parse ${llvm_libs} m)
+target_link_libraries(parser parse ${llvm_libs} m)

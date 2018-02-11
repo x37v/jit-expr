@@ -44,7 +44,7 @@ distcheck: dist
 	@rm -fr ${NAME}
 
 test: all
-	./parser examples.txt 2>&1 | less
+	./build/src/parser examples.txt 2>&1 | less
 
 pd:
 	@make -C build
