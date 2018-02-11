@@ -43,6 +43,8 @@ namespace {
     std::vector<xnor::ast::Variable::VarType> input_types;
     int signal_inputs = 0; //could just calc from input_types
 
+    bool compute = true;
+
     //constructor
     cpp_expr(XnorExpr t) : expr_type(t) { };
     ~cpp_expr() {
@@ -59,7 +61,11 @@ namespace {
 
 extern "C" void *xnor_expr_new(t_symbol *s, int argc, t_atom *argv);
 extern "C" void xnor_expr_free(struct _xnor_expr * x);
+extern "C" void xnor_expr_start(struct _xnor_expr * x);
+extern "C" void xnor_expr_stop(struct _xnor_expr * x);
 extern "C" void xnor_expr_setup(void);
+extern "C" void xnor_fexpr_tilde_set(struct _xnor_expr *x, t_symbol *s, int argc, t_atom *argv);
+extern "C" void xnor_fexpr_tilde_clear(struct _xnor_expr *x, t_symbol *s, int argc, t_atom *argv);
 
 //functions called from generated code
 extern "C" float xnor_expr_fact(float v);
@@ -338,23 +344,32 @@ static t_int *xnor_expr_tilde_perform(t_int *w) {
     }
   }
 
-  if (x->cpp->expr_type == XnorExpr::SAMPLE) {
-    //render to the saved buffers [which has some old needed data into it]
+  //if we're not computing then we just clear everything out
+  if (!x->cpp->compute) {
+    size_t vsize = x->cpp->saved_outputs.size() ? x->cpp->saved_outputs.begin()->second.size() : 0;
     for (unsigned int i = 0; i < x->cpp->outarg.size(); i++) {
-      x->cpp->outarg.at(i) = &x->cpp->saved_outputs.at(i).front();
-    }
-    x->cpp->func(&x->cpp->outarg.front(), &x->cpp->inarg.front(), n);
-
-    //copy out the saved buffers
-    for (unsigned int i = 0; i < x->cpp->outarg.size(); i++) {
-      auto f = (float *)w[vector_index++];
-      memcpy(f, &x->cpp->saved_outputs.at(i).front(), sizeof(t_sample) * n);
+      auto p = (t_sample *)w[vector_index++];
+      memset(p, 0, vsize * sizeof(t_sample));
     }
   } else {
-    for (unsigned int i = 0; i < x->cpp->outarg.size(); i++) {
-      x->cpp->outarg.at(i) = (float *)w[vector_index++];
+    if (x->cpp->expr_type == XnorExpr::SAMPLE) {
+      //render to the saved buffers [which has some old needed data into it]
+      for (unsigned int i = 0; i < x->cpp->outarg.size(); i++) {
+        x->cpp->outarg.at(i) = &x->cpp->saved_outputs.at(i).front();
+      }
+      x->cpp->func(&x->cpp->outarg.front(), &x->cpp->inarg.front(), n);
+
+      //copy out the saved buffers
+      for (unsigned int i = 0; i < x->cpp->outarg.size(); i++) {
+        auto f = (t_sample *)w[vector_index++];
+        memcpy(f, &x->cpp->saved_outputs.at(i).front(), sizeof(t_sample) * n);
+      }
+    } else {
+      for (unsigned int i = 0; i < x->cpp->outarg.size(); i++) {
+        x->cpp->outarg.at(i) = (t_sample *)w[vector_index++];
+      }
+      x->cpp->func(&x->cpp->outarg.front(), &x->cpp->inarg.front(), n);
     }
-    x->cpp->func(&x->cpp->outarg.front(), &x->cpp->inarg.front(), n);
   }
   return w + vector_index;
 }
@@ -384,6 +399,183 @@ static void xnor_expr_tilde_dsp(t_xnor_expr *x, t_signal **sp)
   dsp_addv(xnor_expr_tilde_perform, vecsize, (t_int*)vec);
   freebytes(vec, sizeof(t_int) * vecsize);
 }
+
+void xnor_fexpr_set_usage() {
+}
+
+// taken directly from x_vexpr_if.c and modified
+void xnor_fexpr_tilde_set(t_xnor_expr *x, t_symbol *s, int argc, t_atom *argv)
+{
+  t_symbol *sx;
+  int vecno, vsize, nargs;
+
+  if (!argc)
+    return;
+  sx = atom_getsymbolarg(0, argc, argv);
+  switch(sx->s_name[0]) {
+    case 'x': {
+        if (!sx->s_name[1])
+          vecno = 0;
+        else {
+          vecno = atoi(sx->s_name + 1);
+          if (!vecno) {
+            post("xnor/fexpr~ set: bad set x vector number");
+            xnor_fexpr_set_usage();
+            return;
+          }
+          vecno--;
+        }
+        auto it = x->cpp->saved_inputs.find(vecno);
+        if (it == x->cpp->saved_inputs.end()) {
+          post("xnor/fexpr~ set: no signal at inlet %d", vecno + 1);
+          return;
+        }
+        nargs = argc - 1;
+        if (nargs <= 0) {
+          post("xnor/fexpr~ set: no argument to set");
+          return;
+        }
+        vsize = it->second.size();
+        if (nargs > vsize) {
+          post("xnor/fexpr~ set: %d set values larger than vector size(%d)", nargs, vsize);
+          post("xnor/fexpr~ set: only the first %d values will be set", vsize);
+          nargs = vsize;
+        }
+        for (int i = 0; i < nargs; i++) {
+          it->second.at(vsize - i - 1) = atom_getfloatarg(i + 1, argc, argv);
+        }
+      }
+      return;
+    case 'y': {
+        if (!sx->s_name[1])
+          vecno = 0;
+        else {
+          vecno = atoi(sx->s_name + 1);
+          if (!vecno) {
+            post("xnor/fexpr~ set: bad set y vector number");
+            //xnor_fexpr_set_usage();
+            return;
+          }
+          vecno--;
+        }
+        auto it = x->cpp->saved_outputs.find(vecno);
+        if (it == x->cpp->saved_outputs.end()) {
+          post("xnor/fexpr~ set: outlet out of range");
+          return;
+        }
+        nargs = argc - 1;
+        if (nargs <= 0) {
+          post("xnor/fexpr~ set: no argument to set");
+          return;
+        }
+        vsize = it->second.size();
+        if (nargs > vsize) {
+          post("xnor/fexpr~ set: %d set values larger than vector size(%d)", nargs, vsize);
+          post("xnor/fexpr~ set: only the first %d values will be set", vsize);
+          nargs = vsize;
+        }
+        for (int i = 0; i < nargs; i++) {
+          it->second.at(vsize - i - 1) = atom_getfloatarg(i + 1, argc, argv);
+        }
+      }
+      return;
+    case 0: {
+        int nouts = x->cpp->saved_outputs.size();
+        if (argc > nouts) {
+          post("xnor/fexpr~ set: only %d outlets available", nouts);
+          post("xnor/fexpr~ set: the extra set values are ignored");
+        }
+        for (int i = 0; i < nouts && i < argc; i++) {
+          auto it = x->cpp->saved_outputs.find(i);
+          if (it == x->cpp->saved_outputs.end())
+            continue;
+          it->second.at(it->second.size() - 1) = atom_getfloatarg(i, argc, argv);
+        }
+      }
+      return;
+    default:
+      xnor_fexpr_set_usage();
+      return;
+  }
+  return;
+}
+
+// taken directly from x_vexpr_if.c and modified
+void xnor_fexpr_tilde_clear(t_xnor_expr *x, t_symbol *s, int argc, t_atom *argv)
+{
+  t_symbol *sx;
+  int vecno;
+  int i, nargs;
+
+#if 0
+  /*
+   *  if no arguement clear all input and output buffers
+   */
+  if (!argc) {
+    for (i = 0; i < x->exp_nexpr; i++)
+      memset(x->exp_p_res[i], 0, x->exp_vsize*sizeof(t_float));
+    for (i = 0; i < MAX_VARS; i++)
+      if (x->exp_var[i].ex_type == ET_XI)
+        memset(x->exp_p_var[i], 0,
+            x->exp_vsize*sizeof(t_float));
+    return;
+  }
+  if (argc > 1) {
+    post("fexpr~ usage: 'clear' or 'clear {xy}[#]'");
+    return;
+  }
+
+  sx = atom_getsymbolarg(0, argc, argv);
+  switch(sx->s_name[0]) {
+    case 'x':
+      if (!sx->s_name[1])
+        vecno = 0;
+      else {
+        vecno = atoi(sx->s_name + 1);
+        if (!vecno) {
+          post("fexpr~.clear: bad clear x vector number");
+          return;
+        }
+        if (vecno >= MAX_VARS) {
+          post("fexpr~.clear: no more than %d inlets",
+              MAX_VARS);
+          return;
+        }
+        vecno--;
+      }
+      if (x->exp_var[vecno].ex_type != ET_XI) {
+        post("fexpr~-clear: no signal at inlet %d", vecno + 1);
+        return;
+      }
+      memset(x->exp_p_var[vecno], 0, x->exp_vsize*sizeof(t_float));
+      return;
+    case 'y':
+      if (!sx->s_name[1])
+        vecno = 0;
+      else {
+        vecno = atoi(sx->s_name + 1);
+        if (!vecno) {
+          post("fexpr~.clear: bad clear y vector number");
+          return;
+        }
+        vecno--;
+      }
+      if (vecno >= x->exp_nexpr) {
+        post("fexpr~.clear: only %d outlets", x->exp_nexpr);
+        return;
+      }
+      memset(x->exp_p_res[vecno], 0, x->exp_vsize*sizeof(t_float));
+      return;
+      return;
+    default:
+      post("fexpr~ usage: 'clear' or 'clear {xy}[#]'");
+      return;
+  }
+#endif
+}
+
+void xnor_expr_start(t_xnor_expr *x) { x->cpp->compute = true; }
+void xnor_expr_stop(t_xnor_expr *x) { x->cpp->compute = false; }
 
 void xnor_expr_setup(void) {
   xnor::LLVMCodeGenVisitor::init();
@@ -424,6 +616,10 @@ void xnor_expr_setup(void) {
 	class_addmethod(xnor_fexpr_tilde_class, nullfn, gensym("signal"), A_NULL);
 	CLASS_MAINSIGNALIN(xnor_fexpr_tilde_class, t_xnor_expr, exp_f);
 	class_addmethod(xnor_fexpr_tilde_class, (t_method)xnor_expr_tilde_dsp, gensym("dsp"), A_NULL);
+  class_addmethod(xnor_fexpr_tilde_class, (t_method)xnor_fexpr_tilde_set, gensym("set"), A_GIMME, 0);
+  class_addmethod(xnor_fexpr_tilde_class, (t_method)xnor_fexpr_tilde_clear, gensym("clear"), A_GIMME, 0);
+  class_addmethod(xnor_fexpr_tilde_class, (t_method)xnor_expr_start, gensym("start"), A_NULL);
+  class_addmethod(xnor_fexpr_tilde_class, (t_method)xnor_expr_stop, gensym("stop"), A_NULL);
 }
 
 //utility functions
