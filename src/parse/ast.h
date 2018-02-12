@@ -1,4 +1,4 @@
-//Copyright (c) Alex Norman, 2018, see LICENSE.xnor
+//Copyright (c) Alex Norman, 2018, see LICENSE-xnor
 
 #ifndef XNOR_AST_H
 #define XNOR_AST_H
