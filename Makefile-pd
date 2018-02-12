@@ -10,11 +10,18 @@ LLVM_COMPONENTS = support core irreader mcjit linker native
 lib.name = jit_expr
 common.sources = src/llvmcodegen/codegen.cc
 
-#convert -I to -isystem so we don't get so many warnings.
-llvmcflags = `llvm-config-5.0 --cxxflags | ruby -pe 'sub /-I/, "-isystem"'`
-cflags = --std=c++11 ${llvmcflags} -isystem/usr/local/include/ -Isrc/ -Isrc/parse/ -Ibuild/src/parse/ -fexceptions -g
+ifeq ($(UNAME), Linux)
+LLVM_CONFIG = llvm-config-5.0
+else
+LLVM_CONFIG = llvm-config
+endif
 
-ldflags = `llvm-config-5.0 --ldflags` `llvm-config-5.0 --libs ${LLVM_COMPONENTS}` 
+#convert -I to -isystem so we don't get so many warnings.
+LLVMCFLAGS = `${LLVM_CONFIG} --cxxflags | ruby -pe 'sub /-I/, "-isystem"'`
+cflags = --std=c++11 ${LLVMCFLAGS} -isystem/usr/local/include/ -Isrc/ -Isrc/parse/ -Ibuild/src/parse/ -fexceptions -g
+
+ldflags = `${LLVM_CONFIG} --ldflags`
+ldflags += `${LLVM_CONFIG} --libs ${LLVM_COMPONENTS}` 
 ldlibs += build/src/parse/libparse.a
 
 # input source file (class name == source file basename)
@@ -26,3 +33,4 @@ datafiles = README.md
 # include Makefile.pdlibbuilder from submodule directory 'pd-lib-builder'
 PDLIBBUILDER_DIR=pd-lib-builder/
 include $(PDLIBBUILDER_DIR)/Makefile.pdlibbuilder
+
