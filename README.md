@@ -6,9 +6,9 @@ Just-in-time (JIT) clones of the [expr/expr~/fexpr~](http://yadegari.org/expr/ex
 Requirements
 ---
 
-* [bison](https://www.gnu.org/software/bison/)
-* [flex](https://github.com/westes/flex)
-* [llvm](http://llvm.org/)
+* [bison](https://www.gnu.org/software/bison/) tested with 3.0.4, didn't work with 2.3 on osX
+* [flex](https://github.com/westes/flex) tested with 2.6.0
+* [llvm](http://llvm.org/) 5.0
 * [pure-data](https://puredata.info/) headers
 * [pd-lib-builder](https://github.com/pure-data/pd-lib-builder)
 	* it is already set up as a submodule, remember `git submodule init && git submodule update`
