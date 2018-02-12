@@ -18,6 +18,8 @@ Build
 
 `./configure && make pd`
 
+on osX with flex installed by homebrew I had to do `./configure && CPATH=/usr/local/opt/flex/include/:/Applications/Pd-0.48-0.app/Contents/Resources/include/ make`
+
 Notes
 ---
 
