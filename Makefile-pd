@@ -18,7 +18,7 @@ endif
 
 #convert -I to -isystem so we don't get so many warnings.
 LLVMCFLAGS = `${LLVM_CONFIG} --cxxflags | sed 's/-I/-isystem/g'`
-cflags = --std=c++11 ${LLVMCFLAGS} -isystem/usr/local/include/ -Isrc/ -Isrc/parse/ -Ibuild/src/parse/ -fexceptions -g
+cflags = --std=c++11 ${LLVMCFLAGS} -Isrc/ -Isrc/parse/ -Ibuild/src/parse/ -fexceptions -g
 
 ldflags = `${LLVM_CONFIG} --ldflags`
 ldflags += `${LLVM_CONFIG} --libs ${LLVM_COMPONENTS}` 
