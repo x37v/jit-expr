@@ -17,7 +17,7 @@ LLVM_CONFIG = llvm-config
 endif
 
 #convert -I to -isystem so we don't get so many warnings.
-LLVMCFLAGS = `${LLVM_CONFIG} --cxxflags | ruby -pe 'sub /-I/, "-isystem"'`
+LLVMCFLAGS = `${LLVM_CONFIG} --cxxflags | sed 's/-I/-isystem/g'`
 cflags = --std=c++11 ${LLVMCFLAGS} -isystem/usr/local/include/ -Isrc/ -Isrc/parse/ -Ibuild/src/parse/ -fexceptions -g
 
 ldflags = `${LLVM_CONFIG} --ldflags`
