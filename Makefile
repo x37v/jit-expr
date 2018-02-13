@@ -1,4 +1,4 @@
-FILES = CMakeLists.txt Makefile Makefile-pd configure src/
+FILES = CMakeLists.txt Makefile configure src/
 NAME = name
 PROJECT_NAME = parser
 TARBALL = ${NAME}-${PROJECT_NAME}.tar.bz2
@@ -17,7 +17,6 @@ clean:
 	@echo "\033[33m< ---------------------- >\033[37m"
 	@rm -f *.dot
 	@if [ -e build/ ] ; then make -C build/ clean ; fi 1>/dev/null
-	@make -f Makefile-pd clean
 
 distclean: clean
 	@echo "\033[34m< Preparing directory for dist >\033[37m"
@@ -43,12 +42,8 @@ distcheck: dist
 	@make distclean
 	@rm -fr ${NAME}
 
-test: all
-	./build/src/parser examples.txt 2>&1 | less
+#test: all
+#	./build/src/parser examples.txt 2>&1 | less
 
 pd:
 	@make -C build
-	@make -f Makefile-pd alldebug
-
-install: 
-	@make -f Makefile.pd install

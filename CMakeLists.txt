@@ -1,8 +1,7 @@
 #Minimum version of CMake to build this project
 cmake_minimum_required(VERSION 2.6)
 
-# Declaration et nommage du projet
-project(parser)
+project(jit_expr)
 
 set(CXX "clang++")
 set(CMAKE_CXX_FLAGS_DEBUG "-Wall -W -Werror -pedantic -g -Wno-sign-compare -Wno-unused-parameter -Wno-overloaded-virtual")
