@@ -2,7 +2,6 @@
 
 #ifndef XNOR_AST_H
 #define XNOR_AST_H
-#pragma once
 
 #include <string>
 #include <vector>
