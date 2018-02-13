@@ -16,10 +16,21 @@ Requirements
 Build
 ---
 
+### Linux
+
 `./configure && make pd`
 
-* On my linux machine I don't have llvm-config, it is *llvm-config-5.0* so I run make like `make LLVM_CONFIG=llvm-config-5.0 pd`
-* On osX with flex installed by homebrew I had to do `./configure && CPATH=/usr/local/opt/flex/include/:/Applications/Pd-0.48-0.app/Contents/Resources/include/ make`
+### osX
+
+The build in flex header is old, I needed to target the one I installed with homebrew which was installed in */usr/local/opt/flex/include/*
+
+* `mkdir build/ && cd build`
+* `cmake -DCMAKE_CXX_FLAGS="-I/usr/local/opt/flex/include/ -I/Applications/Pd-0.48-0.app/Contents/Resources/include/" ..`
+
+### Windows
+
+??
+
 
 Install
 ---
