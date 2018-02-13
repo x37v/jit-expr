@@ -37,3 +37,8 @@ file(GLOB jit_expr_sources llvmcodegen/codegen.cc jit_expr.cpp)
 add_pd_external(jit_expr jit_expr "${jit_expr_sources}")
 
 target_link_libraries(jit_expr parse ${llvm_libs} m)
+
+file(GLOB licenses ../LICENSE*)
+install(TARGETS jit_expr DESTINATION lib/pd-externals/jit_expr)
+install(FILES jit_expr-help.pd DESTINATION lib/pd-externals/jit_expr)
+install(FILES ${licenses} DESTINATION lib/pd-externals/jit_expr)
