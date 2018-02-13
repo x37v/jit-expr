@@ -10,6 +10,7 @@
 #include <memory>
 #include <algorithm>
 #include <random>
+#include <cmath>
 #include "llvmcodegen/codegen.h"
 #include "parser.hh"
 
@@ -579,9 +580,11 @@ float jit_expr_modf(float v) {
   return v - truncf(v);
 }
 
-float jit_expr_isnan(float v) { return isnanf(v) ? 1 : 0; }
-float jit_expr_isinf(float v) { return isinff(v) ? 1 : 0; }
-float jit_expr_finite(float v) { return finitef(v) ? 1 : 0; }
+float jit_expr_isnan(float v) { return std::isnan(v) ? 1 : 0; }
+
+float jit_expr_isinf(float v) { return std::isinf(v) ? 1 : 0; }
+
+float jit_expr_finite(float v) { return std::isfinite(v) ? 1 : 0; }
 
 float jit_expr_value_assign(t_symbol * name, float v) {
   if (name)

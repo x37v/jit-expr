@@ -35,6 +35,7 @@ namespace xnor {
 
     class Visitor {
       public:
+        virtual ~Visitor(){}
         virtual void visit(Variable* v) = 0;
         virtual void visit(Value<int>* v) = 0;
         virtual void visit(Value<float>* v) = 0;
