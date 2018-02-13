@@ -17,7 +17,7 @@ add_subdirectory(parse/)
 
 #set_pd_sources(${project_source_dir}/pure-data/src)
 set_pd_sources(/home/alex/local/src/pure-data/src/)
-set_pd_external_path(externals/)
+set_pd_external_path(${CMAKE_BINARY_DIR})
 
 # http://llvm.org/docs/CMake.html#embedding-llvm-in-your-project
 find_package(LLVM REQUIRED CONFIG)
