@@ -5,16 +5,11 @@
 CXX = clang++
 
 LLVM_COMPONENTS = support core irreader mcjit linker native
+LLVM_CONFIG = llvm-config
 
 # library name
 lib.name = jit_expr
 common.sources = src/llvmcodegen/codegen.cc
-
-ifeq ($(UNAME), Linux)
-LLVM_CONFIG = llvm-config-5.0
-else
-LLVM_CONFIG = llvm-config
-endif
 
 #convert -I to -isystem so we don't get so many warnings.
 LLVMCFLAGS = `${LLVM_CONFIG} --cxxflags | sed 's/-I/-isystem/g'`

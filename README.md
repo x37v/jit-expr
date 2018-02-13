@@ -18,7 +18,8 @@ Build
 
 `./configure && make pd`
 
-on osX with flex installed by homebrew I had to do `./configure && CPATH=/usr/local/opt/flex/include/:/Applications/Pd-0.48-0.app/Contents/Resources/include/ make`
+* On my linux machine I don't have llvm-config, it is *llvm-config-5.0* so I run make like `make LLVM_CONFIG=llvm-config-5.0 pd`
+* On osX with flex installed by homebrew I had to do `./configure && CPATH=/usr/local/opt/flex/include/:/Applications/Pd-0.48-0.app/Contents/Resources/include/ make`
 
 Install
 ---
