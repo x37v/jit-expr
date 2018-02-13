@@ -50,3 +50,5 @@ pd:
 	@make -C build
 	@make -f Makefile.pd alldebug
 
+install: 
+	@make -f Makefile.pd install

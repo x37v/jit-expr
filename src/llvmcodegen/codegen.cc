@@ -206,7 +206,7 @@ namespace xnor {
     auto sym = getSymbol(v->value());
     mValue = createFunctionCall("jit_expr_value_get",
         llvm::FunctionType::get(mFloatType, {mSymbolPtrType}, false),
-        {sym}, "tmpvalueget");
+        {sym}, v->value().c_str());
     wrapIntIfNeeded(v);
   }
 

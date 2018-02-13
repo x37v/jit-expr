@@ -21,7 +21,7 @@ ldlibs += build/src/parse/libparse.a
 class.sources = src/jit_expr.cpp
 
 # all extra files to be included in binary distribution of the library
-datafiles = README.md
+datafiles = README.md LICENSE.pd LICENSE.parser LICENSE.xnor jit_expr-help.pd
 
 # include Makefile.pdlibbuilder from submodule directory 'pd-lib-builder'
 PDLIBBUILDER_DIR=pd-lib-builder/

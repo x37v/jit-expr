@@ -13,6 +13,8 @@
 #include "llvmcodegen/codegen.h"
 #include "parser.hh"
 
+#include <iostream>
+
 struct _jit_expr_proxy;
 struct _jit_expr;
 
@@ -138,6 +140,8 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
     atom_string(&argv[i], buf, 1024);
     line += " " + std::string(buf);
   }
+
+  std::cout << line << std::endl;
   
   //parse and setup
   try {
@@ -438,7 +442,7 @@ void jit_expr_setup(void) {
   class_addlist(jit_expr_class, jit_expr_list);
   class_addbang(jit_expr_class, jit_expr_bang);
   class_addmethod(jit_expr_class, (t_method)jit_expr_print, gensym("print"), A_NULL);
-  class_sethelpsymbol(jit_expr_class, gensym("jit-expr"));
+  class_sethelpsymbol(jit_expr_class, gensym("jit_expr"));
 
 	jit_expr_proxy_class = class_new(gensym("jit_expr_proxy"),
       0, 0,
@@ -457,7 +461,7 @@ void jit_expr_setup(void) {
 	CLASS_MAINSIGNALIN(jit_expr_tilde_class, t_jit_expr, exp_f);
 	class_addmethod(jit_expr_tilde_class, (t_method)jit_expr_tilde_dsp, gensym("dsp"), A_NULL);
   class_addmethod(jit_expr_tilde_class, (t_method)jit_expr_print, gensym("print"), A_NULL);
-  class_sethelpsymbol(jit_expr_tilde_class, gensym("jit-expr"));
+  class_sethelpsymbol(jit_expr_tilde_class, gensym("jit_expr"));
 
   jit_fexpr_tilde_class = class_new(gensym("jit/fexpr~"),
       (t_newmethod)jit_expr_new,
@@ -473,7 +477,7 @@ void jit_expr_setup(void) {
   class_addmethod(jit_fexpr_tilde_class, (t_method)jit_expr_start, gensym("start"), A_NULL);
   class_addmethod(jit_fexpr_tilde_class, (t_method)jit_expr_stop, gensym("stop"), A_NULL);
   class_addmethod(jit_fexpr_tilde_class, (t_method)jit_expr_print, gensym("print"), A_NULL);
-  class_sethelpsymbol(jit_fexpr_tilde_class, gensym("jit-expr"));
+  class_sethelpsymbol(jit_fexpr_tilde_class, gensym("jit_expr"));
 }
 
 //utility functions

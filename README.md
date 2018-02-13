@@ -18,6 +18,10 @@ Build
 
 `./configure && make pd`
 
+Install
+---
+* `sudo make install`
+
 Notes
 ---
 
