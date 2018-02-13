@@ -1,7 +1,6 @@
-set(CMAKE_CXX_STANDARD 11)
-
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(/usr/local/opt/flex/include/)
 
 file(GLOB H_FILES *.h)
 file(GLOB HH_FILES *.hh)
