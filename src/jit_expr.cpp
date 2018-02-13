@@ -1,5 +1,5 @@
 //Copyright (c) Alex Norman, 2018.
-//see LICENSE.xnor
+//see LICENSE-xnor
 
 
 #include <m_pd.h>
@@ -614,7 +614,7 @@ float jit_expr_array_read(float * array, float index, int array_length) {
  *
  * Copyright (c) IRCAM.
  * For information on usage and redistribution, and for a DISCLAIMER OF ALL
- * WARRANTIES, see the file, "LICENSE.pd," in this distribution.
+ * WARRANTIES, see the file, "LICENSE-pd," in this distribution.
  */
 
 void jit_fexpr_set_usage() {

@@ -1,4 +1,4 @@
-//Copyright (c) Alex Norman, 2018, see LICENSE.xnor
+//Copyright (c) Alex Norman, 2018, see LICENSE-xnor
 
 #include "print.h"
 #include "ast.h"

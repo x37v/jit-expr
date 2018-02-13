@@ -1,4 +1,4 @@
-//Copyright (c) Alex Norman, 2018, see LICENSE.xnor
+//Copyright (c) Alex Norman, 2018, see LICENSE-xnor
 
 #include "ast.h"
 #include <iostream>
