@@ -8,10 +8,7 @@ include(pd.build/pd.cmake)
 
 add_subdirectory(parse/)
 
-#set_pd_sources(${project_source_dir}/pure-data/src)
-
-#set_pd_sources(/home/alex/local/src/pure-data/src/)
-set_pd_sources(/Applications/Pd-0.48-0.app/Contents/Resources/include/)
+#need the generated headers
 set_pd_external_path(${CMAKE_BINARY_DIR})
 
 # http://llvm.org/docs/CMake.html#embedding-llvm-in-your-project
