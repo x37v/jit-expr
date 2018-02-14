@@ -25,10 +25,10 @@ Build
 
 The build in flex header is old, I needed to target the one I installed with homebrew which was installed in */usr/local/opt/flex/include/*
 
-**Not working yet, would love some help with this one**
-
-* `mkdir build/ && cd build`
-* `cmake -DCMAKE_CXX_FLAGS="-I/usr/local/opt/flex/include/ -I/Applications/Pd-0.48-0.app/Contents/Resources/include/" ..`
+* make the cmake build directory:
+	* `mkdir build/ && cd build`
+* let cmake know where your flex headers and m_pd.h are:
+	* `cmake -DCMAKE_CXX_FLAGS="-I/usr/local/opt/flex/include/ -I/Applications/Pd-0.48-0.app/Contents/Resources/include/" ..`
 
 ### Windows
 
@@ -37,7 +37,9 @@ The build in flex header is old, I needed to target the one I installed with hom
 
 Install
 ---
-* `sudo make install`
+
+* Linux:
+	* `sudo make install`
 
 Notes
 ---
