@@ -38,10 +38,10 @@ Could use some help here..
 Install
 ---
 
-copy *build/jit_expr* to your appropriate *pd-externals* directory
+copy *build/jit_expr* to your appropriate *pd externals* directory
 
 for example
-* Linux: `cp -r build/jit_expr ~/.local/lib/pd/extra`
+* Linux: `cp -r build/jit_expr ~/pd-externals/`
 * MacOS: `cp -r build/jit_expr ~/Library/Pd/`
 * Windows: not sure.. *%AppData%\Pd*
 
