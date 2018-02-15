@@ -38,12 +38,12 @@ The build in flex header is old, I needed to target the one I installed with hom
 Install
 ---
 
-copy *build/jit_expr/* to your appropriate *pd-externals* directory
+copy *build/jit_expr* to your appropriate *pd-externals* directory
 
 for example
-* Linux: *~/.local/lib/pd/extra*
-* MacOS: *~/Library/Pd/*
-* WindowS: *%AppData%\Pd*
+* Linux: `cp -r build/jit_expr ~/.local/lib/pd/extra`
+* MacOS: `cp -r build/jit_expr ~/Library/Pd/`
+* WindowS: not sure.. *%AppData%\Pd*
 
 Notes
 ---
