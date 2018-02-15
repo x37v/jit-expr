@@ -142,7 +142,7 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
     line += " " + std::string(buf);
   }
 
-#ifdef JIT_EXPR_PRINT_ARG
+#if 0
   std::cout << line << std::endl;
 #endif
   
