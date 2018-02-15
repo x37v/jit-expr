@@ -38,7 +38,7 @@ namespace xnor {
   }
 
   void AstPrintVisitor::visit(xnor::ast::Value<std::string>* v){
-    print("const: " + v->value());
+    print("value: " + v->value());
   }
 
   void AstPrintVisitor::visit(xnor::ast::Quoted* v){
