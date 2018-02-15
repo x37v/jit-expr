@@ -32,7 +32,7 @@ The build in flex header is old, I needed to target the one I installed with hom
 
 ### Windows
 
-??
+Could use some help here..
 
 
 Install
@@ -43,7 +43,7 @@ copy *build/jit_expr* to your appropriate *pd-externals* directory
 for example
 * Linux: `cp -r build/jit_expr ~/.local/lib/pd/extra`
 * MacOS: `cp -r build/jit_expr ~/Library/Pd/`
-* WindowS: not sure.. *%AppData%\Pd*
+* Windows: not sure.. *%AppData%\Pd*
 
 Notes
 ---
