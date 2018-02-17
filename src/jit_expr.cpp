@@ -19,6 +19,8 @@
 struct _jit_expr_proxy;
 struct _jit_expr;
 
+namespace ast = xnor::ast;
+
 namespace {
   const int buffer_size = 64;
 
@@ -47,7 +49,7 @@ namespace {
     std::map<unsigned int, std::vector<t_sample>> saved_outputs;
 
     std::vector<xnor::LLVMCodeGenVisitor::input_arg_t> inarg;
-    std::vector<xnor::ast::Variable::VarType> input_types;
+    std::vector<ast::Variable::VarType> input_types;
     int signal_inputs = 0; //could just calc from input_types
 
     bool compute = true;
@@ -156,12 +158,16 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
       x->cpp->func = x->cpp->cv.function(statements, x->cpp->code_printout);
 
       auto inputs = x->cpp->driver.inputs();
+      //we automatically have at least one input even if we're not using it
+      if (inputs.size() == 0) {
+        auto v = std::make_shared<ast::Variable>(x->cpp->expr_type == XnorExpr::CONTROL ? ast::Variable::VarType::FLOAT : ast::Variable::VarType::VECTOR, 0);
+        inputs.push_back(v);
+      }
 
-      //we have a minimum of 1 input, we might not use all these floats [in signal domain] but, whatever
-      x->cpp->infloats.resize(std::max((size_t)1, inputs.size()), 0);
-      x->cpp->symbol_inputs.resize(std::max((size_t)1, inputs.size()), nullptr);
-      x->cpp->inarg.resize(std::max((size_t)1, inputs.size()));
-      x->cpp->input_types.resize(std::max((size_t)1, inputs.size()), xnor::ast::Variable::VarType::FLOAT);
+      x->cpp->infloats.resize(inputs.size(), 0);
+      x->cpp->symbol_inputs.resize(inputs.size(), nullptr);
+      x->cpp->inarg.resize(inputs.size());
+      x->cpp->input_types.resize(inputs.size(), ast::Variable::VarType::FLOAT); //this will be overwritten when the variables are set up
 
       x->cpp->signal_inputs = 0;
       x->cpp->outarg.resize(statements.size());
@@ -170,9 +176,9 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
         case XnorExpr::CONTROL: 
           {
             if (inputs.size() >= 1 &&
-                inputs.at(0)->type() != xnor::ast::Variable::VarType::FLOAT &&
-                inputs.at(0)->type() != xnor::ast::Variable::VarType::INT &&
-                inputs.at(0)->type() != xnor::ast::Variable::VarType::SYMBOL) {
+                inputs.at(0)->type() != ast::Variable::VarType::FLOAT &&
+                inputs.at(0)->type() != ast::Variable::VarType::INT &&
+                inputs.at(0)->type() != ast::Variable::VarType::SYMBOL) {
               error("the first inlet of jit/expr must be a float, int or symbol");
               jit_expr_free(x);
               return NULL;
@@ -190,7 +196,7 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
         case XnorExpr::VECTOR: 
           {
             if (inputs.size() >= 1 &&
-                inputs.at(0)->type() != xnor::ast::Variable::VarType::VECTOR) {
+                inputs.at(0)->type() != ast::Variable::VarType::VECTOR) {
               error("the first inlet of jit/expr~ must be a vector");
               jit_expr_free(x);
               return NULL;
@@ -203,8 +209,9 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
         case XnorExpr::SAMPLE: 
           {
             if (inputs.size() >= 1 &&
-                inputs.at(0)->type() != xnor::ast::Variable::VarType::INPUT) {
-              error("the first inlet of jit/fexpr~ must be a input sample variable");
+                inputs.at(0)->type() != ast::Variable::VarType::INPUT &&
+                inputs.at(0)->type() != ast::Variable::VarType::VECTOR) {
+              error("the first inlet of jit/fexpr~ must be a input sample or vector variable");
               jit_expr_free(x);
               return NULL;
             }
@@ -221,8 +228,8 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
         auto v = inputs.at(i);
         x->cpp->input_types[i] = v->type();
         switch (v->type()) {
-          case xnor::ast::Variable::VarType::FLOAT:
-          case xnor::ast::Variable::VarType::INT:
+          case ast::Variable::VarType::FLOAT:
+          case ast::Variable::VarType::INT:
             if (i != 0) {
               t_jit_expr_proxy *p = (t_jit_expr_proxy *)pd_new(jit_expr_proxy_class);
               p->index = v->input_index();
@@ -231,9 +238,9 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
               x->cpp->ins.push_back(inlet_new(&x->x_obj, &p->p_pd, &s_float, &s_float));
             }
             break;
-          case xnor::ast::Variable::VarType::VECTOR:
-            if (x->cpp->expr_type != XnorExpr::VECTOR) {
-              error("cannot create vector inlet for jit/expr or jit/fexpr~");
+          case ast::Variable::VarType::VECTOR:
+            if (x->cpp->expr_type == XnorExpr::CONTROL) {
+              error("cannot create vector inlet for jit/expr");
               jit_expr_free(x);
               return NULL;
             }
@@ -241,7 +248,7 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
               x->cpp->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal));
             x->cpp->signal_inputs += 1;
             break;
-          case xnor::ast::Variable::VarType::INPUT:
+          case ast::Variable::VarType::INPUT:
             if (x->cpp->expr_type != XnorExpr::SAMPLE) {
               error("input sample inlet only works for jit/fexpr~");
               jit_expr_free(x);
@@ -252,7 +259,7 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
             x->cpp->signal_inputs += 1;
             x->cpp->saved_inputs[v->input_index()].resize(buffer_size * 2, 0); //input buffers need access to last input as well
             break;
-          case xnor::ast::Variable::VarType::SYMBOL:
+          case ast::Variable::VarType::SYMBOL:
             if (i != 0)
               x->cpp->ins.push_back(symbolinlet_new(&x->x_obj, &x->cpp->symbol_inputs.at(i)));
             break;
@@ -284,11 +291,11 @@ void jit_expr_bang(t_jit_expr * x) {
   for (size_t i = 0; i < x->cpp->inarg.size(); i++) {
     auto t = x->cpp->input_types.at(i);
     switch (t) {
-      case xnor::ast::Variable::VarType::FLOAT:
-      case xnor::ast::Variable::VarType::INT:
+      case ast::Variable::VarType::FLOAT:
+      case ast::Variable::VarType::INT:
         x->cpp->inarg.at(i).flt = x->cpp->infloats.at(i);
         break;
-      case xnor::ast::Variable::VarType::SYMBOL:
+      case ast::Variable::VarType::SYMBOL:
         x->cpp->inarg.at(i).sym = x->cpp->symbol_inputs.at(i);
         break;
       default:
@@ -308,9 +315,9 @@ void jit_expr_bang(t_jit_expr * x) {
 static void jit_expr_list(t_jit_expr *x, t_symbol * /*s*/, int argc, const t_atom *argv) {
   for (int i = 0; i < std::min(argc, (int)x->cpp->infloats.size()); i++) {
     auto t = x->cpp->input_types.at(i);
-		if (argv[i].a_type == A_FLOAT && (t == xnor::ast::Variable::VarType::FLOAT || t == xnor::ast::Variable::VarType::INT)) {
+		if (argv[i].a_type == A_FLOAT && (t == ast::Variable::VarType::FLOAT || t == ast::Variable::VarType::INT)) {
       x->cpp->infloats.at(i) = argv[i].a_w.w_float;
-    } else if (argv[i].a_type == A_SYMBOL && t == xnor::ast::Variable::VarType::SYMBOL) {
+    } else if (argv[i].a_type == A_SYMBOL && t == ast::Variable::VarType::SYMBOL) {
       x->cpp->symbol_inputs.at(i) = argv[i].a_w.w_symbol;
 		} else {
 			pd_error(x, "expr: type mismatch");
@@ -328,30 +335,34 @@ static t_int *jit_expr_tilde_perform(t_int *w) {
   int n = std::min((int)(w[2]), buffer_size); //XXX how do we figure out the real buffer size?
 
   int vector_index = 3;
-  for (unsigned int i = 0; i < x->cpp->input_types.size(); i++) {
-    switch (x->cpp->input_types.at(i)) {
-        case xnor::ast::Variable::VarType::FLOAT:
-        case xnor::ast::Variable::VarType::INT:
-          x->cpp->inarg.at(i).flt = x->cpp->infloats.at(i);
-          break;
-        case xnor::ast::Variable::VarType::SYMBOL:
-          x->cpp->inarg.at(i).sym = x->cpp->symbol_inputs.at(i);
-          break;
-        case xnor::ast::Variable::VarType::VECTOR:
-          x->cpp->inarg.at(i).vec = (t_sample*)w[vector_index++];
-          break;
-        case xnor::ast::Variable::VarType::INPUT:
-          {
-            t_sample * in = (t_sample*)w[vector_index++];
-            t_sample * buf = &x->cpp->saved_inputs.at(i).front();
-            memcpy(buf + n, buf, n * sizeof(t_sample)); //copy the old data forward
-            memcpy(buf, in, n * sizeof(t_sample)); //copy the new data in
-            x->cpp->inarg.at(i).vec = buf;
-          }
-          break;
-        default:
-          //XXX
-          break;
+  if (x->cpp->signal_inputs == 0) {
+    vector_index++; //there is always actually 1 input, even if we don't use it
+  } else {
+    for (unsigned int i = 0; i < x->cpp->input_types.size(); i++) {
+      switch (x->cpp->input_types.at(i)) {
+          case ast::Variable::VarType::FLOAT:
+          case ast::Variable::VarType::INT:
+            x->cpp->inarg.at(i).flt = x->cpp->infloats.at(i);
+            break;
+          case ast::Variable::VarType::SYMBOL:
+            x->cpp->inarg.at(i).sym = x->cpp->symbol_inputs.at(i);
+            break;
+          case ast::Variable::VarType::VECTOR:
+            x->cpp->inarg.at(i).vec = (t_sample*)w[vector_index++];
+            break;
+          case ast::Variable::VarType::INPUT:
+            {
+              t_sample * in = (t_sample*)w[vector_index++];
+              t_sample * buf = &x->cpp->saved_inputs.at(i).front();
+              memcpy(buf + n, buf, n * sizeof(t_sample)); //copy the old data forward
+              memcpy(buf, in, n * sizeof(t_sample)); //copy the new data in
+              x->cpp->inarg.at(i).vec = buf;
+            }
+            break;
+          default:
+            //XXX
+            break;
+      }
     }
   }
 
@@ -389,7 +400,8 @@ static void jit_expr_tilde_dsp(t_jit_expr *x, t_signal **sp) {
   if (x->cpp->func == nullptr)
     return;
 
-  int input_signals = x->cpp->signal_inputs;
+  //there is always at least one signal input
+  int input_signals = std::max(1, x->cpp->signal_inputs);
   int output_signals = x->cpp->outarg.size();
 
   int vecsize = input_signals + output_signals + 2;
