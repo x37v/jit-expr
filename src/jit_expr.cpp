@@ -247,6 +247,7 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
             if (i != 0)
               x->cpp->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal));
             x->cpp->signal_inputs += 1;
+            x->cpp->saved_inputs[v->input_index()].resize(buffer_size, 0);
             break;
           case ast::Variable::VarType::INPUT:
             if (x->cpp->expr_type != XnorExpr::SAMPLE) {
@@ -335,34 +336,36 @@ static t_int *jit_expr_tilde_perform(t_int *w) {
   int n = std::min((int)(w[2]), buffer_size); //XXX how do we figure out the real buffer size?
 
   int vector_index = 3;
-  if (x->cpp->signal_inputs == 0) {
-    vector_index++; //there is always actually 1 input, even if we don't use it
-  } else {
-    for (unsigned int i = 0; i < x->cpp->input_types.size(); i++) {
-      switch (x->cpp->input_types.at(i)) {
-          case ast::Variable::VarType::FLOAT:
-          case ast::Variable::VarType::INT:
-            x->cpp->inarg.at(i).flt = x->cpp->infloats.at(i);
-            break;
-          case ast::Variable::VarType::SYMBOL:
-            x->cpp->inarg.at(i).sym = x->cpp->symbol_inputs.at(i);
-            break;
-          case ast::Variable::VarType::VECTOR:
-            x->cpp->inarg.at(i).vec = (t_sample*)w[vector_index++];
-            break;
-          case ast::Variable::VarType::INPUT:
-            {
-              t_sample * in = (t_sample*)w[vector_index++];
-              t_sample * buf = &x->cpp->saved_inputs.at(i).front();
-              memcpy(buf + n, buf, n * sizeof(t_sample)); //copy the old data forward
-              memcpy(buf, in, n * sizeof(t_sample)); //copy the new data in
-              x->cpp->inarg.at(i).vec = buf;
-            }
-            break;
-          default:
-            //XXX
-            break;
-      }
+  for (unsigned int i = 0; i < x->cpp->input_types.size(); i++) {
+    switch (x->cpp->input_types.at(i)) {
+      case ast::Variable::VarType::FLOAT:
+      case ast::Variable::VarType::INT:
+        x->cpp->inarg.at(i).flt = x->cpp->infloats.at(i);
+        break;
+      case ast::Variable::VarType::SYMBOL:
+        x->cpp->inarg.at(i).sym = x->cpp->symbol_inputs.at(i);
+        break;
+      case ast::Variable::VarType::VECTOR: {
+          //we make a copy of the input data and provide that as we might stomp on it
+          //in our function because buffers get reused
+          t_sample * in = (t_sample*)w[vector_index++];
+          t_sample * buf = &x->cpp->saved_inputs.at(i).front();
+          memcpy(buf, in, n * sizeof(t_sample)); //copy the new data in
+          x->cpp->inarg.at(i).vec = buf;
+        }
+        break;
+      case ast::Variable::VarType::INPUT:
+        {
+          t_sample * in = (t_sample*)w[vector_index++];
+          t_sample * buf = &x->cpp->saved_inputs.at(i).front();
+          memcpy(buf + n, buf, n * sizeof(t_sample)); //copy the old data forward
+          memcpy(buf, in, n * sizeof(t_sample)); //copy the new data in
+          x->cpp->inarg.at(i).vec = buf;
+        }
+        break;
+      default:
+        //XXX
+        break;
     }
   }
 
@@ -396,12 +399,19 @@ static t_int *jit_expr_tilde_perform(t_int *w) {
   return w + vector_index;
 }
 
+//the external howto doc says:
+//The signals are arranged in the array in such way, that they are ordered in
+//a clockwise way in the graphical representation of the object
+//If both left and right in- and out-signals exist, this means:
+//First is the leftmost in-signal followed by the right in-signals; after the
+//right out-signals, finally there comes the leftmost out-signal.
+
 static void jit_expr_tilde_dsp(t_jit_expr *x, t_signal **sp) {
   if (x->cpp->func == nullptr)
     return;
 
   //there is always at least one signal input
-  int input_signals = std::max(1, x->cpp->signal_inputs);
+  int input_signals = x->cpp->signal_inputs;
   int output_signals = x->cpp->outarg.size();
 
   int vecsize = input_signals + output_signals + 2;
@@ -418,6 +428,7 @@ static void jit_expr_tilde_dsp(t_jit_expr *x, t_signal **sp) {
   voffset += input_signals;
   for (int i = 0; i < output_signals; i++)
     vec[i + voffset] = (t_int*)sp[i + input_signals]->s_vec;
+
   dsp_addv(jit_expr_tilde_perform, vecsize, (t_int*)vec);
   freebytes(vec, sizeof(t_int) * vecsize);
 }
