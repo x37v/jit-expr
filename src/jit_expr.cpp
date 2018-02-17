@@ -118,10 +118,6 @@ typedef struct _jit_expr_proxy {
 } t_jit_expr_proxy;
 
 
-#include <iostream>
-using std::cout;
-using std::endl;
-
 void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
 {
   //create the driver and code visitor
@@ -141,7 +137,6 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
 	}
 
   const int buffer_size = x->cpp->dsp_buffer_size = sys_getblksize();
-  cout << "block size: " << buffer_size << endl;
 
   //read in the arguments into a string
   char buf[1024];
