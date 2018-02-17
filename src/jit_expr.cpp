@@ -22,8 +22,6 @@ struct _jit_expr;
 namespace ast = xnor::ast;
 
 namespace {
-  const int buffer_size = 64;
-
   enum class XnorExpr {
     CONTROL,
     VECTOR,
@@ -31,6 +29,8 @@ namespace {
   };
 
   struct cpp_expr {
+    int dsp_buffer_size = 64;
+
     std::vector<t_inlet *> ins;
     std::vector<t_outlet *> outs;
     std::vector<struct _jit_expr_proxy *> proxies;
@@ -118,6 +118,10 @@ typedef struct _jit_expr_proxy {
 } t_jit_expr_proxy;
 
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
 void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
 {
   //create the driver and code visitor
@@ -135,6 +139,9 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
     x = (t_jit_expr *)pd_new(jit_expr_class);
     x->cpp = std::make_shared<cpp_expr>(XnorExpr::CONTROL);
 	}
+
+  const int buffer_size = x->cpp->dsp_buffer_size = sys_getblksize();
+  cout << "block size: " << buffer_size << endl;
 
   //read in the arguments into a string
   char buf[1024];
@@ -333,7 +340,7 @@ void jit_expr_proxy_float(t_jit_expr_proxy *p, t_floatarg f) {
 
 static t_int *jit_expr_tilde_perform(t_int *w) {
   t_jit_expr *x = (t_jit_expr *)(w[1]);
-  int n = std::min((int)(w[2]), buffer_size); //XXX how do we figure out the real buffer size?
+  int n = std::min((int)(w[2]), x->cpp->dsp_buffer_size);
 
   int vector_index = 3;
   for (unsigned int i = 0; i < x->cpp->input_types.size(); i++) {
