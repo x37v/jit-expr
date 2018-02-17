@@ -103,6 +103,8 @@ namespace ast {
       mInputIndex = std::stoi(i) - 1;
   }
 
+  Variable::Variable(VarType t, unsigned int index) : mType(t), mInputIndex(index) { }
+
   Variable::~Variable() {
   }
 

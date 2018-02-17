@@ -83,6 +83,7 @@ namespace xnor {
           OUTPUT
         };
         Variable(const std::string& n);
+        Variable(VarType t, unsigned int index);
         virtual ~Variable();
         virtual OutputType output_type() const override;
 
