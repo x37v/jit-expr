@@ -80,7 +80,6 @@ namespace xnor {
     mIntType = llvm::Type::getInt32Ty(mContext);
 
     mFunctionPassManager = llvm::make_unique<llvm::legacy::FunctionPassManager>(mModule.get());
-
 #if 1
     // Do simple "peephole" optimizations and bit-twiddling optzns.
     mFunctionPassManager->add(llvm::createInstructionCombiningPass());
@@ -106,7 +105,6 @@ namespace xnor {
     argTypes.push_back(mIntType);
 
     llvm::FunctionType *ftype = llvm::FunctionType::get(llvm::Type::getVoidTy(mContext), llvm::makeArrayRef(argTypes), false);
-    //XXX should we use internal linkage and figure out how to grab those symbols?
     mMainFunction = llvm::Function::Create(ftype, llvm::GlobalValue::InternalLinkage, main_function_name, mModule.get());
     mBlock = llvm::BasicBlock::Create(mContext, "entry", mMainFunction, 0);
     mBuilder.SetInsertPoint(mBlock);
