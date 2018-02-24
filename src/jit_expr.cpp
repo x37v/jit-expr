@@ -13,6 +13,7 @@
 #include <cmath>
 #include "llvmcodegen/codegen.h"
 #include "parser.hh"
+#include "jit_expr_version.h"
 
 #include <iostream>
 
@@ -74,6 +75,7 @@ extern "C" void jit_expr_free(struct _jit_expr * x);
 extern "C" void jit_expr_start(struct _jit_expr * x);
 extern "C" void jit_expr_stop(struct _jit_expr * x);
 extern "C" void jit_expr_print(struct _jit_expr * x);
+extern "C" void jit_expr_version(struct _jit_expr * x);
 extern "C" void jit_expr_setup(void);
 extern "C" void jit_fexpr_tilde_set(struct _jit_expr *x, t_symbol *s, int argc, t_atom *argv);
 extern "C" void jit_fexpr_tilde_clear(struct _jit_expr *x, t_symbol *s, int argc, t_atom *argv);
@@ -108,13 +110,13 @@ static t_class *jit_fexpr_tilde_class;
 typedef struct _jit_expr {
   t_object x_obj;
   std::shared_ptr<cpp_expr> cpp;
-  float exp_f;   		/* control value to be transformed to signal */
+  float exp_f;       /* control value to be transformed to signal */
 } t_jit_expr;
 
 typedef struct _jit_expr_proxy {
-	t_pd p_pd;
-	unsigned int index;
-	t_jit_expr *parent;
+  t_pd p_pd;
+  unsigned int index;
+  t_jit_expr *parent;
 } t_jit_expr_proxy;
 
 
@@ -123,18 +125,18 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
   //create the driver and code visitor
   t_jit_expr *x = NULL;
 
-	if (strcmp("jit/expr~", s->s_name) == 0) {
+  if (strcmp("jit/expr~", s->s_name) == 0) {
     x = (t_jit_expr *)pd_new(jit_expr_tilde_class);
     x->cpp = std::make_shared<cpp_expr>(XnorExpr::VECTOR);
   } else if (strcmp("jit/fexpr~", s->s_name) == 0) {
     x = (t_jit_expr *)pd_new(jit_fexpr_tilde_class);
     x->cpp = std::make_shared<cpp_expr>(XnorExpr::SAMPLE);
-	} else {
+  } else {
     if (strcmp("jit/expr", s->s_name) != 0)
       error("jit_expr_new: bad object name '%s'", s->s_name);
     x = (t_jit_expr *)pd_new(jit_expr_class);
     x->cpp = std::make_shared<cpp_expr>(XnorExpr::CONTROL);
-	}
+  }
 
   const int buffer_size = x->cpp->dsp_buffer_size = sys_getblksize();
 
@@ -318,13 +320,13 @@ void jit_expr_bang(t_jit_expr * x) {
 static void jit_expr_list(t_jit_expr *x, t_symbol * /*s*/, int argc, const t_atom *argv) {
   for (int i = 0; i < std::min(argc, (int)x->cpp->infloats.size()); i++) {
     auto t = x->cpp->input_types.at(i);
-		if (argv[i].a_type == A_FLOAT && (t == ast::Variable::VarType::FLOAT || t == ast::Variable::VarType::INT)) {
+    if (argv[i].a_type == A_FLOAT && (t == ast::Variable::VarType::FLOAT || t == ast::Variable::VarType::INT)) {
       x->cpp->infloats.at(i) = argv[i].a_w.w_float;
     } else if (argv[i].a_type == A_SYMBOL && t == ast::Variable::VarType::SYMBOL) {
       x->cpp->symbol_inputs.at(i) = argv[i].a_w.w_symbol;
-		} else {
-			pd_error(x, "expr: type mismatch");
-		}
+    } else {
+      pd_error(x, "expr: type mismatch");
+    }
   }
   jit_expr_bang(x);
 }
@@ -457,8 +459,17 @@ void jit_expr_print(t_jit_expr *x) {
   }
 }
 
+void jit_expr_version_post() {
+  post("jit/expr jit/expr~ jit/fexpr~ version: %d.%d", JIT_EXPR_VERSION_MAJOR, JIT_EXPR_VERSION_MINOR);
+}
+
+void jit_expr_version(t_jit_expr * x) {
+  jit_expr_version_post();
+}
+
 void jit_expr_setup(void) {
   xnor::LLVMCodeGenVisitor::init();
+  jit_expr_version_post();
 
   jit_expr_class = class_new(gensym("jit/expr"),
       (t_newmethod)jit_expr_new,
@@ -469,15 +480,16 @@ void jit_expr_setup(void) {
 
   class_addlist(jit_expr_class, jit_expr_list);
   class_addbang(jit_expr_class, jit_expr_bang);
+  class_addmethod(jit_expr_class, (t_method)jit_expr_version, gensym("version"), A_NULL);
   class_addmethod(jit_expr_class, (t_method)jit_expr_print, gensym("print"), A_NULL);
   class_sethelpsymbol(jit_expr_class, gensym("jit_expr"));
 
-	jit_expr_proxy_class = class_new(gensym("jit_expr_proxy"),
+  jit_expr_proxy_class = class_new(gensym("jit_expr_proxy"),
       0, 0,
       sizeof(t_jit_expr_proxy),
       CLASS_PD,
       A_NULL);
-	class_addfloat(jit_expr_proxy_class, jit_expr_proxy_float);
+  class_addfloat(jit_expr_proxy_class, jit_expr_proxy_float);
 
   jit_expr_tilde_class = class_new(gensym("jit/expr~"),
       (t_newmethod)jit_expr_new,
@@ -485,9 +497,10 @@ void jit_expr_setup(void) {
       sizeof(t_jit_expr),
       0,
       A_GIMME, 0);
-	class_addmethod(jit_expr_tilde_class, nullfn, gensym("signal"), A_NULL);
-	CLASS_MAINSIGNALIN(jit_expr_tilde_class, t_jit_expr, exp_f);
-	class_addmethod(jit_expr_tilde_class, (t_method)jit_expr_tilde_dsp, gensym("dsp"), A_NULL);
+  class_addmethod(jit_expr_tilde_class, nullfn, gensym("signal"), A_NULL);
+  CLASS_MAINSIGNALIN(jit_expr_tilde_class, t_jit_expr, exp_f);
+  class_addmethod(jit_expr_tilde_class, (t_method)jit_expr_version, gensym("version"), A_NULL);
+  class_addmethod(jit_expr_tilde_class, (t_method)jit_expr_tilde_dsp, gensym("dsp"), A_NULL);
   class_addmethod(jit_expr_tilde_class, (t_method)jit_expr_print, gensym("print"), A_NULL);
   class_sethelpsymbol(jit_expr_tilde_class, gensym("jit_expr"));
 
@@ -497,9 +510,10 @@ void jit_expr_setup(void) {
       sizeof(t_jit_expr),
       0,
       A_GIMME, 0);
-	class_addmethod(jit_fexpr_tilde_class, nullfn, gensym("signal"), A_NULL);
-	CLASS_MAINSIGNALIN(jit_fexpr_tilde_class, t_jit_expr, exp_f);
-	class_addmethod(jit_fexpr_tilde_class, (t_method)jit_expr_tilde_dsp, gensym("dsp"), A_NULL);
+  class_addmethod(jit_fexpr_tilde_class, nullfn, gensym("signal"), A_NULL);
+  CLASS_MAINSIGNALIN(jit_fexpr_tilde_class, t_jit_expr, exp_f);
+  class_addmethod(jit_fexpr_tilde_class, (t_method)jit_expr_version, gensym("version"), A_NULL);
+  class_addmethod(jit_fexpr_tilde_class, (t_method)jit_expr_tilde_dsp, gensym("dsp"), A_NULL);
   class_addmethod(jit_fexpr_tilde_class, (t_method)jit_fexpr_tilde_set, gensym("set"), A_GIMME, 0);
   class_addmethod(jit_fexpr_tilde_class, (t_method)jit_fexpr_tilde_clear, gensym("clear"), A_GIMME, 0);
   class_addmethod(jit_fexpr_tilde_class, (t_method)jit_expr_start, gensym("start"), A_NULL);

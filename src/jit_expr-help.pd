@@ -1156,7 +1156,7 @@ and call it in the below expression \, check it:, f 68;
 #X connect 34 0 33 0;
 #X connect 35 0 32 0;
 #X restore 803 378 pd [value];
-#X text 363 16 Version 0.1;
+#X text 363 16 Version @jit_expr_VERSION_MAJOR@.@jit_expr_VERSION_MINOR@;
 #X text 21 48 Originally By Shahrokh Yadegari \, cloned by Alex Norman
 ;
 #X text 796 517 helpfile modified from original expr help;

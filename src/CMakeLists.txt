@@ -1,5 +1,14 @@
 project(jit_expr)
 
+# The version number.
+set(jit_expr_VERSION_MAJOR 0)
+set(jit_expr_VERSION_MINOR 1)
+
+configure_file(
+  "${PROJECT_SOURCE_DIR}/jit_expr_version.h.in"
+  "${PROJECT_BINARY_DIR}/jit_expr_version.h"
+)
+
 # Add subdirectories
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -18,6 +27,7 @@ include_directories(${LLVM_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 #need the generated headers
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/parse)
+include_directories("${PROJECT_BINARY_DIR}")
 
 add_definitions(${LLVM_DEFINITIONS})
 
@@ -36,7 +46,12 @@ target_link_libraries(printer parse ${llvm_libs} m)
 set(OUT_DIR ${CMAKE_BINARY_DIR}/jit_expr)
 set_pd_external_path(${OUT_DIR})
 file(GLOB LICENSES ../LICENSE*)
-file(COPY jit_expr-help.pd ${LICENSES} DESTINATION ${OUT_DIR})
+file(COPY ${LICENSES} DESTINATION ${OUT_DIR})
+#process the help file to add the version number
+configure_file(
+  "jit_expr-help.pd"
+  "${OUT_DIR}/jit_expr-help.pd"
+)
 file(GLOB jit_expr_sources llvmcodegen/codegen.cc jit_expr.cpp)
 add_pd_external(jit_expr jit_expr "${jit_expr_sources}")
 target_link_libraries(jit_expr parse ${llvm_libs} m)
