@@ -30,7 +30,7 @@ namespace {
   };
 
   struct cpp_expr {
-    int dsp_buffer_size = 64;
+    int dsp_buffer_size = 0;
 
     std::vector<t_inlet *> ins;
     std::vector<t_outlet *> outs;
@@ -46,8 +46,8 @@ namespace {
     std::vector<float *> outarg;
     std::vector<float> infloats;
     std::vector<t_symbol *> symbol_inputs;
-    std::map<unsigned int, std::vector<t_sample>> saved_inputs;
-    std::map<unsigned int, std::vector<t_sample>> saved_outputs;
+    std::map<unsigned int, t_sample*> saved_inputs;
+    std::map<unsigned int, t_sample*> saved_outputs;
 
     std::vector<xnor::LLVMCodeGenVisitor::input_arg_t> inarg;
     std::vector<ast::Variable::VarType> input_types;
@@ -138,8 +138,6 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
     x->cpp = std::make_shared<cpp_expr>(XnorExpr::CONTROL);
   }
 
-  const int buffer_size = x->cpp->dsp_buffer_size = sys_getblksize();
-
   //read in the arguments into a string
   char buf[1024];
   std::string line;
@@ -222,7 +220,7 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
 
             for (size_t i = 0; i < statements.size(); i++) {
               x->cpp->outs.push_back(outlet_new(&x->x_obj, &s_signal));
-              x->cpp->saved_outputs[i].resize(buffer_size, 0); //XXX saving a copy of the buffer, we may not actually need it though
+              x->cpp->saved_outputs[i] = nullptr;
             }
           }
           break;
@@ -251,7 +249,7 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
             if (i != 0)
               x->cpp->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal));
             x->cpp->signal_inputs += 1;
-            x->cpp->saved_inputs[v->input_index()].resize(buffer_size, 0);
+            x->cpp->saved_inputs[v->input_index()] = nullptr;
             break;
           case ast::Variable::VarType::INPUT:
             if (x->cpp->expr_type != XnorExpr::SAMPLE) {
@@ -262,7 +260,7 @@ void *jit_expr_new(t_symbol *s, int argc, t_atom *argv)
             if (i != 0)
               x->cpp->ins.push_back(inlet_new(&x->x_obj, &x->x_obj.ob_pd, &s_signal, &s_signal));
             x->cpp->signal_inputs += 1;
-            x->cpp->saved_inputs[v->input_index()].resize(buffer_size * 2, 0); //input buffers need access to last input as well
+            x->cpp->saved_inputs[v->input_index()] = nullptr;
             break;
           case ast::Variable::VarType::SYMBOL:
             if (i != 0)
@@ -353,7 +351,7 @@ static t_int *jit_expr_tilde_perform(t_int *w) {
           //we make a copy of the input data and provide that as we might stomp on it
           //in our function because buffers get reused
           t_sample * in = (t_sample*)w[vector_index++];
-          t_sample * buf = &x->cpp->saved_inputs.at(i).front();
+          t_sample * buf = x->cpp->saved_inputs.at(i);
           memcpy(buf, in, n * sizeof(t_sample)); //copy the new data in
           x->cpp->inarg.at(i).vec = buf;
         }
@@ -361,7 +359,7 @@ static t_int *jit_expr_tilde_perform(t_int *w) {
       case ast::Variable::VarType::INPUT:
         {
           t_sample * in = (t_sample*)w[vector_index++];
-          t_sample * buf = &x->cpp->saved_inputs.at(i).front();
+          t_sample * buf = x->cpp->saved_inputs.at(i);
           memcpy(buf + n, buf, n * sizeof(t_sample)); //copy the old data forward
           memcpy(buf, in, n * sizeof(t_sample)); //copy the new data in
           x->cpp->inarg.at(i).vec = buf;
@@ -375,7 +373,7 @@ static t_int *jit_expr_tilde_perform(t_int *w) {
 
   //if we're not computing then we just clear everything out
   if (!x->cpp->compute) {
-    size_t vsize = x->cpp->saved_outputs.size() ? x->cpp->saved_outputs.begin()->second.size() : 0;
+    size_t vsize = x->cpp->dsp_buffer_size;
     for (unsigned int i = 0; i < x->cpp->outarg.size(); i++) {
       auto p = (t_sample *)w[vector_index++];
       memset(p, 0, vsize * sizeof(t_sample));
@@ -384,14 +382,14 @@ static t_int *jit_expr_tilde_perform(t_int *w) {
     if (x->cpp->expr_type == XnorExpr::SAMPLE) {
       //render to the saved buffers [which has some old needed data into it]
       for (unsigned int i = 0; i < x->cpp->outarg.size(); i++) {
-        x->cpp->outarg.at(i) = &x->cpp->saved_outputs.at(i).front();
+        x->cpp->outarg.at(i) = x->cpp->saved_outputs.at(i);
       }
       x->cpp->func(&x->cpp->outarg.front(), &x->cpp->inarg.front(), n);
 
       //copy out the saved buffers
       for (unsigned int i = 0; i < x->cpp->outarg.size(); i++) {
         auto f = (t_sample *)w[vector_index++];
-        memcpy(f, &x->cpp->saved_outputs.at(i).front(), sizeof(t_sample) * n);
+        memcpy(f, x->cpp->saved_outputs.at(i), sizeof(t_sample) * n);
       }
     } else {
       for (unsigned int i = 0; i < x->cpp->outarg.size(); i++) {
@@ -422,16 +420,38 @@ static void jit_expr_tilde_dsp(t_jit_expr *x, t_signal **sp) {
   t_int ** vec = (t_int **)getbytes(sizeof(t_int) * vecsize);
   vec[0] = (t_int*)x;
   vec[1] = (t_int*)sp[0]->s_n;
+  int vsize = x->cpp->dsp_buffer_size = sp[0]->s_n;
 
   //add the inputs
   int voffset = 2;
-  for (int i = 0; i < input_signals; i++)
+  int invbytes = vsize * sizeof(t_sample);
+  for (int i = 0; i < input_signals; i++) {
     vec[i + voffset] = (t_int*)sp[i]->s_vec;
+    //allocate saved buffers if we need them
+    if (i < x->cpp->input_types.size()) {
+      switch (x->cpp->input_types.at(i)) {
+        case ast::Variable::VarType::VECTOR:
+          x->cpp->saved_inputs.at(i) = (t_sample*)getbytes(invbytes);
+          break;
+        case ast::Variable::VarType::INPUT:
+          x->cpp->saved_inputs.at(i) = (t_sample*)getbytes(invbytes * 2); //input buffers need access to last input as well
+          break;
+        default:
+          break;
+      }
+    }
+  }
 
   //then the outputs
   voffset += input_signals;
-  for (int i = 0; i < output_signals; i++)
+
+  //save outputs if needed
+  int outvbytes = x->cpp->expr_type == XnorExpr::SAMPLE ? (vsize * sizeof(t_sample)) : 0;
+  for (int i = 0; i < output_signals; i++) {
     vec[i + voffset] = (t_int*)sp[i + input_signals]->s_vec;
+    if (outvbytes)
+      x->cpp->saved_outputs.at(i) = (t_sample*)getbytes(outvbytes);
+  }
 
   dsp_addv(jit_expr_tilde_perform, vecsize, (t_int*)vec);
   freebytes(vec, sizeof(t_int) * vecsize);
@@ -673,7 +693,8 @@ void jit_fexpr_clear_usage() {
 // taken directly from x_vexpr_if.c and modified
 void jit_fexpr_tilde_set(t_jit_expr *x, t_symbol * /*s*/, int argc, t_atom *argv) {
   t_symbol *sx;
-  int vecno, vsize, nargs;
+  int vecno, nargs;
+  int vsize = x->cpp->dsp_buffer_size;
 
   if (!argc)
     return;
@@ -701,14 +722,13 @@ void jit_fexpr_tilde_set(t_jit_expr *x, t_symbol * /*s*/, int argc, t_atom *argv
           post("jit/fexpr~ set: no argument to set");
           return;
         }
-        vsize = it->second.size();
         if (nargs > vsize) {
           post("jit/fexpr~ set: %d set values larger than vector size(%d)", nargs, vsize);
           post("jit/fexpr~ set: only the first %d values will be set", vsize);
           nargs = vsize;
         }
         for (int i = 0; i < nargs; i++) {
-          it->second.at(vsize - i - 1) = atom_getfloatarg(i + 1, argc, argv);
+          it->second[vsize - i - 1] = atom_getfloatarg(i + 1, argc, argv);
         }
       }
       return;
@@ -734,14 +754,13 @@ void jit_fexpr_tilde_set(t_jit_expr *x, t_symbol * /*s*/, int argc, t_atom *argv
           post("jit/fexpr~ set: no argument to set");
           return;
         }
-        vsize = it->second.size();
         if (nargs > vsize) {
           post("jit/fexpr~ set: %d set values larger than vector size(%d)", nargs, vsize);
           post("jit/fexpr~ set: only the first %d values will be set", vsize);
           nargs = vsize;
         }
         for (int i = 0; i < nargs; i++) {
-          it->second.at(vsize - i - 1) = atom_getfloatarg(i + 1, argc, argv);
+          it->second[vsize - i - 1] = atom_getfloatarg(i + 1, argc, argv);
         }
       }
       return;
@@ -755,7 +774,7 @@ void jit_fexpr_tilde_set(t_jit_expr *x, t_symbol * /*s*/, int argc, t_atom *argv
           auto it = x->cpp->saved_outputs.find(i);
           if (it == x->cpp->saved_outputs.end())
             continue;
-          it->second.at(it->second.size() - 1) = atom_getfloatarg(i, argc, argv);
+          it->second[vsize - 1] = atom_getfloatarg(i, argc, argv);
         }
       }
       return;
@@ -770,16 +789,20 @@ void jit_fexpr_tilde_set(t_jit_expr *x, t_symbol * /*s*/, int argc, t_atom *argv
 void jit_fexpr_tilde_clear(t_jit_expr *x, t_symbol * /*s */, int argc, t_atom *argv) {
   t_symbol *sx;
   int vecno;
+  const int vsize = x->cpp->dsp_buffer_size * sizeof(t_sample);
 
   /*
    *  if no argument clear all input and output buffers
    */
   if (argc <= 0) {
     for (auto& it: x->cpp->saved_inputs) {
-      memset(&it.second.front(), 0, it.second.size() * sizeof(t_sample));
+      int size = vsize;
+      if (x->cpp->input_types[it.first] == ast::Variable::VarType::INPUT)
+        size *= 2; //sample input variables have 2 times the length of the buffer size
+      memset(it.second, 0, size);
     }
     for (auto& it: x->cpp->saved_outputs) {
-      memset(&it.second.front(), 0, it.second.size() * sizeof(t_sample));
+      memset(it.second, 0, vsize);
     }
     return;
   }
@@ -807,7 +830,10 @@ void jit_fexpr_tilde_clear(t_jit_expr *x, t_symbol * /*s */, int argc, t_atom *a
           post("jit/fexpr~ clear: no signal at inlet %d", vecno + 1);
           return;
         }
-        memset(&it->second.front(), 0, it->second.size() * sizeof(t_sample));
+        int size = vsize;
+        if (x->cpp->input_types[it->first] == ast::Variable::VarType::INPUT)
+          size *= 2;
+        memset(it->second, 0, size);
       }
       return;
     case 'y':
@@ -827,7 +853,7 @@ void jit_fexpr_tilde_clear(t_jit_expr *x, t_symbol * /*s */, int argc, t_atom *a
           post("jit/fexpr~ clear: no signal at outlet %d", vecno + 1);
           return;
         }
-        memset(&it->second.front(), 0, it->second.size() * sizeof(t_sample));
+        memset(it->second, 0, vsize);
       }
       return;
     default:
