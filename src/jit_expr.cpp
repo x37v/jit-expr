@@ -460,7 +460,7 @@ void jit_expr_print(t_jit_expr *x) {
 }
 
 void jit_expr_version_post() {
-  post("jit/expr jit/expr~ jit/fexpr~ version: %d.%d", JIT_EXPR_VERSION_MAJOR, JIT_EXPR_VERSION_MINOR);
+  post("jit/expr,expr~,fexpr~ version %d.%d", JIT_EXPR_VERSION_MAJOR, JIT_EXPR_VERSION_MINOR);
 }
 
 void jit_expr_version(t_jit_expr * x) {
@@ -469,6 +469,7 @@ void jit_expr_version(t_jit_expr * x) {
 
 void jit_expr_setup(void) {
   xnor::LLVMCodeGenVisitor::init();
+  jit_expr_version_post();
 
   jit_expr_class = class_new(gensym("jit/expr"),
       (t_newmethod)jit_expr_new,
