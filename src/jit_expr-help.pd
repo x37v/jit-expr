@@ -1,26 +1,24 @@
-#N canvas 2 52 1362 714 12;
-#X obj 195 71 jit/expr;
-#X obj 266 71 jit/expr~;
-#X obj 347 70 jit/fexpr~;
+#N canvas 2 72 1362 694 12;
+#X obj 347 39 jit/expr;
+#X obj 347 62 jit/expr~;
+#X obj 347 85 jit/fexpr~;
 #X floatatom 760 121 5 0 0 0 - - -, f 5;
 #X floatatom 760 209 5 0 0 0 - - -, f 5;
 #X floatatom 804 208 5 0 0 0 - - -, f 5;
-#X text 21 78 Online documentation: http://yadegari.org/jit/expr/jit/expr.html
-, f 62;
-#X text 45 457 - $x#[n]: an input audio sample from inlet # indexed
+#X text 45 472 - $x#[n]: an input audio sample from inlet # indexed
 by 'n';
-#X text 45 476 - $y#[n]: an output audio sample from outlet # indexed
+#X text 45 491 - $y#[n]: an output audio sample from outlet # indexed
 by 'n', f 61;
-#X text 80 501 where 'n' for $x# has to satisfy: 0 => n >= -vector
+#X text 80 516 where 'n' for $x# has to satisfy: 0 => n >= -vector
 size;
-#X text 79 520 and 'n' for $y# has to satisfy: -1 => n >= -vector size
+#X text 79 535 and 'n' for $y# has to satisfy: -1 => n >= -vector size
 ;
-#X text 21 113 - [jit/expr]: used for evaluation of control data expressions
+#X text 21 128 - [jit/expr]: used for evaluation of control data expressions
 , f 62;
-#X text 45 399 - $v#: an audio signal vector/block, f 59;
-#X text 45 297 - $i#: an integer, f 59;
-#X text 45 316 - $f#: a float, f 59;
-#X text 45 335 - $s#: a symbol (used to define arrays), f 59;
+#X text 45 414 - $v#: an audio signal vector/block, f 59;
+#X text 45 312 - $i#: an integer, f 59;
+#X text 45 331 - $f#: a float, f 59;
+#X text 45 350 - $s#: a symbol (used to define arrays), f 59;
 #X obj 760 147 jit/expr $f1 + 1 \; $f1 - 1 \; $f1 * 2;
 #X floatatom 848 208 5 0 0 0 - - -, f 5;
 #N canvas 273 26 812 549 Arrays 0;
@@ -61,9 +59,9 @@ size;
 #X connect 11 0 4 0;
 #X connect 13 0 15 0;
 #X connect 14 0 13 0;
-#X restore 803 352 pd Arrays;
+#X restore 803 307 pd Arrays;
 #X text 556 182 Basic examples:;
-#X text 748 322 Further details:;
+#X text 748 277 Further details:;
 #N canvas 2 72 1362 694 Dealing_with_"\$0" 0;
 #X obj 623 138 jit/expr $s2[$f1];
 #X obj 711 107 symbol \$0-x;
@@ -130,21 +128,21 @@ see Pd window for error., f 40;
 #X connect 15 0 13 0;
 #X connect 15 0 14 0;
 #X connect 16 0 12 0;
-#X restore 803 406 pd Dealing_with_"\$0";
-#X text 21 197 - [jit/fexpr~]: used for evaluation of signal expressions
+#X restore 803 361 pd Dealing_with_"\$0";
+#X text 21 212 - [jit/fexpr~]: used for evaluation of signal expressions
 on sample level data (i.e. \, filter design) - very cpu intensive!
 , f 62;
-#X text 21 244 Input variables types for [jit/expr] \, [jit/expr~]
+#X text 21 259 Input variables types for [jit/expr] \, [jit/expr~]
 and [jit/fexpr~] are: integers \, floats and symbols \, specified as
 follows where the '#' stands for the inlet number:, f 62;
-#X text 21 362 The [jit/expr~] object has an exclusive input variable
+#X text 21 377 The [jit/expr~] object has an exclusive input variable
 type for signal vectors \, defined as:, f 62;
-#X text 21 428 The [jit/fexpr~] object has exclusive variable types
+#X text 21 443 The [jit/fexpr~] object has exclusive variable types
 \, defined as:, f 62;
-#X text 21 140 - [jit/expr~]: used for evaluation of audio signal expression
+#X text 21 155 - [jit/expr~]: used for evaluation of audio signal expression
 - on a vector by vector basis (vector/block size is defined by the
 [block~] or [switch~] objects)., f 62;
-#X text 514 14 These objects have several built in operators and functions.
+#X text 510 33 These objects have several built in operators and functions.
 The syntax is quite similar to how expressions are written in C. A
 semicolon can be used to define and separate different expressions.
 If so \, an outlet is created for each expression and they're evaluated
@@ -664,7 +662,7 @@ store the result of any operation into a variable or table index.;
 examples are only presented with [jit/expr]., f 52;
 #X text 28 71 These are organized in different groups. Click on the
 subpatches below to check each group:, f 52;
-#X restore 803 432 pd All_functions \; and operators;
+#X restore 803 387 pd All_functions \; and operators;
 #N canvas 2 52 1362 714 [jit/expr] 0;
 #X obj 49 115 jit/expr 1;
 #X floatatom 47 248 0 0 0 0 - - -;
@@ -1155,17 +1153,24 @@ and call it in the below expression \, check it:, f 68;
 #X connect 32 1 33 0;
 #X connect 34 0 33 0;
 #X connect 35 0 32 0;
-#X restore 803 378 pd [value];
-#X text 363 16 Version @jit_expr_VERSION_MAJOR@.@jit_expr_VERSION_MINOR@;
-#X text 21 48 Originally By Shahrokh Yadegari \, cloned by Alex Norman
+#X restore 803 333 pd [value];
+#X text 309 15 Version @jit_expr_VERSION_MAJOR@.@jit_expr_VERSION_MINOR@
 ;
 #X text 796 517 helpfile modified from original expr help;
 #X text 20 16 Expression evaluation family of objects:, f 62;
-#X text 18 33 Just in time [JIT] compiled;
-#X connect 3 0 16 0;
-#X connect 4 0 35 0;
-#X connect 5 0 35 0;
-#X connect 16 0 4 0;
-#X connect 16 1 5 0;
-#X connect 16 2 17 0;
-#X connect 17 0 35 0;
+#X text 20 33 Just in time [JIT] compiled;
+#X obj 811 491 jit/expr;
+#X msg 811 462 version;
+#X text 809 438 print the version;
+#X text 21 93 Online original documentation: http://yadegari.org/jit/expr/jit/expr.html
+, f 62;
+#X text 19 50 Originally By Shahrokh Yadegari \,;
+#X text 19 67 cloned and made JIT by Alex Norman;
+#X connect 3 0 15 0;
+#X connect 4 0 34 0;
+#X connect 5 0 34 0;
+#X connect 15 0 4 0;
+#X connect 15 1 5 0;
+#X connect 15 2 16 0;
+#X connect 16 0 34 0;
+#X connect 49 0 48 0;
