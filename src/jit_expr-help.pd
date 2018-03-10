@@ -1,4 +1,5 @@
 #N canvas 2 72 1362 694 12;
+#X declare -lib jit_expr;
 #X obj 347 39 jit/expr;
 #X obj 347 62 jit/expr~;
 #X obj 347 85 jit/fexpr~;
@@ -1166,6 +1167,7 @@ and call it in the below expression \, check it:, f 68;
 , f 62;
 #X text 19 50 Originally By Shahrokh Yadegari \,;
 #X text 19 67 cloned and made JIT by Alex Norman;
+#X obj 805 548 declare -lib jit_expr;
 #X connect 3 0 15 0;
 #X connect 4 0 34 0;
 #X connect 5 0 34 0;
