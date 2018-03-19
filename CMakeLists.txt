@@ -7,7 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_SUPPRESS_REGENERATION true)
 set(CMAKE_MACOSX_RPATH Off)
-set(CMAKE_OSX_DEPLOYMENT_TARGET 10.6) #10.4 has issues with shared_ptr
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9") #before 10.9 didn't see shared_ptr
 set(CMAKE_OSX_ARCHITECTURES "i386;x86_64")
 
 #set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -W -Werror -pedantic -g -Wno-sign-compare -Wno-unused-parameter -Wno-overloaded-virtual -std=c++11")
