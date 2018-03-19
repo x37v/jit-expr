@@ -6,7 +6,7 @@
 #include "ast.h"
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/IRBuilder.h>
-#include <memory>
+#include <tr1/memory>
 
 #include <m_pd.h>
 
@@ -34,6 +34,8 @@ namespace llvm {
   class TargetMachine;
 }
 
+using std::tr1::shared_ptr;
+using std::tr1::function;
 
 namespace xnor {
   class LLVMCodeGenVisitor : public xnor::ast::Visitor {

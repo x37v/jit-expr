@@ -5,8 +5,11 @@
 
 #include <string>
 #include <vector>
-#include <memory>
-#include <functional>
+#include <tr1/memory>
+#include <tr1/functional>
+
+using std::tr1::shared_ptr;
+using std::tr1::function;
 
 namespace xnor {
   namespace ast {
@@ -23,12 +26,12 @@ namespace xnor {
     class ValueAssignment;
     class ArrayAssignment;
     class Deref;
-    typedef std::shared_ptr<Node> NodePtr;
-    typedef std::shared_ptr<Variable> VariablePtr;
-    typedef std::shared_ptr<SampleAccess> SampleAccessPtr;
-    typedef std::shared_ptr<ArrayAccess> ArrayAccessPtr;
-    typedef std::shared_ptr<Deref> DerefPtr;
-    typedef std::function<void(std::string v, unsigned int depth)> PrintFunc;
+    typedef shared_ptr<Node> NodePtr;
+    typedef shared_ptr<Variable> VariablePtr;
+    typedef shared_ptr<SampleAccess> SampleAccessPtr;
+    typedef shared_ptr<ArrayAccess> ArrayAccessPtr;
+    typedef shared_ptr<Deref> DerefPtr;
+    typedef function<void(std::string v, unsigned int depth)> PrintFunc;
 
     typedef std::vector<xnor::ast::VariablePtr> VariableVector;
 
@@ -116,7 +119,7 @@ namespace xnor {
         VariablePtr variable() const { return mQuotedVar; }
       private:
         std::string mStringValue;
-        VariablePtr mQuotedVar = nullptr;
+        VariablePtr mQuotedVar;
     };
 
     class UnaryOp : public VNode<UnaryOp> {
@@ -200,7 +203,7 @@ namespace xnor {
         NodePtr index_node() const { return mAccessor; }
       private:
         std::string mArrayName;
-        VariablePtr mArrayVar = nullptr;
+        VariablePtr mArrayVar;
         NodePtr mAccessor;
     };
 

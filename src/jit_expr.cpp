@@ -7,7 +7,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
-#include <memory>
+#include <tr1/memory>
 #include <algorithm>
 #include <random>
 #include <cmath>
@@ -127,9 +127,11 @@ static t_class *jit_expr_proxy_class;
 static t_class *jit_expr_tilde_class;
 static t_class *jit_fexpr_tilde_class;
 
+using std::tr1::shared_ptr;
+
 typedef struct _jit_expr {
   t_object x_obj;
-  std::shared_ptr<cpp_expr> cpp;
+  shared_ptr<cpp_expr> cpp;
   float exp_f;       /* control value to be transformed to signal */
 } t_jit_expr;
 
