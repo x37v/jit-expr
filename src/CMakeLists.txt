@@ -10,12 +10,20 @@ configure_file(
   "${PROJECT_BINARY_DIR}/jit_expr_version.h"
 )
 
-# Add subdirectories
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(CMAKE_SUPPRESS_REGENERATION true)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_MACOSX_RPATH Off)
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.9") #before 10.9 didn't see shared_ptr
+set(CMAKE_OSX_ARCHITECTURES "i386;x86_64")
 
 include(pd.build/pd.cmake)
 
+# Add subdirectories
 add_subdirectory(parse/)
 
 # http://llvm.org/docs/CMake.html#embedding-llvm-in-your-project
