@@ -1155,7 +1155,7 @@ and call it in the below expression \, check it:, f 68;
 #X connect 34 0 33 0;
 #X connect 35 0 32 0;
 #X restore 803 333 pd [value];
-#X text 309 15 Version @jit_expr_VERSION_MAJOR@.@jit_expr_VERSION_MINOR@
+#X text 309 15 Version @jit_expr_VERSION_MAJOR@.@jit_expr_VERSION_MINOR@.@jit_expr_VERSION_PATCH@
 ;
 #X text 796 517 helpfile modified from original expr help;
 #X text 20 16 Expression evaluation family of objects:, f 62;

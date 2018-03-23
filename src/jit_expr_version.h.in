@@ -2,3 +2,4 @@
 // the configured options and settings for jit_expr
 #define JIT_EXPR_VERSION_MAJOR @jit_expr_VERSION_MAJOR@
 #define JIT_EXPR_VERSION_MINOR @jit_expr_VERSION_MINOR@
+#define JIT_EXPR_VERSION_PATCH @jit_expr_VERSION_PATCH@

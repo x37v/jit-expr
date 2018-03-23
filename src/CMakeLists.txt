@@ -3,6 +3,7 @@ project(jit_expr)
 # The version number.
 set(jit_expr_VERSION_MAJOR 0)
 set(jit_expr_VERSION_MINOR 1)
+set(jit_expr_VERSION_PATCH 1)
 
 configure_file(
   "${PROJECT_SOURCE_DIR}/jit_expr_version.h.in"
