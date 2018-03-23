@@ -27,12 +27,8 @@ The build in flex header is old, I needed to target the one I installed with hom
 
 * make the cmake build directory:
 	* `mkdir build/ && cd build`
-* let cmake know where your (homebrew) flex headers and m_pd.h are, multi-arch (if wanted) and c++11:
-  * `cmake -DFLEX_INCLUDE_DIR=/usr/local/opt/flex/include -DCMAKE_CXX_FLAGS="-I/Applications/Pd-0.48-1.app/Contents/Resources/src/ -stdlib=libc++ -std=c++11 -arch i386 -arch x86_64" ..`
-  * I'm not sure that the c++ and multi arch are needed on new machines though
-    * `cmake -DFLEX_INCLUDE_DIR=/usr/local/opt/flex/include -DCMAKE_CXX_FLAGS="-I/Applications/Pd-0.48-1.app/Contents/Resources/src/" ..`
-  * with an older pd install it was:
-    * `cmake -DCMAKE_CXX_FLAGS="-I/usr/local/opt/flex/include/ -I/Applications/Pd-0.48-0.app/Contents/Resources/include/" ..`
+* let cmake know where your (homebrew) flex headers and m_pd.h are, update this to reflect your paths:
+  * `cmake -DFLEX_INCLUDE_DIR=/usr/local/opt/flex/include -DCMAKE_CXX_FLAGS="-I/Applications/Pd-0.48-1.app/Contents/Resources/src/" ..`
 
 ### Windows
 
