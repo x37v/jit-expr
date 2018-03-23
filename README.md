@@ -8,7 +8,7 @@ Requirements
 
 * [cmake](https://cmake.org/) 3.0 or greater
 * [bison](https://www.gnu.org/software/bison/) tested with 3.0.4, didn't work with 2.3 on osX
-* [flex](https://github.com/westes/flex) tested with 2.6.0
+* [flex](https://github.com/westes/flex) tested with 2.6.0 and 2.6.4
 * [llvm](http://llvm.org/) 5.0
 * [pure-data](https://puredata.info/) headers
 * [pd.build](https://github.com/pierreguillot/pd.build)
@@ -23,12 +23,14 @@ Build
 
 ### osX
 
-The build in flex header is old, I needed to target the one I installed with homebrew which was installed in */usr/local/opt/flex/include/*
+The build in flex header is old, I needed to target the one I installed with homebrew which was installed in */usr/local/opt/flex/include/* or with macports which wav installed in */opt/local/include/*
 
 * make the cmake build directory:
 	* `mkdir build/ && cd build`
-* let cmake know where your flex headers and m_pd.h are:
-  * `cmake -DCMAKE_CXX_FLAGS="-I/usr/local/opt/flex/include/ -I/Applications/Pd-0.48-1.app/Contents/Resources/src/" ..`
+* let cmake know where your (homebrew) flex headers and m_pd.h are, multi-arch (if wanted) and c++11:
+  * `cmake -DFLEX_INCLUDE_DIR=/usr/local/opt/flex/include -DCMAKE_CXX_FLAGS="-I/Applications/Pd-0.48-1.app/Contents/Resources/src/ -stdlib=libc++ -std=c++11 -arch i386 -arch x86_64" ..`
+  * I'm not sure that the c++ and multi arch are needed on new machines though
+    * `cmake -DFLEX_INCLUDE_DIR=/usr/local/opt/flex/include -DCMAKE_CXX_FLAGS="-I/Applications/Pd-0.48-1.app/Contents/Resources/src/" ..`
   * with an older pd install it was:
     * `cmake -DCMAKE_CXX_FLAGS="-I/usr/local/opt/flex/include/ -I/Applications/Pd-0.48-0.app/Contents/Resources/include/" ..`
 
