@@ -65,3 +65,7 @@ TODO
 * remove overloaded virtual warning disable, if we can fix it
 * convert more of the functions into LLVM code so it can be further optimized
 
+Thanks
+===
+
+* Thanks to **Marco Matteo Markidis** for help building the osx external for 10.10+
