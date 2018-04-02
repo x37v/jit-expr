@@ -21,7 +21,7 @@ Build
 
 `./configure && make pd`
 
-### osX
+### Mac OsX
 
 The build in flex header is old, I needed to target the one I installed with homebrew which was installed in */usr/local/opt/flex/include/* or with macports which wav installed in */opt/local/include/*
 
@@ -29,6 +29,8 @@ The build in flex header is old, I needed to target the one I installed with hom
 	* `mkdir build/ && cd build`
 * let cmake know where your (homebrew) flex headers and m_pd.h are, update this to reflect your paths:
   * `cmake -DFLEX_INCLUDE_DIR=/usr/local/opt/flex/include -DCMAKE_CXX_FLAGS="-I/Applications/Pd-0.48-1.app/Contents/Resources/src/" ..`
+* 0.1.1 was built on a 10.10 machine with this command:
+  * `cmake -DFLEX_INCLUDE_DIR=/opt/local/include -DCMAKE_CXX_FLAGS="-I/Applications/Pd*.app/Contents/Resources/src -I/opt/local/include -stdlib=libc++ -std=c++11" -DCMAKE_CXX_COMPILER=/opt/local/bin/clang++-mp-5.0 -DLLVM_DIR=/opt/local/libexec/llvm-5.0/lib/cmake/llvm/`
 
 ### Windows
 
