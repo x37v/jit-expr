@@ -103,6 +103,7 @@ namespace xnor {
       llvm::Value * toInt(llvm::Value * v);
       llvm::Value * toFloat(llvm::Value * v);
       llvm::Value * getSymbol(const std::string& name);
+      llvm::Value * createIfFunc(std::function<llvm::Value *()> condGetter, std::function<llvm::Value *()> trueGetter, std::function<llvm::Value *()> falseGetter);
       void wrapIntIfNeeded(xnor::ast::Node * n);
 
       //returns float

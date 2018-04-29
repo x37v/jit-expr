@@ -313,45 +313,19 @@ namespace xnor {
 
     //if
     if (n == "if") {
-      //translated from kaleidoscope example, chapter 5
-      v->args().at(0)->accept(this);
-
-      //true if not equal to zero
-      auto cond = mBuilder.CreateFCmpONE(mValue, llvm::ConstantFP::get(mFloatType, 0.0f), "neqtmp");
-
-      llvm::Function *f = mBuilder.GetInsertBlock()->getParent();
-      auto thenbb = llvm::BasicBlock::Create(mContext, "then", f);
-      auto elsebb = llvm::BasicBlock::Create(mContext, "else");
-      auto mergebb = llvm::BasicBlock::Create(mContext, "ifcont");
-
-      mBuilder.CreateCondBr(cond, thenbb, elsebb);
-
-      mBuilder.SetInsertPoint(thenbb);
-      v->args().at(1)->accept(this);
-      auto thenv = mValue;
-      if (!thenv)
-        throw std::runtime_error("couldn't create true expression");
-
-      mBuilder.CreateBr(mergebb);
-      thenbb = mBuilder.GetInsertBlock(); //codegen of then can change current block so update thenbb for phi
-      mMainFunction->getBasicBlockList().push_back(elsebb);
-
-      mBuilder.SetInsertPoint(elsebb);
-      v->args().at(2)->accept(this);
-      auto elsev = mValue;
-      if (!elsev)
-        throw std::runtime_error("couldn't create else expression");
-
-      mBuilder.CreateBr(mergebb);
-      elsebb = mBuilder.GetInsertBlock(); //codegen can change the current block so update elsebb for phi
-      mMainFunction->getBasicBlockList().push_back(mergebb);
-
-      //bring everything together
-      mBuilder.SetInsertPoint(mergebb);
-      auto *phi = mBuilder.CreatePHI(mFloatType, 2, "iftmp");
-      phi->addIncoming(thenv, thenbb);
-      phi->addIncoming(elsev, elsebb);
-      mValue = phi;
+      mValue = createIfFunc(
+          [this, v]() {
+            v->args().at(0)->accept(this);
+            return mValue;
+          },
+          [this, v]() {
+            v->args().at(1)->accept(this);
+            return mValue;
+          },
+          [this, v]() {
+            v->args().at(2)->accept(this);
+            return mValue;
+          });
       wrapIntIfNeeded(v);
       return;
     } else if (n == "float") { //this doesn't do anything, all math is float
@@ -644,6 +618,49 @@ namespace xnor {
     if (!sym)
       throw std::runtime_error("couldn't get symbol " + name);
     return llvm::ConstantInt::get(mDataLayout.getIntPtrType(mContext, 0), reinterpret_cast<uintptr_t>(sym));
+  }
+
+  llvm::Value * LLVMCodeGenVisitor::createIfFunc(std::function<llvm::Value *()> condGetter, std::function<llvm::Value *()> trueGetter, std::function<llvm::Value *()> falseGetter) {
+      //translated from kaleidoscope example, chapter 5
+      llvm::Value * condValue = condGetter();
+      //v->args().at(0)->accept(this);
+
+      //true if not equal to zero
+      auto cond = mBuilder.CreateFCmpONE(condValue, llvm::ConstantFP::get(mFloatType, 0.0f), "neqtmp");
+
+      llvm::Function *f = mBuilder.GetInsertBlock()->getParent();
+      auto thenbb = llvm::BasicBlock::Create(mContext, "then", f);
+      auto elsebb = llvm::BasicBlock::Create(mContext, "else");
+      auto mergebb = llvm::BasicBlock::Create(mContext, "ifcont");
+
+      mBuilder.CreateCondBr(cond, thenbb, elsebb);
+
+      mBuilder.SetInsertPoint(thenbb);
+      //v->args().at(1)->accept(this);
+      auto thenv = trueGetter();
+      if (!thenv)
+        throw std::runtime_error("couldn't create true expression");
+
+      mBuilder.CreateBr(mergebb);
+      thenbb = mBuilder.GetInsertBlock(); //codegen of then can change current block so update thenbb for phi
+      mMainFunction->getBasicBlockList().push_back(elsebb);
+
+      mBuilder.SetInsertPoint(elsebb);
+      //v->args().at(2)->accept(this);
+      auto elsev = falseGetter();
+      if (!elsev)
+        throw std::runtime_error("couldn't create else expression");
+
+      mBuilder.CreateBr(mergebb);
+      elsebb = mBuilder.GetInsertBlock(); //codegen can change the current block so update elsebb for phi
+      mMainFunction->getBasicBlockList().push_back(mergebb);
+
+      //bring everything together
+      mBuilder.SetInsertPoint(mergebb);
+      auto *phi = mBuilder.CreatePHI(mFloatType, 2, "iftmp");
+      phi->addIncoming(thenv, thenbb);
+      phi->addIncoming(elsev, elsebb);
+      return phi;
   }
 
   void LLVMCodeGenVisitor::wrapIntIfNeeded(ast::Node * n) {
