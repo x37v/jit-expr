@@ -142,6 +142,7 @@ namespace xnor {
           SUBTRACT,
           MULTIPLY,
           DIVIDE,
+          MOD,
           SHIFT_LEFT,
           SHIFT_RIGHT,
           COMP_EQUAL,

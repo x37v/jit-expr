@@ -259,6 +259,22 @@ namespace xnor {
       case ast::BinaryOp::Op::DIVIDE:
         mValue = mBuilder.CreateFDiv(left, right, "divtmp");
         break;
+      case ast::BinaryOp::Op::MOD: 
+        //value = (float)((int)right != 0 ? (int)left % (int)right) : 0;
+        {
+          auto iright = toInt(right);
+          mValue = createIfFunc([this, iright]() {
+                return toFloat(iright); //truncated, if it != 0 then do mod, otherwise return 0
+              },
+              [this, left, iright]() {
+                return toFloat(mBuilder.CreateSRem(toInt(left), iright, "modtmp"));
+              },
+              [this]() {
+                return llvm::ConstantFP::get(mFloatType, 0.0f);
+              }
+          );
+        } 
+        break;
       case ast::BinaryOp::Op::SHIFT_LEFT:
         mValue = toFloat(mBuilder.CreateShl(toInt(left), toInt(right), "sltmp"));
         break;
@@ -620,13 +636,14 @@ namespace xnor {
     return llvm::ConstantInt::get(mDataLayout.getIntPtrType(mContext, 0), reinterpret_cast<uintptr_t>(sym));
   }
 
+  //condition is just a float, if it != 0.0 then the true getter value is returned, otherwise the false getter value is
   llvm::Value * LLVMCodeGenVisitor::createIfFunc(std::function<llvm::Value *()> condGetter, std::function<llvm::Value *()> trueGetter, std::function<llvm::Value *()> falseGetter) {
       //translated from kaleidoscope example, chapter 5
       llvm::Value * condValue = condGetter();
       //v->args().at(0)->accept(this);
 
       //true if not equal to zero
-      auto cond = mBuilder.CreateFCmpONE(condValue, llvm::ConstantFP::get(mFloatType, 0.0f), "neqtmp");
+      auto cond = mBuilder.CreateFCmpONE(condValue, llvm::ConstantFP::get(mFloatType, 0.0f), "cmptmp");
 
       llvm::Function *f = mBuilder.GetInsertBlock()->getParent();
       auto thenbb = llvm::BasicBlock::Create(mContext, "then", f);
