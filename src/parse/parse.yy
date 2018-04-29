@@ -57,6 +57,7 @@
 %token ADD
 %token MULTIPLY
 %token DIVIDE
+%token MOD
 %token COMP_EQUAL
 %token COMP_NOT_EQUAL
 %token COMP_GREATER
@@ -93,7 +94,7 @@
 %left COMP_EQUAL COMP_NOT_EQUAL COMP_GREATER COMP_LESS COMP_GREATER_OR_EQUAL COMP_LESS_OR_EQUAL
 %left LOGICAL_OR LOGICAL_AND
 %left ADD NEG
-%left MULTIPLY DIVIDE
+%left MULTIPLY DIVIDE MOD
 %left BIT_AND BIT_OR BIT_XOR
 %left SHIFT_RIGHT SHIFT_LEFT
 %right UNOP_BIT_NOT UNOP_LOGICAL_NOT
@@ -158,6 +159,7 @@ binary_op :
           statement ADD statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::ADD, $3); }
         | statement MULTIPLY statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::MULTIPLY, $3); }
         | statement DIVIDE statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::DIVIDE, $3); }
+        | statement MOD statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::MOD, $3); }
         | statement COMP_EQUAL statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::COMP_EQUAL, $3); }
         | statement COMP_NOT_EQUAL statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::COMP_NOT_EQUAL, $3); }
         | statement COMP_GREATER statement { $$ = std::make_shared<xnor::ast::BinaryOp>($1, xnor::ast::BinaryOp::Op::COMP_GREATER, $3); }

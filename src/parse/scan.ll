@@ -82,6 +82,7 @@ eol                ;
 "-"                { return token::NEG; }
 "\*"               { return token::MULTIPLY; }
 "\/"               { return token::DIVIDE; }
+"%"                { return token::MOD; }
 "=="               { return token::COMP_EQUAL; }
 "!="               { return token::COMP_NOT_EQUAL; }
 ">"                { return token::COMP_GREATER; }

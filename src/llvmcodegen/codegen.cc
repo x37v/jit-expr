@@ -259,6 +259,22 @@ namespace xnor {
       case ast::BinaryOp::Op::DIVIDE:
         mValue = mBuilder.CreateFDiv(left, right, "divtmp");
         break;
+      case ast::BinaryOp::Op::MOD: 
+        //value = (float)((int)right != 0 ? (int)left % (int)right) : 0;
+        {
+          auto iright = toInt(right);
+          mValue = createIfFunc([this, iright]() {
+                return toFloat(iright); //truncated, if it != 0 then do mod, otherwise return 0
+              },
+              [this, left, iright]() {
+                return toFloat(mBuilder.CreateSRem(toInt(left), iright, "modtmp"));
+              },
+              [this]() {
+                return llvm::ConstantFP::get(mFloatType, 0.0f);
+              }
+          );
+        } 
+        break;
       case ast::BinaryOp::Op::SHIFT_LEFT:
         mValue = toFloat(mBuilder.CreateShl(toInt(left), toInt(right), "sltmp"));
         break;
@@ -313,45 +329,19 @@ namespace xnor {
 
     //if
     if (n == "if") {
-      //translated from kaleidoscope example, chapter 5
-      v->args().at(0)->accept(this);
-
-      //true if not equal to zero
-      auto cond = mBuilder.CreateFCmpONE(mValue, llvm::ConstantFP::get(mFloatType, 0.0f), "neqtmp");
-
-      llvm::Function *f = mBuilder.GetInsertBlock()->getParent();
-      auto thenbb = llvm::BasicBlock::Create(mContext, "then", f);
-      auto elsebb = llvm::BasicBlock::Create(mContext, "else");
-      auto mergebb = llvm::BasicBlock::Create(mContext, "ifcont");
-
-      mBuilder.CreateCondBr(cond, thenbb, elsebb);
-
-      mBuilder.SetInsertPoint(thenbb);
-      v->args().at(1)->accept(this);
-      auto thenv = mValue;
-      if (!thenv)
-        throw std::runtime_error("couldn't create true expression");
-
-      mBuilder.CreateBr(mergebb);
-      thenbb = mBuilder.GetInsertBlock(); //codegen of then can change current block so update thenbb for phi
-      mMainFunction->getBasicBlockList().push_back(elsebb);
-
-      mBuilder.SetInsertPoint(elsebb);
-      v->args().at(2)->accept(this);
-      auto elsev = mValue;
-      if (!elsev)
-        throw std::runtime_error("couldn't create else expression");
-
-      mBuilder.CreateBr(mergebb);
-      elsebb = mBuilder.GetInsertBlock(); //codegen can change the current block so update elsebb for phi
-      mMainFunction->getBasicBlockList().push_back(mergebb);
-
-      //bring everything together
-      mBuilder.SetInsertPoint(mergebb);
-      auto *phi = mBuilder.CreatePHI(mFloatType, 2, "iftmp");
-      phi->addIncoming(thenv, thenbb);
-      phi->addIncoming(elsev, elsebb);
-      mValue = phi;
+      mValue = createIfFunc(
+          [this, v]() {
+            v->args().at(0)->accept(this);
+            return mValue;
+          },
+          [this, v]() {
+            v->args().at(1)->accept(this);
+            return mValue;
+          },
+          [this, v]() {
+            v->args().at(2)->accept(this);
+            return mValue;
+          });
       wrapIntIfNeeded(v);
       return;
     } else if (n == "float") { //this doesn't do anything, all math is float
@@ -644,6 +634,50 @@ namespace xnor {
     if (!sym)
       throw std::runtime_error("couldn't get symbol " + name);
     return llvm::ConstantInt::get(mDataLayout.getIntPtrType(mContext, 0), reinterpret_cast<uintptr_t>(sym));
+  }
+
+  //condition is just a float, if it != 0.0 then the true getter value is returned, otherwise the false getter value is
+  llvm::Value * LLVMCodeGenVisitor::createIfFunc(std::function<llvm::Value *()> condGetter, std::function<llvm::Value *()> trueGetter, std::function<llvm::Value *()> falseGetter) {
+      //translated from kaleidoscope example, chapter 5
+      llvm::Value * condValue = condGetter();
+      //v->args().at(0)->accept(this);
+
+      //true if not equal to zero
+      auto cond = mBuilder.CreateFCmpONE(condValue, llvm::ConstantFP::get(mFloatType, 0.0f), "cmptmp");
+
+      llvm::Function *f = mBuilder.GetInsertBlock()->getParent();
+      auto thenbb = llvm::BasicBlock::Create(mContext, "then", f);
+      auto elsebb = llvm::BasicBlock::Create(mContext, "else");
+      auto mergebb = llvm::BasicBlock::Create(mContext, "ifcont");
+
+      mBuilder.CreateCondBr(cond, thenbb, elsebb);
+
+      mBuilder.SetInsertPoint(thenbb);
+      //v->args().at(1)->accept(this);
+      auto thenv = trueGetter();
+      if (!thenv)
+        throw std::runtime_error("couldn't create true expression");
+
+      mBuilder.CreateBr(mergebb);
+      thenbb = mBuilder.GetInsertBlock(); //codegen of then can change current block so update thenbb for phi
+      mMainFunction->getBasicBlockList().push_back(elsebb);
+
+      mBuilder.SetInsertPoint(elsebb);
+      //v->args().at(2)->accept(this);
+      auto elsev = falseGetter();
+      if (!elsev)
+        throw std::runtime_error("couldn't create else expression");
+
+      mBuilder.CreateBr(mergebb);
+      elsebb = mBuilder.GetInsertBlock(); //codegen can change the current block so update elsebb for phi
+      mMainFunction->getBasicBlockList().push_back(mergebb);
+
+      //bring everything together
+      mBuilder.SetInsertPoint(mergebb);
+      auto *phi = mBuilder.CreatePHI(mFloatType, 2, "iftmp");
+      phi->addIncoming(thenv, thenbb);
+      phi->addIncoming(elsev, elsebb);
+      return phi;
   }
 
   void LLVMCodeGenVisitor::wrapIntIfNeeded(ast::Node * n) {

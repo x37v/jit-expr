@@ -76,6 +76,8 @@ namespace xnor {
         op = "*"; break;
       case xnor::ast::BinaryOp::Op::DIVIDE:
         op = "/"; break;
+      case xnor::ast::BinaryOp::Op::MOD:
+        op = "%"; break;
       case xnor::ast::BinaryOp::Op::SHIFT_LEFT:
         op = "<<"; break;
       case xnor::ast::BinaryOp::Op::SHIFT_RIGHT:
